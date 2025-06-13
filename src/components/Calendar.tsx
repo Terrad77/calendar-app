@@ -1,15 +1,46 @@
-import { useState, type JSX } from "react";
+import { useState, useEffect, useTransition, type JSX } from "react";
 import { styled } from "@stitches/react";
 import dayjs, { Dayjs } from "dayjs";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import Icon from "./Icon";
+
+// Extend dayjs with plugins for date comparison
+dayjs.extend(isSameOrBefore);
+dayjs.extend(isSameOrAfter);
+
+// Define the types for the props of the Calendar component
+interface PublicHolidayApiResponse {
+  date: string; // YYYY-MM-DD
+  localName: string;
+  name: string;
+  countryCode: string;
+  fixed: boolean;
+  global: boolean;
+  counties: string[] | null;
+  launchYear: number | null;
+  types: string[];
+}
+
+// allowed types for color markers of tasks
+type ColorType =
+  | "blue"
+  | "green"
+  | "orange"
+  | "purple"
+  | "turquoise"
+  | "yellow"
+  | "holiday"
+  | "default";
 
 // Task interface to represent tasks in the calendar
 interface Task {
   id: string;
-  date: string;
+  date: string; // YYYY-MM-DD
   title: string;
   description?: string;
-  color?: "blue" | "green" | "red" | "yellow" | "default";
+  eventType: "task" | "holiday";
+  colors?: ColorType[];
 }
 
 const Wrapper = styled("div", {
@@ -24,14 +55,14 @@ const Wrapper = styled("div", {
 
 const Header = styled("div", {
   display: "flex",
-  alignItems: "center",
+  // alignItems: "center",
   justifyContent: "space-between",
   flexWrap: "wrap",
-  gap: "12px",
+  // gap: "12px",
   backgroundColor: "#edeff1",
-  padding: "12px 16px",
+  padding: "10px 16px 2px 16px",
   color: "#555",
-  borderBottom: "1px solid #e0e0e0", // Легкая нижняя граница для отделения шапки
+  // borderBottom: "1px solid #e0e0e0", // Легкая нижняя граница для отделения шапки
 });
 
 const MonthLabel = styled("h2", {
@@ -75,7 +106,7 @@ const NavButton = styled("button", {
   padding: "8px 10px",
   boxShadow: "0 1px 0 #ced0d1",
   transition: "background-color 0.2s, color 0.2s, border-color 0.2s",
-  "&:hover": {
+  "&:focus, &:hover": {
     outline: "none",
     backgroundColor: "#c7cbcf", // Чуть темнее при наведении
     color: "#333",
@@ -102,73 +133,54 @@ const ViewButton = styled("button", {
   cursor: "pointer",
   alignItems: "center",
   justifyContent: "center",
-  color: "#555",
+  color: "#36343a",
   fontWeight: "700",
   padding: "6px 12px",
   boxShadow: "0 1px 0 #ced0d1",
-
   transition: "background-color 0.2s, color 0.2s, border-color 0.2s",
-  variants: {
-    active: {
-      true: {
-        backgroundColor: "#c7cbcf",
-
-        borderColor: "#e0e0e0",
-        outline: "none",
-      },
-      false: {
-        backgroundColor: "#e3e5e6",
-      },
-      "&:focus": {
-        outline: "none",
-        borderColor: "#e0e0e0",
-      },
-      "&:hover": {
-        outline: "none",
-        backgroundColor: "#e8e8e8", // Чуть темнее при наведении
-        // color: "#333",
-        borderColor: "#e0e0e0",
-      },
-    },
+  "&:focus, &:hover": {
+    backgroundColor: "#c7cbcf",
+    outline: "none",
+    borderColor: "#d0d0d0",
   },
+  "&:active": { backgroundColor: "#c7cbcf" },
 });
 
 const WeekdayHeaderContainer = styled("div", {
   display: "grid",
   gridTemplateColumns: "repeat(7, 1fr)",
-  gap: "1px", // Создает вертикальные разделители
-  backgroundColor: "#e0e0e0", // Цвет, который виден в промежутках (линиях)
+  gap: "4px",
+  backgroundColor: "#eceded", // as the color grid lines
 });
 
-// WeekdayHeaderCell теперь имеет правильные стили для выравнивания и нижней границы
 const WeekdayHeaderCell = styled("div", {
   fontWeight: "500",
+  fontSize: "0.9rem",
   textAlign: "center",
-  backgroundColor: "#f7f7f7", // Фон для заголовков дней недели, немного светлее чем линии
-  color: "#777", // Более мягкий цвет текста
-  height: "35px", // УМЕНЬШЕННАЯ ВЫСОТА, чтобы соответствовать макету
+  backgroundColor: "#edeff1",
+  color: "#777",
+  height: "35px",
   display: "flex",
-  alignItems: "center", // ВЫРАВНИВАЕТ ПО ВЕРТИКАЛИ ПО ЦЕНТРУ
-  justifyContent: "center", // ВЫРАВНИВАЕТ ПО ГОРИЗОНТАЛИ ПО ЦЕНТРУ
-  borderBottom: "1px solid #e0e0e0", // ГОРИЗОНТАЛЬНАЯ ЛИНИЯ ПОД ЗАГОЛОВКАМИ
+  alignItems: "center",
+  justifyContent: "center",
+  borderBottom: "1px solid #e0e0e0",
 });
 
 const CalendarGrid = styled("div", {
   display: "grid",
   gridTemplateColumns: "repeat(7, 1fr)",
-  gap: "1px", // Задает разделители между ячейками дней
-  backgroundColor: "#e0e0e0", // Цвет линий сетки
+  gap: "4px",
+  backgroundColor: "#edeff1", // as the color grid lines
 });
 
 const DayCell = styled("div", {
-  backgroundColor: "#ffffff", // Белый фон для ячеек дня, как на макете
-  color: "red",
-  height: "100px", // Высота для ячеек с датами
-  padding: "4px",
-  paddingTop: "8px", // Отступ для номера дня сверху
+  height: "100px",
+  width: "180px",
+  padding: "2px 2px",
   textAlign: "left",
   position: "relative", // Для позиционирования задач или инлайн-редактирования
-  fontSize: "0.9rem",
+  fontSize: "1rem",
+  fontWeight: "700",
 
   // style for the day number
   "& .day-content-wrapper": {
@@ -178,16 +190,15 @@ const DayCell = styled("div", {
   "& .day-number-and-month": {
     display: "flex",
     alignItems: "baseline",
-    gap: "4px",
-    marginBottom: "4px",
+    gap: "2px",
+    marginBottom: "2px",
   },
-  "& .day-number": {
-    fontSize: "1.1rem",
-    color: "#47494a",
-  },
-  "& .month-abbr": {
-    fontSize: "0.8rem",
+  // "& .day-number": {},
+  // "& .month-abbr": {},
+  "& .task-count": {
     color: "#97999a",
+    fontSize: "0.75rem",
+    marginLeft: "2px",
   },
 
   // styling days outside the current month
@@ -203,8 +214,11 @@ const DayCell = styled("div", {
         },
       },
       false: {
-        backgroundColor: "#ffffff",
+        backgroundColor: "#e3e5e6",
         "& .day-number": {
+          color: "#47494a",
+        },
+        "& .month-abbr": {
           color: "#47494a",
         },
       },
@@ -212,33 +226,120 @@ const DayCell = styled("div", {
   },
 });
 
+const TaskMarker = styled("span", {
+  width: "34px",
+  height: "6px",
+  borderRadius: "6px",
+  flexShrink: 0, // Не позволяет маркеру сжиматься
+  variants: {
+    color: {
+      blue: { backgroundColor: "#0070bc" },
+      green: { backgroundColor: "#62c050" },
+      orange: { backgroundColor: "#fea93f" },
+      purple: { backgroundColor: "#c67ae3" },
+      turquoise: { backgroundColor: "#51ea9d" },
+      yellow: { backgroundColor: "#f2d200" },
+      holiday: { backgroundColor: "#dc3545" },
+      default: { backgroundColor: "#a0a0a0" },
+    },
+  },
+});
+
 const TaskCard = styled("div", {
-  backgroundColor: "#e7e7e7",
+  backgroundColor: "#ffffff",
   borderRadius: "3px",
   padding: "4px 8px",
-  fontSize: "0.8rem",
+  fontSize: "0.7rem",
+  fontWeight: "500",
   color: "#333",
   marginBottom: "4px",
   overflow: "hidden",
   textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
   cursor: "grab",
   boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "2px",
+
+  "& .task-title": {
+    flexGrow: 1,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "wrap",
+  },
   variants: {
-    taskColor: {
-      blue: { backgroundColor: "#e0f2ff", color: "#007bff" },
-      green: { backgroundColor: "#e6ffe6", color: "#28a745" },
-      red: { backgroundColor: "#ffebe6", color: "#dc3545" },
-      yellow: { backgroundColor: "#fff3cd", color: "#856404" },
-      default: { backgroundColor: "#f0f0f0", color: "#555" },
+    eventType: {
+      task: {
+        // default styles for tasks
+        backgroundColor: "f0f8ff",
+        border: "1px solid #d0d0d0",
+      },
+      holiday: {
+        // styles for holidays
+        border: "1px solid #dc3545",
+        color: "red",
+      },
     },
   },
-  "&:hover": {
-    backgroundColor: "#dcdcdc",
+  defaultVariants: {
+    eventType: "task",
+  },
+});
+
+// Стили для сообщений о загрузке/ошибке
+const StatusMessage = styled("div", {
+  padding: "8px 16px",
+  backgroundColor: "#fffbe6",
+  color: "#856404",
+  border: "1px solid #ffeeba",
+  borderRadius: "4px",
+  margin: "12px",
+  textAlign: "center",
+  variants: {
+    type: {
+      error: {
+        backgroundColor: "#f8d7da",
+        color: "#721c24",
+        border: "1px solid #f5c6cb",
+      },
+      loading: {
+        backgroundColor: "#d1ecf1",
+        color: "#0c5460",
+        border: "1px solid #bee5eb",
+      },
+    },
+  },
+});
+
+// Стили для выпадающего списка стран
+const CountrySelect = styled("select", {
+  padding: "6px 10px",
+  borderRadius: "3px",
+  border: "1px solid #e0e0e0",
+  backgroundColor: "#e3e5e6",
+  color: "#36343a",
+  fontSize: "1rem",
+  fontWeight: "700",
+  cursor: "pointer",
+  boxShadow: "0 1px 0 #ced0d1",
+  "&:focus, &:hover": {
+    backgroundColor: "#c7cbcf",
+    outline: "none",
+    borderColor: "#d0d0d0",
   },
 });
 
 const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+// list of countries for public holidays
+const countryOptions = [
+  { code: "UA", name: "Ukraine" },
+  { code: "US", name: "USA" },
+  { code: "DE", name: "Germany" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "PL", name: "Poland" },
+  { code: "CA", name: "Canada" },
+];
 
 export const Calendar = () => {
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
@@ -248,18 +349,90 @@ export const Calendar = () => {
       id: "1",
       date: "2025-06-10",
       title: "Запланировать встречу",
-      color: "blue",
+      colors: ["blue"], // Теперь массив цветов
+      eventType: "task",
     },
-    { id: "2", date: "2025-06-10", title: "Подготовить отчет", color: "green" },
-    { id: "3", date: "2025-06-15", title: "Купить продукты", color: "red" },
-    { id: "4", date: "2025-06-15", title: "Позвонить отцу" },
-    { id: "5", date: "2025-07-01", title: "Начать новый проект" },
+    {
+      id: "2",
+      date: "2025-06-10",
+      title: "Подготовить отчет",
+      colors: ["green", "orange"],
+      eventType: "task",
+    },
+    {
+      id: "3",
+      date: "2025-06-15",
+      title: "Купить продукты",
+      colors: ["orange"],
+      eventType: "task",
+    },
+    {
+      id: "4",
+      date: "2025-06-15",
+      title: "Позвонить отцу",
+      colors: ["default"],
+      eventType: "task",
+    },
+    {
+      id: "5",
+      date: "2025-07-01",
+      title: "Начать новый проект",
+      eventType: "task",
+    },
+    {
+      id: "6",
+      date: "2025-06-10",
+      title: "Забрать почту",
+      colors: ["yellow"],
+      eventType: "task",
+    },
   ]);
 
-  const startOfMonth = currentDate.startOf("month");
-  const endOfMonth = currentDate.endOf("month");
-  const startDayOfWeek = startOfMonth.day();
-  const daysInMonth = endOfMonth.date();
+  const [publicHolidays, setPublicHolidays] = useState<Task[]>([]);
+  const [holidayError, setHolidayError] = useState<string | null>(null);
+  const [countryCode, setCountryCode] = useState<string>("UA");
+
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    const fetchPublicHolidays = async () => {
+      setHolidayError(null);
+
+      try {
+        const year = currentDate.year();
+        const response = await fetch(
+          `https://date.nager.at/api/v3/PublicHolidays/${year}/${countryCode}`
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: PublicHolidayApiResponse[] = await response.json();
+
+        const mappedHolidays: Task[] = data.map((holiday) => ({
+          id: `holiday-${holiday.date}-${
+            holiday.countryCode
+          }-${holiday.name.replace(/\s/g, "-")}`,
+          date: holiday.date,
+          title: holiday.localName || holiday.name,
+          eventType: "holiday",
+        }));
+
+        startTransition(() => {
+          setPublicHolidays(mappedHolidays);
+        });
+      } catch (error) {
+        console.error("Error fetching public holidays:", error);
+        setHolidayError(
+          "Failed to fetch public holidays. Please try again later."
+        );
+        startTransition(() => {
+          setPublicHolidays([]);
+        });
+      }
+    };
+
+    fetchPublicHolidays();
+  }, [currentDate, countryCode]);
 
   // function to handle previous button click
   const handlePrev = () => {
@@ -277,16 +450,29 @@ export const Calendar = () => {
     );
   };
 
+  // function to handle country change
+  const handleCountryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setCountryCode(event.target.value);
+  };
+
   // function to render days based on the current view mode
   const renderDays = () => {
     const days: JSX.Element[] = [];
 
-    const getTasksForDate = (date: Dayjs): Task[] => {
+    const getEventsForDate = (date: Dayjs): Task[] => {
       const formattedDate = date.format("YYYY-MM-DD");
-      return tasks.filter((task) => task.date === formattedDate);
+      const dailyTasks = tasks.filter((task) => task.date === formattedDate);
+      const dailyHolidays = publicHolidays.filter(
+        (holiday) => holiday.date === formattedDate
+      );
+      // Combine tasks and holidays for the day
+      const allEvents = [...dailyTasks, ...dailyHolidays].sort((a, b) =>
+        a.title.localeCompare(b.title)
+      );
+      return allEvents;
     };
 
-    let allDaysInGrid: Dayjs[] = []; // Array to hold all days in the grid
+    const allDaysInGrid: Dayjs[] = []; // Array to hold all days in the grid
 
     // ViewMode === "month"
     if (viewMode === "month") {
@@ -297,31 +483,10 @@ export const Calendar = () => {
       const endDate = lastDayOfMonth.endOf("week"); // End of week for the last day of the month
       let currentDayInLoop = dayjs(startDate); // constant for update current day in loop
 
-      while (
-        currentDayInLoop.isBefore(endDate) ||
-        currentDayInLoop.isSame(endDate, "day")
-      ) {
+      while (currentDayInLoop.isSameOrBefore(endDate, "day")) {
         allDaysInGrid.push(currentDayInLoop); // Add each day to the grid array
         currentDayInLoop = currentDayInLoop.add(1, "day");
       }
-      //   const isOutsideMonth = !currentDayInLoop.isSame(currentDate, "month");
-      //   const dailyTasks = getTasksForDate(currentDayInLoop);
-
-      //   days.push(
-      //     <DayCell
-      //       key={currentDayInLoop.format("YYYY-MM-DD")}
-      //       isOutsideMonth={isOutsideMonth} // Props for  variant to style outside month days
-      //     >
-      //       <span className="day-number">{currentDayInLoop.date()}</span>
-      //       {dailyTasks.map((task) => (
-      //         <TaskCard key={task.id} taskColor={task.color || "default"}>
-      //           {task.title}
-      //         </TaskCard>
-      //       ))}
-      //     </DayCell>
-      //   );
-      //   currentDayInLoop = currentDayInLoop.add(1, "day"); // Increment to the next day
-      // }
     } else {
       // ViewMode === "week"
       const startOfWeek = currentDate.startOf("week");
@@ -330,44 +495,56 @@ export const Calendar = () => {
       }
     }
 
-    allDaysInGrid.forEach((dayInLoop, index) => {
+    allDaysInGrid.forEach((dayInLoop) => {
       const isOutsideMonth = !dayInLoop.isSame(currentDate, "month");
-      const dailyTasks = getTasksForDate(dayInLoop);
+      const dailyEvents = getEventsForDate(dayInLoop);
+      // filter only tasks for counting "cards"
+      const dailyTasksOnly = dailyEvents.filter(
+        (event) => event.eventType === "task"
+      );
 
-      // Упрощенная логика для отображения сокращенного имени месяца
-      let showMonthAbbr = false;
+      let showMonthAbbr = false; // trigger for showing month abbreviation
+
       const isFirstDayOfItsMonth = dayInLoop.date() === 1;
       const isLastDayOfItsMonth = dayInLoop.isSame(
         dayInLoop.endOf("month"),
         "day"
       );
 
-      //show month abbreviation first or last day of the month
       if (isFirstDayOfItsMonth || isLastDayOfItsMonth) {
         showMonthAbbr = true;
       }
-      // ИЛИ если это последний день своего *фактического* месяца И он отображается вне текущего месяца
-      // (т.е. 30/31 мая, если текущий месяц - июнь)
-      else if (
-        isOutsideMonth &&
-        dayInLoop.isSame(dayInLoop.endOf("month"), "day")
-      ) {
-        showMonthAbbr = true;
-      }
+
       days.push(
         <DayCell
           key={dayInLoop.format("YYYY-MM-DD")}
           isOutsideMonth={isOutsideMonth}
         >
           <div className="day-number-and-month">
-            <span className="day-number">{dayInLoop.date()}</span>
             {showMonthAbbr && (
               <span className="month-abbr">{dayInLoop.format("MMM")}</span>
             )}
+            <span className="day-number">{dayInLoop.date()}</span>
+            {dailyTasksOnly.length > 0 && (
+              <span className="task-count">
+                {dailyTasksOnly.length}&nbsp;
+                {dailyTasksOnly.length === 1 ? "card" : "cards"}
+              </span>
+            )}
           </div>
-          {dailyTasks.map((task) => (
-            <TaskCard key={task.id} taskColor={task.color || "default"}>
-              {task.title}
+          {dailyEvents.map((event) => (
+            <TaskCard key={event.id} eventType={event.eventType}>
+              {event.eventType === "task" ? (
+                // eventType === "task"
+                <div style={{ display: "flex", gap: "4px" }}>
+                  {(event.colors || ["default"]).map((color, idx) => (
+                    <TaskMarker key={idx} color={color} />
+                  ))}
+                </div>
+              ) : // eventType === "holiday"
+              // no use any markers for holidays
+              null}
+              <span className="task-title">{event.title}</span>
             </TaskCard>
           ))}
         </DayCell>
@@ -399,6 +576,13 @@ export const Calendar = () => {
           {currentDate.year()}
         </MonthLabel>
         <ButtonContainer>
+          <CountrySelect value={countryCode} onChange={handleCountryChange}>
+            {countryOptions.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.name}
+              </option>
+            ))}
+          </CountrySelect>
           <ViewButton
             active={viewMode === "week"}
             onClick={() => setViewMode("week")}
