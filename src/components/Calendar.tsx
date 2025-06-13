@@ -30,7 +30,6 @@ type ColorType =
   | "purple"
   | "turquoise"
   | "yellow"
-  | "holiday"
   | "default";
 
 // Task interface to represent tasks in the calendar
@@ -117,6 +116,12 @@ const NavButton = styled("button", {
     color: "#222",
     borderColor: "#c0c0c0",
     outline: "none",
+  },
+  "&:disabled": {
+    backgroundColor: "#e0e0e0",
+    color: "#a0a0a0",
+    cursor: "not-allowed",
+    borderColor: "#d0d0d0",
   },
 });
 
@@ -239,7 +244,6 @@ const TaskMarker = styled("span", {
       purple: { backgroundColor: "#c67ae3" },
       turquoise: { backgroundColor: "#51ea9d" },
       yellow: { backgroundColor: "#f2d200" },
-      holiday: { backgroundColor: "#dc3545" },
       default: { backgroundColor: "#a0a0a0" },
     },
   },
@@ -325,6 +329,12 @@ const CountrySelect = styled("select", {
   "&:focus, &:hover": {
     backgroundColor: "#c7cbcf",
     outline: "none",
+    borderColor: "#d0d0d0",
+  },
+  "&:disabled": {
+    backgroundColor: "#e0e0e0",
+    color: "#a0a0a0",
+    cursor: "not-allowed",
     borderColor: "#d0d0d0",
   },
 });
@@ -465,6 +475,7 @@ export const Calendar = () => {
       const dailyHolidays = publicHolidays.filter(
         (holiday) => holiday.date === formattedDate
       );
+
       // Combine tasks and holidays for the day
       const allEvents = [...dailyTasks, ...dailyHolidays].sort((a, b) =>
         a.title.localeCompare(b.title)
@@ -562,10 +573,10 @@ export const Calendar = () => {
             {viewMode === "month" ? "Monthly" : "Weekly"}
           </CurrentViewDisplayButton>
           <ButtonContainer>
-            <NavButton onClick={handlePrev}>
+            <NavButton onClick={handlePrev} disabled={isPending}>
               <Icon name="chevron-up" />
             </NavButton>
-            <NavButton onClick={handleNext}>
+            <NavButton onClick={handleNext} disabled={isPending}>
               <Icon name="chevron-down" />
             </NavButton>
           </ButtonContainer>
@@ -576,27 +587,25 @@ export const Calendar = () => {
           {currentDate.year()}
         </MonthLabel>
         <ButtonContainer>
-          <CountrySelect value={countryCode} onChange={handleCountryChange}>
+          <CountrySelect
+            value={countryCode}
+            onChange={handleCountryChange}
+            disabled={isPending}
+          >
             {countryOptions.map((option) => (
               <option key={option.code} value={option.code}>
                 {option.name}
               </option>
             ))}
           </CountrySelect>
-          <ViewButton
-            active={viewMode === "week"}
-            onClick={() => setViewMode("week")}
-          >
-            Week
-          </ViewButton>
-          <ViewButton
-            active={viewMode === "month"}
-            onClick={() => setViewMode("month")}
-          >
-            Month
-          </ViewButton>
+          <ViewButton onClick={() => setViewMode("week")}>Week</ViewButton>
+          <ViewButton onClick={() => setViewMode("month")}>Month</ViewButton>
         </ButtonContainer>
       </Header>
+      {isPending && <StatusMessage type="loading">Loading...</StatusMessage>}
+      {holidayError && (
+        <StatusMessage type="error">{holidayError}</StatusMessage>
+      )}
 
       <WeekdayHeaderContainer>
         {daysOfWeek.map((day) => (
