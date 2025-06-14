@@ -9,7 +9,7 @@ import Icon from "./Icon";
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
-// Define the types for the props of the Calendar component
+// types for props of the Calendar component
 interface PublicHolidayApiResponse {
   date: string; // YYYY-MM-DD
   localName: string;
@@ -22,7 +22,7 @@ interface PublicHolidayApiResponse {
   types: string[];
 }
 
-// allowed types for color markers of tasks
+// types for color markers of tasks
 type ColorType =
   | "blue"
   | "green"
@@ -32,7 +32,7 @@ type ColorType =
   | "yellow"
   | "default";
 
-// Task interface to represent tasks in the calendar
+// interface to represent tasks in the calendar
 interface Task {
   id: string;
   date: string; // YYYY-MM-DD
@@ -54,14 +54,13 @@ const Wrapper = styled("div", {
 
 const Header = styled("div", {
   display: "flex",
-  // alignItems: "center",
+
   justifyContent: "space-between",
   flexWrap: "wrap",
   // gap: "12px",
   backgroundColor: "#edeff1",
   padding: "10px 16px 2px 16px",
   color: "#555",
-  // borderBottom: "1px solid #e0e0e0", // Легкая нижняя граница для отделения шапки
 });
 
 const MonthLabel = styled("h2", {
@@ -183,10 +182,10 @@ const DayCell = styled("div", {
   width: "180px",
   padding: "2px 2px",
   textAlign: "left",
-  position: "relative", // Для позиционирования задач или инлайн-редактирования
+  position: "relative", // for positioning tasks or inline edit
   fontSize: "1rem",
   fontWeight: "700",
-
+  cursor: "pointer", // to show ability to click on the day cell for adding tasks
   // style for the day number
   "& .day-content-wrapper": {
     display: "flex",
@@ -198,17 +197,16 @@ const DayCell = styled("div", {
     gap: "2px",
     marginBottom: "2px",
   },
-  // "& .day-number": {},
-  // "& .month-abbr": {},
   "& .task-count": {
     color: "#97999a",
     fontSize: "0.75rem",
     marginLeft: "2px",
   },
 
-  // styling days outside the current month
+  // styling days
   variants: {
     isOutsideMonth: {
+      //outside the current month
       true: {
         backgroundColor: "#ebebeb",
         "& .day-number": {
@@ -218,6 +216,7 @@ const DayCell = styled("div", {
           color: "#97999a",
         },
       },
+      //inside the current month
       false: {
         backgroundColor: "#e3e5e6",
         "& .day-number": {
@@ -235,7 +234,7 @@ const TaskMarker = styled("span", {
   width: "34px",
   height: "6px",
   borderRadius: "6px",
-  flexShrink: 0, // Не позволяет маркеру сжиматься
+  flexShrink: 0,
   variants: {
     color: {
       blue: { backgroundColor: "#0070bc" },
@@ -274,7 +273,7 @@ const TaskCard = styled("div", {
   variants: {
     eventType: {
       task: {
-        // default styles for tasks
+        // styles for tasks
         backgroundColor: "f0f8ff",
         border: "1px solid #d0d0d0",
       },
@@ -290,7 +289,6 @@ const TaskCard = styled("div", {
   },
 });
 
-// Стили для сообщений о загрузке/ошибке
 const StatusMessage = styled("div", {
   padding: "8px 16px",
   backgroundColor: "#fffbe6",
@@ -315,7 +313,6 @@ const StatusMessage = styled("div", {
   },
 });
 
-// Стили для выпадающего списка стран
 const CountrySelect = styled("select", {
   padding: "6px 10px",
   borderRadius: "3px",
@@ -351,15 +348,248 @@ const countryOptions = [
   { code: "CA", name: "Canada" },
 ];
 
+const TaskInputFormWrapper = styled("div", {
+  marginTop: "8px",
+  padding: "4px",
+  backgroundColor: "#f9f9f9",
+  border: "1px solid #e0e0e0",
+  borderRadius: "3px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "4px",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+  position: "absolute",
+  bottom: "4px",
+  left: "4px",
+  right: "4px",
+  zIndex: 10,
+});
+
+const TaskInput = styled("input", {
+  width: "calc(100% - 8px)",
+  padding: "4px",
+  border: "1px solid #d0d0d0",
+  borderRadius: "3px",
+  fontSize: "0.85rem",
+  "&:focus": {
+    outline: "none",
+    borderColor: "#007bff",
+  },
+});
+// ------------------ Task input buttons ----------------- //
+const TaskInputButtons = styled("div", {
+  display: "flex",
+  justifyContent: "flex-end",
+  gap: "4px",
+});
+
+// Button for adding or editing tasks
+const TaskInputButton = styled("button", {
+  padding: "4px 8px",
+  borderRadius: "3px",
+  border: "1px solid #d0d0d0",
+  backgroundColor: "#e3e5e6",
+  cursor: "pointer",
+  fontSize: "0.8rem",
+  boxShadow: "0 1px 0 #ced0d1",
+  transition: "background-color 0.2s, color 0.2s, border-color 0.2s",
+  "&:hover": {
+    backgroundColor: "#c7cbcf",
+    borderColor: "#c7cbcf",
+  },
+  // Primary button variant for adding or saving tasks
+  variants: {
+    primary: {
+      true: {
+        backgroundColor: "#007bff",
+        color: "#fff",
+        borderColor: "#007bff",
+        "&:hover": {
+          backgroundColor: "#0056b3",
+          borderColor: "#0056b3",
+        },
+      },
+    },
+  },
+});
+
+// --- Color choise components ---
+
+const ColorSelectorWrapper = styled("div", {
+  display: "flex",
+  gap: "4px",
+  marginTop: "4px",
+  flexWrap: "wrap",
+});
+
+const ColorOption = styled("div", {
+  width: "20px",
+  height: "20px",
+  borderRadius: "50%",
+  cursor: "pointer",
+  border: "2px solid transparent", // Граница для выделения
+  transition: "border-color 0.2s",
+
+  "&:hover": {
+    borderColor: "#ccc",
+  },
+
+  variants: {
+    color: {
+      blue: { backgroundColor: "#0070bc" },
+      green: { backgroundColor: "#62c050" },
+      orange: { backgroundColor: "#fea93f" },
+      purple: { backgroundColor: "#c67ae3" },
+      turquoise: { backgroundColor: "#51ea9d" },
+      yellow: { backgroundColor: "#f2d200" },
+      default: { backgroundColor: "#a0a0a0" },
+    },
+    isSelected: {
+      true: {
+        borderColor: "#007bff", // Цвет границы при выборе
+        boxShadow: "0 0 0 2px rgba(0, 123, 255, 0.5)", // Легкая тень для акцента
+      },
+    },
+  },
+});
+
+// ---------------- Form component for task input -------------- //
+
+interface TaskInputFormProps {
+  day: string; // Дата в формате YYYY-MM-DD
+  initialTitle?: string; // Для редактирования существующей задачи
+  initialColors?: ColorType[]; // Для редактирования существующей задачи
+  onAddTask: (date: string, title: string, colors: ColorType[]) => void;
+  onUpdateTask?: (taskId: string, title: string, colors: ColorType[]) => void; // Для редактирования
+  onCancel: () => void; // Для закрытия формы
+  taskId?: string; // Если редактируем, то передаем ID задачи
+}
+
+const TaskInputForm: React.FC<TaskInputFormProps> = ({
+  day,
+  initialTitle = "",
+  initialColors = [],
+  onAddTask,
+  onUpdateTask,
+  onCancel,
+  taskId,
+}) => {
+  const [title, setTitle] = useState(initialTitle);
+
+  // интерфейс Set для удобного управления уникальными цветами,
+  // затем преобразуем в массив для передачи в onAddTask/onUpdateTask
+  const [selectedColors, setSelectedColors] = useState<Set<ColorType>>(
+    new Set(initialColors.length > 0 ? initialColors : ["default"])
+  );
+
+  // определяем возможные значения для ColorType как массив констант
+  const availableColors = [
+    "blue",
+    "green",
+    "orange",
+    "purple",
+    "turquoise",
+    "yellow",
+    "default",
+  ] as const;
+
+  // Использование typeof и [number] здесь по-прежнему хорошая практика, так как это гарантирует, что ваш тип ColorType всегда будет соответствовать этому массиву.
+
+  type ColorType = (typeof availableColors)[number];
+
+  // Доступные цвета для выбора, исключаем "holiday"
+  // const availableColors: ColorType[] = [
+  //   "blue",
+  //   "green",
+  //   "orange",
+  //   "purple",
+  //   "turquoise",
+  //   "yellow",
+  //   "default",
+  // ];
+
+  const handleColorToggle = (color: ColorType) => {
+    setSelectedColors((prevColors) => {
+      const newColors = new Set(prevColors);
+      if (newColors.has(color)) {
+        newColors.delete(color);
+      } else {
+        newColors.add(color);
+      }
+      // Если никаких цветов не выбрано, выбираем 'default'
+      if (newColors.size === 0) {
+        newColors.add("default");
+      }
+      return newColors;
+    });
+  };
+
+  // function to save the task
+  const handleSave = () => {
+    if (title.trim()) {
+      // Преобразуем Set обратно в массив для сохранения
+      const colorsToSave = Array.from(selectedColors);
+
+      if (taskId && onUpdateTask) {
+        onUpdateTask(taskId, title, colorsToSave);
+      } else {
+        onAddTask(day, title, colorsToSave);
+      }
+      onCancel();
+    }
+  };
+
+  // function to handle keydown events for saving or cancelling
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleSave();
+    } else if (e.key === "Escape") {
+      onCancel();
+    }
+  };
+
+  return (
+    <TaskInputFormWrapper onClick={(e) => e.stopPropagation()}>
+      <TaskInput
+        type="text"
+        placeholder="Task title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onKeyDown={handleKeyDown}
+        autoFocus
+        aria-label="Task title input"
+      />
+      <ColorSelectorWrapper>
+        {availableColors.map((color) => (
+          <ColorOption
+            key={color}
+            color={color}
+            isSelected={selectedColors.has(color)}
+            onClick={() => handleColorToggle(color)}
+          />
+        ))}
+      </ColorSelectorWrapper>
+      <TaskInputButtons>
+        <TaskInputButton onClick={onCancel}>Cancel</TaskInputButton>
+        <TaskInputButton primary onClick={handleSave}>
+          {taskId ? "Save" : "Add Task"}
+        </TaskInputButton>
+      </TaskInputButtons>
+    </TaskInputFormWrapper>
+  );
+};
+
+// --------------------- main Calendar component ------------------------- //
+
 export const Calendar = () => {
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
-  const [viewMode, setViewMode] = useState<"month" | "week">("month"); //state for view mode
+  const [viewMode, setViewMode] = useState<"month" | "week">("month");
   const [tasks, setTasks] = useState<Task[]>([
     {
       id: "1",
       date: "2025-06-10",
       title: "Запланировать встречу",
-      colors: ["blue"], // Теперь массив цветов
+      colors: ["blue"],
       eventType: "task",
     },
     {
@@ -401,8 +631,11 @@ export const Calendar = () => {
   const [publicHolidays, setPublicHolidays] = useState<Task[]>([]);
   const [holidayError, setHolidayError] = useState<string | null>(null);
   const [countryCode, setCountryCode] = useState<string>("UA");
-
   const [isPending, startTransition] = useTransition();
+  const [activeDayForInput, setActiveDayForInput] = useState<string | null>(
+    null
+  );
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   useEffect(() => {
     const fetchPublicHolidays = async () => {
@@ -435,12 +668,10 @@ export const Calendar = () => {
         setHolidayError(
           "Failed to fetch public holidays. Please try again later."
         );
-        startTransition(() => {
-          setPublicHolidays([]);
-        });
+        setPublicHolidays([]);
       }
     };
-
+    // update public holidays when currentDate or countryCode changes
     fetchPublicHolidays();
   }, [currentDate, countryCode]);
 
@@ -463,6 +694,37 @@ export const Calendar = () => {
   // function to handle country change
   const handleCountryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setCountryCode(event.target.value);
+  };
+
+  // function fo adding a New task
+  const handleAddTask = (date: string, title: string, colors: ColorType[]) => {
+    const newTask: Task = {
+      id: String(Date.now()), // Простой уникальный ID
+      date,
+      title,
+      eventType: "task",
+      colors,
+    };
+    setTasks((prevTasks) => [...prevTasks, newTask]);
+
+    setActiveDayForInput(null); // reset the active day for input
+  };
+
+  //function for updating an Existing task
+  const handleUpdateTask = (
+    taskId: string,
+    newTitle: string,
+    newColors: ColorType[]
+  ) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === taskId
+          ? { ...task, title: newTitle, colors: newColors }
+          : task
+      )
+    );
+    setEditingTask(null); // reset the editing task
+    setActiveDayForInput(null); // reset the active day for input
   };
 
   // function to render days based on the current view mode
@@ -514,6 +776,7 @@ export const Calendar = () => {
         (event) => event.eventType === "task"
       );
 
+      // Determine if the month abbreviation should be shown
       let showMonthAbbr = false; // trigger for showing month abbreviation
 
       const isFirstDayOfItsMonth = dayInLoop.date() === 1;
@@ -521,15 +784,27 @@ export const Calendar = () => {
         dayInLoop.endOf("month"),
         "day"
       );
-
       if (isFirstDayOfItsMonth || isLastDayOfItsMonth) {
         showMonthAbbr = true;
       }
 
+      // Check if the day is active for input
+      const dayFormatted = dayInLoop.format("YYYY-MM-DD");
+      const isDayActiveForInput = activeDayForInput === dayFormatted;
+
       days.push(
         <DayCell
-          key={dayInLoop.format("YYYY-MM-DD")}
+          key={dayFormatted}
           isOutsideMonth={isOutsideMonth}
+          onClick={() => {
+            // if there is an active task being edited for this day, do not open the form
+            if (isDayActiveForInput) {
+              setActiveDayForInput(null); // reset active day for input
+              setEditingTask(null); // reset editing task when closing the form
+            } else if (!editingTask) {
+              setActiveDayForInput(dayFormatted);
+            }
+          }}
         >
           <div className="day-number-and-month">
             {showMonthAbbr && (
@@ -544,7 +819,17 @@ export const Calendar = () => {
             )}
           </div>
           {dailyEvents.map((event) => (
-            <TaskCard key={event.id} eventType={event.eventType}>
+            <TaskCard
+              key={event.id}
+              eventType={event.eventType}
+              onClick={(e) => {
+                e.stopPropagation(); //  Prevent click from bubbling up to the DayCell
+                if (event.eventType === "task") {
+                  setEditingTask(event);
+                  setActiveDayForInput(dayFormatted);
+                }
+              }}
+            >
               {event.eventType === "task" ? (
                 // eventType === "task"
                 <div style={{ display: "flex", gap: "4px" }}>
@@ -553,15 +838,28 @@ export const Calendar = () => {
                   ))}
                 </div>
               ) : // eventType === "holiday"
-              // no use any markers for holidays
               null}
               <span className="task-title">{event.title}</span>
             </TaskCard>
           ))}
+          {/* Form for adding/editing tasks */}
+          {isDayActiveForInput && (
+            <TaskInputForm
+              day={dayFormatted}
+              initialTitle={editingTask?.title}
+              initialColors={editingTask?.colors}
+              taskId={editingTask?.id}
+              onAddTask={handleAddTask}
+              onUpdateTask={handleUpdateTask}
+              onCancel={() => {
+                setActiveDayForInput(null);
+                setEditingTask(null);
+              }}
+            />
+          )}
         </DayCell>
       );
     });
-
     return days;
   };
 
