@@ -23,14 +23,26 @@ interface PublicHolidayApiResponse {
 }
 
 // types for color markers of tasks
-type ColorType =
-  | "blue"
-  | "green"
-  | "orange"
-  | "purple"
-  | "turquoise"
-  | "yellow"
-  | "default";
+// type ColorType =
+//   | "blue"
+//   | "green"
+//   | "orange"
+//   | "purple"
+//   | "turquoise"
+//   | "yellow"
+//   | "default";
+
+const TASK_MARKER_COLORS_FOR_SELECTOR = [
+  "blue",
+  "green",
+  "orange",
+  "purple",
+  "turquoise",
+  "yellow",
+  "default",
+] as const;
+
+type ColorType = (typeof TASK_MARKER_COLORS_FOR_SELECTOR)[number];
 
 // interface to represent tasks in the calendar
 interface Task {
@@ -185,7 +197,8 @@ const DayCell = styled("div", {
   position: "relative", // for positioning tasks or inline edit
   fontSize: "1rem",
   fontWeight: "700",
-  cursor: "pointer", // to show ability to click on the day cell for adding tasks
+  cursor: "pointer", // to show ability to click on day cell
+
   // style for the day number
   "& .day-content-wrapper": {
     display: "flex",
@@ -203,7 +216,7 @@ const DayCell = styled("div", {
     marginLeft: "2px",
   },
 
-  // styling days
+  // style for days
   variants: {
     isOutsideMonth: {
       //outside the current month
@@ -227,6 +240,18 @@ const DayCell = styled("div", {
         },
       },
     },
+
+    // Style for drag-over state
+    isDragOver: {
+      true: {
+        outline: "2px solid #007bff", // Highlight on drag over
+        backgroundColor: "#dbe8f5", // Lighter background
+      },
+    },
+  },
+  defaultVariants: {
+    isOutsideMonth: false,
+    isDragOver: false, // Default to not drag over
   },
 });
 
@@ -273,19 +298,27 @@ const TaskCard = styled("div", {
   variants: {
     eventType: {
       task: {
-        // styles for tasks
+        // style for tasks
         backgroundColor: "f0f8ff",
         border: "1px solid #d0d0d0",
       },
       holiday: {
-        // styles for holidays
+        // style for holidays
         border: "1px solid #dc3545",
         color: "red",
+      },
+    },
+    //  style for dragging state
+    isDragging: {
+      true: {
+        opacity: 0.5, // semi-transparent when dragging
+        cursor: "grabbing",
       },
     },
   },
   defaultVariants: {
     eventType: "task",
+    isDragging: false, // Default to not dragging
   },
 });
 
@@ -476,47 +509,27 @@ const TaskInputForm: React.FC<TaskInputFormProps> = ({
 }) => {
   const [title, setTitle] = useState(initialTitle);
 
-  // интерфейс Set для удобного управления уникальными цветами,
+  // 'Set' for managing selected colors,
   // затем преобразуем в массив для передачи в onAddTask/onUpdateTask
   const [selectedColors, setSelectedColors] = useState<Set<ColorType>>(
     new Set(initialColors.length > 0 ? initialColors : ["default"])
   );
 
-  // определяем возможные значения для ColorType как массив констант
-  const availableColors = [
-    "blue",
-    "green",
-    "orange",
-    "purple",
-    "turquoise",
-    "yellow",
-    "default",
-  ] as const;
-
-  // Использование typeof и [number] здесь по-прежнему хорошая практика, так как это гарантирует, что ваш тип ColorType всегда будет соответствовать этому массиву.
-
-  type ColorType = (typeof availableColors)[number];
-
-  // Доступные цвета для выбора, исключаем "holiday"
-  // const availableColors: ColorType[] = [
-  //   "blue",
-  //   "green",
-  //   "orange",
-  //   "purple",
-  //   "turquoise",
-  //   "yellow",
-  //   "default",
-  // ];
+  const availableColors: ColorType[] =
+    TASK_MARKER_COLORS_FOR_SELECTOR as unknown as ColorType[]; // Приведение типа, так как TASK_MARKER_COLORS_FOR_SELECTOR это readonly tuple
 
   const handleColorToggle = (color: ColorType) => {
     setSelectedColors((prevColors) => {
       const newColors = new Set(prevColors);
       if (newColors.has(color)) {
+        // Если цвет уже выбран, удаляем его
         newColors.delete(color);
       } else {
         newColors.add(color);
       }
-      // Если никаких цветов не выбрано, выбираем 'default'
+
+      // Гарантуємо, що завжди є хоча б один обраний колір (за замовчуванням 'default'),
+      // якщо всі інші були скасовані
       if (newColors.size === 0) {
         newColors.add("default");
       }
@@ -637,6 +650,11 @@ export const Calendar = () => {
   );
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
+  //State for drag-and-drop
+  const [isDragging, setIsDragging] = useState(false);
+  const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
+  const [dragOverDay, setDragOverDay] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchPublicHolidays = async () => {
       setHolidayError(null);
@@ -727,6 +745,64 @@ export const Calendar = () => {
     setActiveDayForInput(null); // reset the active day for input
   };
 
+  // Function to handle task drag and drop
+  const handleMoveTask = (taskId: string, newDate: string) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) =>
+        task.id === taskId ? { ...task, date: newDate } : task
+      )
+    );
+  };
+
+  // Drag event handlers for TaskCard
+  const handleDragStart = (
+    e: React.DragEvent<HTMLDivElement>,
+    taskId: string
+  ) => {
+    e.dataTransfer.setData("text/plain", taskId); // Store the task ID
+    setIsDragging(true); // Indicate that a drag is in progress
+    setDraggedTaskId(taskId); // set which task is being dragged
+    e.stopPropagation(); // Prevent parent from receiving dragstart if not desired
+  };
+
+  const handleDragEnd = () => {
+    setIsDragging(false); // Reset drag state
+    setDraggedTaskId(null); // Clear dragged task ID
+    setDragOverDay(null); // Clear any hovered day highlight
+  };
+
+  // NEW: Drop event handlers for DayCell
+  const handleDragOver = (
+    e: React.DragEvent<HTMLDivElement>,
+    dayFormatted: string
+  ) => {
+    e.preventDefault(); // Crucial to allow dropping
+    if (!isDragging) return; // Only highlight if an actual drag is in progress
+    setDragOverDay(dayFormatted); // Set the day currently being hovered over
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    // Check if the mouse is truly leaving the current element and not just moving to a child
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setDragOverDay(null);
+    }
+  };
+
+  const handleDrop = (
+    e: React.DragEvent<HTMLDivElement>,
+    targetDayFormatted: string
+  ) => {
+    e.preventDefault(); // Prevent default browser behavior (e.g., opening file)
+    const taskId = e.dataTransfer.getData("text/plain"); // Retrieve the stored task ID
+    if (taskId && draggedTaskId === taskId) {
+      // Ensure it's our task being dropped
+      handleMoveTask(taskId, targetDayFormatted); // Call the function to update task date
+    }
+    setDragOverDay(null); // Clear drag over highlight
+    setIsDragging(false); // End drag state
+    setDraggedTaskId(null); // Clear dragged task ID
+  };
+
   // function to render days based on the current view mode
   const renderDays = () => {
     const days: JSX.Element[] = [];
@@ -788,15 +864,19 @@ export const Calendar = () => {
         showMonthAbbr = true;
       }
 
-      // Check if the day is active for input
-      const dayFormatted = dayInLoop.format("YYYY-MM-DD");
+      // Check for the active day for input and drag over state
+      const dayFormatted = dayInLoop.format("YYYY-MM-DD"); // Format the day for comparison
       const isDayActiveForInput = activeDayForInput === dayFormatted;
+      const isCurrentDayDragOver = dragOverDay === dayFormatted;
 
       days.push(
         <DayCell
           key={dayFormatted}
           isOutsideMonth={isOutsideMonth}
           onClick={() => {
+            // Prevent opening input form if a drag is in progress
+            if (isDragging) return;
+
             // if there is an active task being edited for this day, do not open the form
             if (isDayActiveForInput) {
               setActiveDayForInput(null); // reset active day for input
@@ -805,6 +885,14 @@ export const Calendar = () => {
               setActiveDayForInput(dayFormatted);
             }
           }}
+          // drag and drop handlers to DayCell
+          onDragOver={(e) => handleDragOver(e, dayFormatted)}
+          onDrop={(e) => handleDrop(e, dayFormatted)}
+          onDragEnter={(e) => {
+            e.preventDefault();
+            setDragOverDay(dayFormatted);
+          }} // Highlight on enter
+          onDragLeave={handleDragLeave} // Clear highlight on leave
         >
           <div className="day-number-and-month">
             {showMonthAbbr && (
@@ -822,8 +910,16 @@ export const Calendar = () => {
             <TaskCard
               key={event.id}
               eventType={event.eventType}
+              // Pass isDragging prop to TaskCard for visual feedback
+              isDragging={isDragging && draggedTaskId === event.id}
+              // Make only "task" event types draggable
+              draggable={event.eventType === "task"}
+              // Add drag event handlers
+              onDragStart={(e) => handleDragStart(e, event.id)}
+              onDragEnd={handleDragEnd}
               onClick={(e) => {
                 e.stopPropagation(); //  Prevent click from bubbling up to the DayCell
+                if (isDragging) return; // Prevent opening edit form if a drag is in progress
                 if (event.eventType === "task") {
                   setEditingTask(event);
                   setActiveDayForInput(dayFormatted);
@@ -833,9 +929,11 @@ export const Calendar = () => {
               {event.eventType === "task" ? (
                 // eventType === "task"
                 <div style={{ display: "flex", gap: "4px" }}>
-                  {(event.colors || ["default"]).map((color, idx) => (
-                    <TaskMarker key={idx} color={color} />
-                  ))}
+                  {(event.colors || ["default"])
+                    .slice(0, 3) //  Limit to 3 colors
+                    .map((color, idx) => (
+                      <TaskMarker key={idx} color={color} />
+                    ))}
                 </div>
               ) : // eventType === "holiday"
               null}
