@@ -1,10 +1,10 @@
-import Calendar from "./components/Calendar";
+import Calendar from "./components/Calendar/Calendar.tsx";
 
 function App() {
   return (
-    <div>
+    <>
       <Calendar />
-    </div>
+    </>
   );
 }
 
