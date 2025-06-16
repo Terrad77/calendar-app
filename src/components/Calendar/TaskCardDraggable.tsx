@@ -102,7 +102,7 @@ const TaskCard = styled("div", {
     eventType: "task",
     colors: "default",
     isDragging: false,
-    customCursor: "pointer", // Дефолтний курсор tasks
+    customCursor: "pointer !important",
   },
 });
 

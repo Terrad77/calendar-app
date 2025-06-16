@@ -399,7 +399,7 @@ export const Calendar = () => {
     <Wrapper>
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={closestCenter} // for
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
@@ -430,6 +430,7 @@ export const Calendar = () => {
               colors={activeDragItem.data.current?.colors}
               title={activeDragItem.data.current?.title}
               isDragging={true}
+              customCursor="grabbing"
             />
           )}
         </DragOverlay>
