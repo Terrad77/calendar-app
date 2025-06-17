@@ -1,9 +1,14 @@
-import React, { type FC } from "react";
+import { type FC } from "react";
 import { styled, type CSS } from "@stitches/react";
 
 // import react-icons
 // Font Awesome Icons(Fa)
-import { FaChevronUp, FaChevronDown, FaQuestionCircle } from "react-icons/fa";
+import {
+  FaChevronUp,
+  FaChevronDown,
+  FaQuestionCircle,
+  FaSearch,
+} from "react-icons/fa";
 // Material Design Icons (Md)
 import { MdCalendarMonth } from "react-icons/md";
 
@@ -12,6 +17,7 @@ const iconComponents = {
   "chevron-up": FaChevronUp,
   "chevron-down": FaChevronDown,
   calendar: MdCalendarMonth,
+  search: FaSearch,
   "question-mark": FaQuestionCircle, // icon for fallback
 };
 

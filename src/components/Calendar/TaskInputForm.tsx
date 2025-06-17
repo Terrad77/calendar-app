@@ -1,10 +1,14 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { styled } from "@stitches/react";
-import { type ColorType, TASK_MARKER_COLORS_FOR_SELECTOR } from "./types"; // Імпорт типів
+import {
+  type ColorType,
+  TASK_MARKER_COLORS_FOR_SELECTOR,
+  type Task,
+} from "./types";
 
 const TaskInputFormWrapper = styled("div", {
-  marginTop: "8px",
-  padding: "4px",
+  marginTop: "2px",
+  padding: "2px",
   backgroundColor: "#f9f9f9",
   border: "1px solid #e0e0e0",
   borderRadius: "3px",
@@ -113,79 +117,109 @@ const ColorOption = styled("div", {
     },
   },
 });
+// --- End Styled Components ---
 
 interface TaskInputFormProps {
-  day: string;
-  initialTitle?: string;
-  initialColors?: ColorType[];
-  onAddTask: (date: string, title: string, colors: ColorType[]) => void;
-  onUpdateTask?: (taskId: string, title: string, colors: ColorType[]) => void;
-  onDeleteTask?: (taskId: string) => void; // Додаємо пропс для видалення
-  onCancel: () => void;
-  taskId?: string;
+  initialTask?: Task | null; // Містить повний об'єкт завдання для редагування
+  onSave: (task: Task) => void; // Колбек для збереження (додавання або оновлення)
+  onCancel: () => void; // Колбек для скасування
+  onDelete?: (taskId: string) => void; // Колбек для видалення (необов'язковий, якщо не для редагування)
+  initialDate?: string; // Дата для нового завдання, якщо немає initialTask
 }
 
 export const TaskInputForm: React.FC<TaskInputFormProps> = ({
-  day,
-  initialTitle = "",
-  initialColors = [],
-  onAddTask,
-  onUpdateTask,
-  onDeleteTask, // Деструктуруємо
+  initialTask,
+  onSave,
   onCancel,
-  taskId,
+  onDelete,
+  initialDate,
 }) => {
-  const [title, setTitle] = useState(initialTitle);
-  const [selectedColors, setSelectedColors] = useState<Set<ColorType>>(
-    new Set(initialColors.length > 0 ? initialColors : ["default"])
+  const [title, setTitle] = useState(initialTask?.title || "");
+  const [selectedColors, setSelectedColors] = useState<ColorType[]>(
+    initialTask?.colors && initialTask.colors.length > 0
+      ? initialTask.colors
+      : ["default"]
   );
+
+  useEffect(() => {
+    setTitle(initialTask?.title || "");
+    setSelectedColors(
+      initialTask?.colors && initialTask.colors.length > 0
+        ? initialTask.colors
+        : ["default"]
+    );
+  }, [initialTask]);
 
   const availableColors: ColorType[] =
     TASK_MARKER_COLORS_FOR_SELECTOR as unknown as ColorType[];
 
+  // --- ЛОГІКА КНОПКИ "ЗБЕРЕГТИ" ---
+  const handleSaveClick = useCallback(() => {
+    if (title.trim() === "") {
+      // Можна додати якийсь feedback користувачу
+      alert("Task title cannot be empty!");
+      return;
+    }
+
+    const taskId = initialTask?.id || `task-${Date.now()}`; // Генеруємо унікальний ID для нового завдання
+    const taskDate = initialTask?.date || initialDate; // Беремо дату з існуючого завдання або з initialDate
+
+    if (!taskDate) {
+      console.error("Task date is missing! Cannot save task.");
+      // Можна додати більш дружнє повідомлення користувачу
+      return;
+    }
+
+    const taskToSave: Task = {
+      id: taskId,
+      title: title.trim(),
+      colors: selectedColors.length > 0 ? selectedColors : ["default"], // Перевіряємо, щоб масив кольорів не був пустим
+      date: taskDate,
+      eventType: "task", // Завжди 'task' для завдань, створених/відредагованих тут
+    };
+
+    onSave(taskToSave); // Викликаємо батьківський onSave
+  }, [title, selectedColors, initialTask, initialDate, onSave]);
+
+  // --- ЛОГІКА КНОПКИ "ВИДАЛИТИ" ---
+  const handleDeleteClick = useCallback(() => {
+    if (initialTask?.id && onDelete) {
+      // Перевіряємо, чи є ID завдання та чи передана функція onDelete
+      onDelete(initialTask.id); // Викликаємо батьківський onDelete
+    }
+  }, [initialTask, onDelete]);
+
+  // --- ЛОГІКА ДЛЯ КОЛІРНОГО СЕЛЕКТОРА ---
   const handleColorToggle = useCallback((color: ColorType) => {
     setSelectedColors((prevColors) => {
-      const newColors = new Set(prevColors);
-      if (newColors.has(color)) {
-        newColors.delete(color);
+      // Якщо колір вже вибраний, видаляємо його
+      if (prevColors.includes(color)) {
+        const newColors = prevColors.filter((c) => c !== color);
+        // Якщо всі кольори видалено, повертаємо 'default'
+        return newColors.length > 0 ? newColors : ["default"];
       } else {
-        newColors.add(color);
+        // Якщо колір не вибраний, додаємо його (якщо це не "default" і ми хочемо, щоб "default" був ексклюзивним)
+        // Або ж просто додаємо, якщо він не "default"
+        if (color === "default") {
+          return ["default"]; // Якщо вибрано "default", то це єдиний колір
+        } else {
+          // Видаляємо "default", якщо він був єдиним і додається інший колір
+          return [...prevColors.filter((c) => c !== "default"), color];
+        }
       }
-      if (newColors.size === 0) {
-        newColors.add("default");
-      }
-      return newColors;
     });
   }, []);
 
-  const handleSave = useCallback(() => {
-    if (title.trim()) {
-      const colorsToSave = Array.from(selectedColors);
-      if (taskId && onUpdateTask) {
-        onUpdateTask(taskId, title, colorsToSave);
-      } else {
-        onAddTask(day, title, colorsToSave);
-      }
-      onCancel();
-    }
-  }, [title, selectedColors, taskId, onUpdateTask, onAddTask, day, onCancel]);
-
-  const handleDelete = useCallback(() => {
-    if (taskId && onDeleteTask) {
-      onDeleteTask(taskId);
-      onCancel();
-    }
-  }, [taskId, onDeleteTask, onCancel]);
-
+  // --- ОБРОБНИК НАТИСКАННЯ КЛАВІШ ---
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") {
-        handleSave();
+        handleSaveClick(); // Викликаємо оновлену функцію збереження
       } else if (e.key === "Escape") {
         onCancel();
       }
     },
-    [handleSave, onCancel]
+    [handleSaveClick, onCancel]
   );
 
   return (
@@ -204,21 +238,26 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
           <ColorOption
             key={color}
             color={color}
-            isSelected={selectedColors.has(color)}
+            isSelected={selectedColors.includes(color)} // Перевірка через includes
             onClick={() => handleColorToggle(color)}
           />
         ))}
       </ColorSelectorWrapper>
       <TaskInputButtons>
         <TaskInputButton onClick={onCancel}>Cancel</TaskInputButton>
-        {taskId &&
-          onDeleteTask && ( // Показуємо кнопку "Delete", якщо taskId присутній
-            <TaskInputButton danger onClick={handleDelete}>
-              Delete
-            </TaskInputButton>
-          )}
-        <TaskInputButton primary onClick={handleSave}>
-          {taskId ? "Save" : "Add Task"}
+        {/* Кнопка "Delete" показується лише в режимі редагування (коли є initialTask) */}
+        {initialTask && (
+          <TaskInputButton danger onClick={handleDeleteClick}>
+            {" "}
+            {/* Змінено на handleDeleteClick */}
+            Delete
+          </TaskInputButton>
+        )}
+        <TaskInputButton primary onClick={handleSaveClick}>
+          {" "}
+          {/* Змінено на handleSaveClick */}
+          {initialTask ? "Save" : "Add Task"}{" "}
+          {/* Змінюємо текст кнопки в залежності від режиму */}
         </TaskInputButton>
       </TaskInputButtons>
     </TaskInputFormWrapper>

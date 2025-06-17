@@ -1,14 +1,15 @@
 import { styled } from "@stitches/react";
 import { Dayjs } from "dayjs";
-import Icon from "../Icon"; // Путь к компоненту Icon
+import Icon from "../Icon";
 
 const HeaderWrapper = styled("div", {
   display: "flex",
   justifyContent: "space-between",
   flexWrap: "wrap",
   backgroundColor: "#edeff1",
-  padding: "10px 16px 2px 16px",
+  padding: "20px 8px 20px 8px",
   color: "#555",
+  boxShadow: "0 1px 0 #ced0d1",
 });
 
 const MonthLabel = styled("h2", {
@@ -73,7 +74,21 @@ const NavButton = styled("button", {
 
 const ButtonContainer = styled("div", {
   display: "flex",
-  gap: "4px",
+  variants: {
+    gapSize: {
+      small: { gap: "4px" },
+      medium: { gap: "8px" },
+      large: { gap: "16px" },
+    },
+    direction: {
+      row: { flexDirection: "row" },
+      column: { flexDirection: "column" },
+    },
+  },
+  defaultVariants: {
+    gapSize: "medium",
+    direction: "row",
+  },
 });
 
 const ViewButton = styled("button", {
@@ -152,7 +167,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
 }) => {
   return (
     <HeaderWrapper>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      <ButtonContainer gapSize="large">
         <CurrentViewDisplayButton tabIndex={-1}>
           {viewMode === "month" ? "Monthly" : "Weekly"}
         </CurrentViewDisplayButton>
@@ -164,13 +179,14 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             <Icon name="chevron-down" />
           </NavButton>
         </ButtonContainer>
-      </div>
+      </ButtonContainer>
+
       <MonthLabel>
         {currentDate.format("MMMM")}
         &nbsp;
         {currentDate.year()}
       </MonthLabel>
-      <ButtonContainer>
+      <ButtonContainer gapSize="large">
         <CountrySelect
           value={countryCode}
           onChange={onCountryChange}
@@ -182,8 +198,12 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
             </option>
           ))}
         </CountrySelect>
-        <ViewButton onClick={() => onViewModeChange("week")}>Week</ViewButton>
-        <ViewButton onClick={() => onViewModeChange("month")}>Month</ViewButton>
+        <ButtonContainer>
+          <ViewButton onClick={() => onViewModeChange("week")}>Week</ViewButton>
+          <ViewButton onClick={() => onViewModeChange("month")}>
+            Month
+          </ViewButton>
+        </ButtonContainer>
       </ButtonContainer>
     </HeaderWrapper>
   );

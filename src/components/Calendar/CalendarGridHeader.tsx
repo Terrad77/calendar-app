@@ -15,6 +15,7 @@ const WeekdayHeaderCell = styled("div", {
   backgroundColor: "#edeff1",
   color: "#777",
   height: "35px",
+  width: "100%",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",

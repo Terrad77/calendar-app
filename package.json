@@ -14,7 +14,9 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@stitches/react": "^1.2.8",
+    "@types/lodash.debounce": "^4.0.9",
     "dayjs": "^1.11.13",
+    "lodash.debounce": "^4.0.8",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-icons": "^5.5.0"

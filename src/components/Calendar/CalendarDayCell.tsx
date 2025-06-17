@@ -1,29 +1,46 @@
-import React, { useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { styled } from "@stitches/react";
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
+import isBetween from "dayjs/plugin/isBetween";
 import { useDroppable, type Active } from "@dnd-kit/core";
 import { SortableContext } from "@dnd-kit/sortable";
-
-import type { Task, ColorType } from "./types"; // Імпорт типів
+import type { Task } from "./types";
 import { TaskCardDraggable } from "./TaskCardDraggable";
 import { TaskInputForm } from "./TaskInputForm";
 
+dayjs.extend(isBetween);
+
+interface CalendarDayCellProps {
+  dayInLoop: Dayjs;
+  currentMonth: Dayjs;
+  dailyTasks: Task[];
+  dailyHolidays: { id: string; title: string }[];
+  activeDragItem: Active | null;
+  activeDayForInput: string | null;
+  setActiveDayForInput: React.Dispatch<React.SetStateAction<string | null>>;
+  editingTask: Task | null;
+  setEditingTask: React.Dispatch<React.SetStateAction<Task | null>>;
+  setAllTasks: React.Dispatch<React.SetStateAction<Task[]>>;
+  allTasks: Task[];
+  isFiller: boolean;
+}
+
 const DayCell = styled("div", {
-  minHeight: "100px",
+  minHeight: "var(--calendar-day-cell-min-height, 120px)",
   padding: "2px 2px",
   textAlign: "left",
   position: "relative",
   fontSize: "1rem",
   fontWeight: "700",
-  cursor: "default",
   display: "flex",
   flexDirection: "column",
-
+  overflow: "hidden",
   "& .day-number-and-month": {
     display: "flex",
     alignItems: "baseline",
     gap: "2px",
     marginBottom: "2px",
+    // minWidth: "150px",
   },
   "& .task-count": {
     color: "#97999a",
@@ -31,15 +48,16 @@ const DayCell = styled("div", {
     marginLeft: "2px",
   },
   "& .tasks-container": {
-    flexGrow: 1, // Позволяет контейнеру задач растягиваться
-    overflowY: "auto", // Добавляет прокрутку, если задач много
-    paddingRight: "2px", // Небольшой отступ для скроллбара
+    flexGrow: 1,
+    overflowY: "auto",
+    paddingRight: "2px",
+    overflowX: "hidden",
   },
-
   variants: {
     isOutsideMonth: {
       true: {
         backgroundColor: "#ebebeb",
+        color: "#97999a",
         "& .day-number": {
           color: "#97999a",
         },
@@ -49,6 +67,7 @@ const DayCell = styled("div", {
       },
       false: {
         backgroundColor: "#e3e5e6",
+        color: "#47494a",
         "& .day-number": {
           color: "#47494a",
         },
@@ -57,84 +76,133 @@ const DayCell = styled("div", {
         },
       },
     },
+    isToday: {
+      true: {
+        backgroundColor: "#e6f7ff",
+      },
+    },
     isDragOver: {
       true: {
         outline: "2px solid #007bff",
         backgroundColor: "#dbe8f5",
       },
     },
+    isFiller: {
+      true: {
+        backgroundColor: "#f9f9f9",
+        color: "#ccc",
+        opacity: 0.6,
+      },
+    },
+    isPastDate: {
+      true: {
+        opacity: 0.5,
+        backgroundColor: "#f0f0f0",
+      },
+    },
+    isInteractive: {
+      true: { cursor: "pointer", pointerEvents: "auto" },
+      false: { cursor: "default", pointerEvents: "none" },
+    },
   },
   defaultVariants: {
     isOutsideMonth: false,
+    isToday: false,
     isDragOver: false,
+    isFiller: false,
+    isPastDate: false,
+    isInteractive: true,
   },
 });
 
-interface CalendarDayCellProps {
-  dayInLoop: Dayjs;
-  currentMonth: Dayjs;
-  dailyEvents: Task[];
-  activeDragItem: Active | null;
-  handleAddTask: (date: string, title: string, colors: ColorType[]) => void;
-  handleUpdateTask: (
-    taskId: string,
-    title: string,
-    colors: ColorType[]
-  ) => void;
-  handleDeleteTask: (taskId: string) => void;
-  activeDayForInput: string | null;
-  setActiveDayForInput: React.Dispatch<React.SetStateAction<string | null>>;
-  editingTask: Task | null;
-  setEditingTask: React.Dispatch<React.SetStateAction<Task | null>>;
-}
+const HolidayName = styled("div", {
+  fontSize: "0.85em",
+  fontWeight: "bold",
+  color: "#dc3545", // Червоний колір для свят
+  marginBottom: "4px",
+  padding: "2px 4px",
+  borderRadius: "3px",
+  backgroundColor: "#f8d7da", // Світло-червоний фон
+  border: "1px solid #f5c6cb",
+  textAlign: "left",
+  whiteSpace: "wrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+});
+
+const DayNumber = styled("span", {
+  variants: {
+    isCurrentMonth: {
+      true: { color: "#47494a" },
+      false: { color: "#97999a" },
+    },
+    isToday: {
+      true: {
+        color: "#fff",
+        backgroundColor: "#007bff", // for current day
+        borderRadius: "50%",
+        padding: "2px 6px",
+        fontSize: "0.9em",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+      },
+    },
+  },
+});
 
 export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   dayInLoop,
   currentMonth,
-  dailyEvents,
+  dailyTasks,
+  dailyHolidays,
   activeDragItem,
-  handleAddTask,
-  handleUpdateTask,
-  handleDeleteTask,
   activeDayForInput,
   setActiveDayForInput,
   editingTask,
   setEditingTask,
+  setAllTasks,
+  isFiller,
 }) => {
   const dayFormatted = dayInLoop.format("YYYY-MM-DD");
-  const isOutsideMonth = !dayInLoop.isSame(currentMonth, "month");
+  const today = dayjs().startOf("day");
+  const isOutsideActualMonth = !dayInLoop.isSame(currentMonth, "month");
+  const isToday = dayjs().isSame(dayInLoop, "day");
+  const isPastDate = dayInLoop.isBefore(today, "day");
 
-  const dailyTasksOnly = dailyEvents.filter(
-    (event) => event.eventType === "task"
-  );
+  // const shouldBeInteractive = !isPastDate && !(isFiller && viewMode === "week");
+  const shouldBeInteractive = !isPastDate;
 
-  // Определение, нужно ли показывать сокращение месяца
+  // show abbr of month
   const showMonthAbbr = useMemo(() => {
     const isFirstDayOfItsMonth = dayInLoop.date() === 1;
     const isLastDayOfItsMonth = dayInLoop.isSame(
       dayInLoop.endOf("month"),
       "day"
     );
+    // show abbr for first & last day of month
     return isFirstDayOfItsMonth || isLastDayOfItsMonth;
   }, [dayInLoop]);
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `day-${dayFormatted}`,
+    // prevent target for Drag&Drop if cell is must be not interacive
+    disabled: !shouldBeInteractive,
   });
 
-  // function to handle AddTask
+  // function to handle Cell Click (add new task)
   const handleCellClick = useCallback(() => {
-    if (activeDragItem) return; // Prevent cell click if dragging
+    if (!shouldBeInteractive || activeDragItem) return;
 
     if (activeDayForInput === dayFormatted) {
       setActiveDayForInput(null);
       setEditingTask(null);
     } else {
       setActiveDayForInput(dayFormatted); // open input for this day
-      // Важливо: скидаємо editingTask, бо клік на саму клітинку означає бажання ДОДАТИ, а не редагувати
       setEditingTask(null);
     }
   }, [
+    shouldBeInteractive,
     activeDragItem,
     activeDayForInput,
     dayFormatted,
@@ -142,72 +210,124 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
     setEditingTask,
   ]);
 
-  //function to handle TaskCardClick
+  //function to handle TaskCardClick (edit existing task)
   const handleTaskCardClick = useCallback(
     (e: React.MouseEvent, event: Task) => {
-      e.stopPropagation(); // stop Event Bubbling, щоб клік не дійшов до DayCell
+      e.stopPropagation(); // stop Event Bubbling, to prevent click from reaching DayCell
 
-      if (activeDragItem) return; // Prevent cell click if dragging
+      if (!shouldBeInteractive || activeDragItem) return;
 
       if (event.eventType === "task") {
         setEditingTask(event); // set the task to be edited
         setActiveDayForInput(dayFormatted); // open input for this day
       }
     },
-    [activeDragItem, dayFormatted, setActiveDayForInput, setEditingTask]
+    [
+      shouldBeInteractive,
+      activeDragItem,
+      dayFormatted,
+      setActiveDayForInput,
+      setEditingTask,
+    ]
   );
+
+  // Save function
+  const handleSaveTaskForm = useCallback(
+    (taskData: Task) => {
+      setAllTasks((prevTasks) => {
+        // if exist initialTask (editingTask), editing
+        if (editingTask) {
+          return prevTasks.map((task) =>
+            task.id === taskData.id ? taskData : task
+          );
+        } else {
+          // Add new Task
+          return [...prevTasks, taskData];
+        }
+      });
+      // Закриваємо форму після збереження
+      setActiveDayForInput(null);
+      setEditingTask(null);
+    },
+    [editingTask, setAllTasks, setActiveDayForInput, setEditingTask] // Залежності
+  );
+
+  // Delete function
+  const handleDeleteTaskForm = useCallback(
+    (taskId: string) => {
+      setAllTasks((prevTasks) =>
+        prevTasks.filter((task) => task.id !== taskId)
+      );
+      setActiveDayForInput(null);
+      setEditingTask(null);
+    },
+    [setAllTasks, setActiveDayForInput, setEditingTask]
+  );
+
+  // Cancel function
+  const handleCancelForm = useCallback(() => {
+    setActiveDayForInput(null);
+    setEditingTask(null);
+  }, [setActiveDayForInput, setEditingTask]);
 
   return (
     <DayCell
       ref={setDroppableRef}
       isDragOver={isOver && activeDragItem?.data.current?.eventType === "task"}
-      isOutsideMonth={isOutsideMonth}
+      isOutsideMonth={isOutsideActualMonth}
+      isFiller={isFiller}
+      isPastDate={isPastDate}
+      isInteractive={shouldBeInteractive}
       onClick={handleCellClick}
     >
       <div className="day-number-and-month">
         {showMonthAbbr && (
           <span className="month-abbr">{dayInLoop.format("MMM")}</span>
         )}
-        <span className="day-number">{dayInLoop.date()}</span>
-        {dailyTasksOnly.length > 0 && (
+        <DayNumber isCurrentMonth={!isOutsideActualMonth} isToday={isToday}>
+          {dayInLoop.date()}
+        </DayNumber>
+        {/* task counter */}
+        {dailyTasks.length > 0 && (
           <span className="task-count">
-            {dailyTasksOnly.length}&nbsp;
-            {dailyTasksOnly.length === 1 ? "card" : "cards"}
+            {dailyTasks.length}&nbsp;
+            {dailyTasks.length === 1 ? "card" : "cards"}
           </span>
         )}
       </div>
+
+      <div className="holidays-container">
+        {dailyHolidays.map((holiday) => (
+          <HolidayName key={holiday.id}>{holiday.title}</HolidayName>
+        ))}
+      </div>
       <div className="tasks-container">
-        {" "}
-        {/* scrollable container for tasks */}
         <SortableContext
-          items={dailyTasksOnly.map((task) => task.id)}
+          items={dailyTasks.map((task) => task.id)}
           id={`sortable-day-${dayFormatted}`}
         >
-          {dailyEvents.map((event) => (
+          {dailyTasks.map((task) => (
             <TaskCardDraggable
-              key={event.id}
-              id={event.id}
-              eventType={event.eventType}
-              colors={event.colors}
-              title={event.title}
-              onCardClick={(e) => handleTaskCardClick(e, event)}
+              key={task.id}
+              id={task.id}
+              eventType={task.eventType}
+              colors={task.colors}
+              title={task.title}
+              date={task.date}
+              onCardClick={(e) => handleTaskCardClick(e, task)}
+              customCursor="pointer"
             />
           ))}
         </SortableContext>
       </div>
-      {activeDayForInput === dayFormatted && (
+      {/* show TaskInputForm only for interactive days */}
+      {activeDayForInput === dayFormatted && shouldBeInteractive && (
         <TaskInputForm
-          day={dayFormatted}
-          initialTitle={editingTask?.title}
-          initialColors={editingTask?.colors}
-          taskId={editingTask?.id}
-          onAddTask={handleAddTask}
-          onUpdateTask={handleUpdateTask}
-          onDeleteTask={handleDeleteTask} // Передаем функцию удаления
-          onCancel={() => {
-            setActiveDayForInput(null);
-            setEditingTask(null);
-          }}
+          initialTask={editingTask}
+          onSave={handleSaveTaskForm}
+          onCancel={handleCancelForm}
+          onDelete={handleDeleteTaskForm}
+          initialDate={editingTask ? undefined : dayFormatted}
         />
       )}
     </DayCell>

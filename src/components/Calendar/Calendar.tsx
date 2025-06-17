@@ -1,4 +1,3 @@
-// src/components/Calendar/Calendar.tsx
 import {
   useState,
   useEffect,
@@ -10,6 +9,7 @@ import { styled } from "@stitches/react";
 import dayjs, { Dayjs } from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import debounce from "lodash.debounce";
 
 // dnd-kit for D&D functionality
 import {
@@ -25,12 +25,12 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 
-// Импортируем дочерние компоненты и типы
-import type { PublicHolidayApiResponse, Task, ColorType } from "./types";
+import type { PublicHolidayApiResponse, Task } from "./types";
 import { CalendarDayCell } from "./CalendarDayCell";
 import { TaskCardDraggable } from "./TaskCardDraggable";
 import { CalendarHeader } from "./CalendarHeader";
 import { CalendarGridHeader } from "./CalendarGridHeader";
+import { SearchInput } from "./SearchInput";
 
 // Extend dayjs with plugins for date comparison
 dayjs.extend(isSameOrBefore);
@@ -40,8 +40,8 @@ const Wrapper = styled("div", {
   display: "flex",
   flexDirection: "column",
   width: "100%",
-  maxWidth: "1400px", // Увеличил максимальную ширину
-  margin: "0 auto",
+  maxWidth: "1400px",
+  margin: "20px",
   backgroundColor: "#fff",
   boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
   overflow: "hidden",
@@ -49,12 +49,12 @@ const Wrapper = styled("div", {
 
 const CalendarGrid = styled("div", {
   display: "grid",
-  gridTemplateColumns: "repeat(7, 1fr)",
+  gridTemplateColumns: "repeat(7, minmax(150px, 1fr))",
   gap: "4px",
   backgroundColor: "#edeff1",
-
+  minHeight: `calc((var(--calendar-day-cell-min-height, 120px) * 6) + (4px * 5))`,
   "@media (max-width: 768px)": {
-    gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))", // Адаптивная сетка
+    minHeight: `auto`,
   },
 });
 
@@ -82,63 +82,121 @@ const StatusMessage = styled("div", {
   },
 });
 
+// --- КЛЮЧ ДЛЯ LOCAL STORAGE ---
+const LOCAL_STORAGE_KEY = "calendarTasks";
+
 export const Calendar = () => {
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
   const [viewMode, setViewMode] = useState<"month" | "week">("month");
-  const [tasks, setTasks] = useState<Task[]>([
-    {
-      id: "1",
-      date: "2025-06-10",
-      title: "Запланировать встречу",
-      colors: ["blue"],
-      eventType: "task",
-    },
-    {
-      id: "2",
-      date: "2025-06-10",
-      title: "Подготовить отчет",
-      colors: ["green", "orange"],
-      eventType: "task",
-    },
-    {
-      id: "3",
-      date: "2025-06-15",
-      title: "Купить продукты",
-      colors: ["orange"],
-      eventType: "task",
-    },
-    {
-      id: "4",
-      date: "2025-06-15",
-      title: "Позвонить отцу",
-      colors: ["default"],
-      eventType: "task",
-    },
-    {
-      id: "5",
-      date: "2025-07-01",
-      title: "Начать новый проект",
-      eventType: "task",
-    },
-    {
-      id: "6",
-      date: "2025-06-10",
-      title: "Забрать почту",
-      colors: ["yellow"],
-      eventType: "task",
-    },
-  ]);
+
+  // --- download from Local Storage ---
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    try {
+      const storedTasks = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return storedTasks ? JSON.parse(storedTasks) : [];
+    } catch (error) {
+      console.error("Failed to load tasks from Local Storage:", error);
+      return [];
+    }
+  });
+
+  // --- Save tasks to Local Storage every change in state tasks ---
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(tasks));
+      console.log("Tasks saved to Local Storage:", tasks); // Для дебагу
+    } catch (error) {
+      console.error("Failed to save tasks to Local Storage:", error);
+    }
+  }, [tasks]);
 
   const [publicHolidays, setPublicHolidays] = useState<Task[]>([]);
   const [holidayError, setHolidayError] = useState<string | null>(null);
   const [countryCode, setCountryCode] = useState<string>("UA");
   const [isPending, startTransition] = useTransition();
-
   const [activeDayForInput, setActiveDayForInput] = useState<string | null>(
     null
   );
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [activeDragItem, setActiveDragItem] = useState<Active | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // function for debounce Search
+  const debouncedSetSearchQuery = useMemo(
+    () =>
+      debounce((value: string) => {
+        setSearchQuery(value);
+      }, 300),
+    []
+  );
+
+  // function to handle search input
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      debouncedSetSearchQuery(e.target.value);
+    },
+    [debouncedSetSearchQuery]
+  );
+
+  // function for filter tasks by Query
+  const filteredTasksAndHolidaysByDay = useMemo(() => {
+    const lowerCaseSearchQuery = searchQuery.toLowerCase();
+    const result: { [key: string]: { tasks: Task[]; holidays: Task[] } } = {};
+
+    // Determine the range of days to include based on viewMode
+    let startDate: Dayjs;
+    let endDate: Dayjs;
+
+    if (viewMode === "month") {
+      const firstDayOfMonth = currentDate.startOf("month");
+      const lastDayOfMonth = currentDate.endOf("month");
+      startDate = firstDayOfMonth.startOf("week");
+      endDate = lastDayOfMonth.endOf("week");
+    } else {
+      startDate = currentDate.startOf("week");
+      endDate = currentDate.endOf("week");
+    }
+
+    let currentDayInLoop = dayjs(startDate);
+
+    while (currentDayInLoop.isSameOrBefore(endDate, "day")) {
+      const formattedDay = currentDayInLoop.format("YYYY-MM-DD");
+      result[formattedDay] = { tasks: [], holidays: [] };
+      currentDayInLoop = currentDayInLoop.add(1, "day");
+    }
+
+    // group filtered Tasks
+    tasks.forEach((task) => {
+      const matchesSearch = task.title
+        .toLowerCase()
+        .includes(lowerCaseSearchQuery);
+
+      if (matchesSearch || lowerCaseSearchQuery === "") {
+        const taskDate = dayjs(task.date).format("YYYY-MM-DD");
+        if (!result[taskDate]) {
+          result[taskDate] = { tasks: [], holidays: [] };
+        }
+        result[taskDate].tasks.push(task);
+      }
+    });
+
+    // group publicHolidays
+    publicHolidays.forEach((holiday) => {
+      const holidayDate = dayjs(holiday.date).format("YYYY-MM-DD");
+      if (!result[holidayDate]) {
+        result[holidayDate] = { tasks: [], holidays: [] };
+      }
+      result[holidayDate].holidays.push(holiday);
+    });
+
+    // sotring Tasks and Holidays
+    Object.keys(result).forEach((date) => {
+      result[date].tasks.sort((a, b) => a.id.localeCompare(b.id));
+      result[date].holidays.sort((a, b) => a.title.localeCompare(b.title));
+    });
+
+    return result;
+  }, [tasks, publicHolidays, searchQuery, currentDate, viewMode]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -214,43 +272,6 @@ export const Calendar = () => {
     setViewMode(mode);
   }, []);
 
-  const handleAddTask = useCallback(
-    (date: string, title: string, colors: ColorType[]) => {
-      const newTask: Task = {
-        id: String(Date.now()), // simple Unique ID based on timestamp
-        date,
-        title,
-        eventType: "task",
-        colors,
-      };
-      setTasks((prevTasks) => [...prevTasks, newTask]);
-      setActiveDayForInput(null);
-      setEditingTask(null);
-    },
-    []
-  );
-
-  const handleUpdateTask = useCallback(
-    (taskId: string, newTitle: string, newColors: ColorType[]) => {
-      setTasks((prevTasks) =>
-        prevTasks.map((task) =>
-          task.id === taskId
-            ? { ...task, title: newTitle, colors: newColors }
-            : task
-        )
-      );
-      setEditingTask(null);
-      setActiveDayForInput(null);
-    },
-    []
-  );
-
-  const handleDeleteTask = useCallback((taskId: string) => {
-    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
-    setEditingTask(null);
-    setActiveDayForInput(null);
-  }, []);
-
   const handleDragStart = useCallback((event: { active: Active }) => {
     if (event.active.data.current?.eventType === "task") {
       setActiveDragItem(event.active);
@@ -321,74 +342,73 @@ export const Calendar = () => {
     [tasks]
   );
 
-  const getEventsForDate = useCallback(
-    (date: Dayjs): Task[] => {
-      const formattedDate = date.format("YYYY-MM-DD");
-      // filter tasks by date
-      const dailyTasks = tasks.filter((task) => task.date === formattedDate);
-      // filter public holidays by date
-      const dailyHolidays = publicHolidays.filter(
-        (holiday) => holiday.date === formattedDate
-      );
-
-      // sort holidays by title
-      const sortedHolidays = dailyHolidays.sort((a, b) =>
-        a.title.localeCompare(b.title)
-      );
-      // first holidays, then tasks
-      return [...sortedHolidays, ...dailyTasks];
-    },
-    [tasks, publicHolidays] // Залежність від tasks та publicHolidays
-  );
-
   const renderedDays = useMemo(() => {
     const allDaysInGrid: Dayjs[] = [];
+
+    let startVisibleDate: Dayjs;
+    let endVisibleDate: Dayjs;
 
     if (viewMode === "month") {
       const firstDayOfMonth = currentDate.startOf("month");
       const lastDayOfMonth = currentDate.endOf("month");
-      const startDate = firstDayOfMonth.startOf("week");
-      const endDate = lastDayOfMonth.endOf("week");
-      let currentDayInLoop = dayjs(startDate);
-
-      while (currentDayInLoop.isSameOrBefore(endDate, "day")) {
-        allDaysInGrid.push(currentDayInLoop);
-        currentDayInLoop = currentDayInLoop.add(1, "day");
-      }
+      startVisibleDate = firstDayOfMonth.startOf("week");
+      endVisibleDate = lastDayOfMonth.endOf("week");
     } else {
-      const startOfWeek = currentDate.startOf("week");
-      for (let i = 0; i < 7; i++) {
-        allDaysInGrid.push(startOfWeek.add(i, "day"));
-      }
+      // viewMode === "week"
+      startVisibleDate = currentDate.startOf("week");
+      endVisibleDate = currentDate.endOf("week");
+    }
+    // always generate full 6 weeks (42 days) for grid
+    let currentDayInLoop = dayjs(startVisibleDate.startOf("week"));
+
+    // while (currentDayInLoop.isSameOrBefore(endVisibleDate, "day")) {
+    //   allDaysInGrid.push(currentDayInLoop);
+    //   currentDayInLoop = currentDayInLoop.add(1, "day");
+    // }
+
+    for (let i = 0; i < 42; i++) {
+      allDaysInGrid.push(currentDayInLoop);
+      currentDayInLoop = currentDayInLoop.add(1, "day");
     }
 
     return allDaysInGrid.map((dayInLoop) => {
-      const dailyEvents = getEventsForDate(dayInLoop);
+      const formattedDay = dayInLoop.format("YYYY-MM-DD");
+      const dayData = filteredTasksAndHolidaysByDay[formattedDay] || {
+        tasks: [],
+        holidays: [],
+      };
+
+      // ****** logic for Fillers ****** //
+      const isFiller =
+        (viewMode === "month" && !dayInLoop.isSame(currentDate, "month")) ||
+        (viewMode === "week" &&
+          (!dayInLoop.isSameOrAfter(startVisibleDate, "day") ||
+            !dayInLoop.isSameOrBefore(endVisibleDate, "day")));
+
       return (
         <CalendarDayCell
           key={dayInLoop.format("YYYY-MM-DD")}
           dayInLoop={dayInLoop}
-          currentMonth={currentDate} // Передаем текущий месяц
-          dailyEvents={dailyEvents}
+          currentMonth={currentDate}
+          dailyTasks={isFiller ? [] : dayData.tasks} // empty tasks for fillers
+          dailyHolidays={isFiller ? [] : dayData.holidays} // empty holidays for fillers
           activeDragItem={activeDragItem}
-          handleAddTask={handleAddTask}
-          handleUpdateTask={handleUpdateTask}
-          handleDeleteTask={handleDeleteTask}
           activeDayForInput={activeDayForInput}
           setActiveDayForInput={setActiveDayForInput}
           editingTask={editingTask}
           setEditingTask={setEditingTask}
+          setAllTasks={setTasks}
+          allTasks={tasks}
+          isFiller={isFiller}
         />
       );
     });
   }, [
     currentDate,
     viewMode,
-    getEventsForDate,
+    filteredTasksAndHolidaysByDay,
+    tasks,
     activeDragItem,
-    handleAddTask,
-    handleUpdateTask,
-    handleDeleteTask,
     activeDayForInput,
     setActiveDayForInput,
     editingTask,
@@ -413,6 +433,10 @@ export const Calendar = () => {
           onCountryChange={handleCountryChange}
           onViewModeChange={handleViewModeChange}
         />
+        <SearchInput
+          placeholder="Search task..."
+          onChange={handleSearchChange}
+        />
         {isPending && <StatusMessage type="loading">Loading...</StatusMessage>}
         {holidayError && (
           <StatusMessage type="error">{holidayError}</StatusMessage>
@@ -425,7 +449,7 @@ export const Calendar = () => {
         <DragOverlay>
           {activeDragItem && (
             <TaskCardDraggable
-              id={activeDragItem.id.toString()}
+              id={activeDragItem.id as string}
               eventType={activeDragItem.data.current?.eventType || "task"}
               colors={activeDragItem.data.current?.colors}
               title={activeDragItem.data.current?.title}

@@ -2,9 +2,8 @@ import React, { useMemo } from "react";
 import { styled } from "@stitches/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Task, ColorType } from "./types"; // Імпорт типу
+import type { Task, ColorType } from "./types";
 
-// TaskMarker також слід експортувати, якщо він використовується в інших місцях, або перенести його сюди
 const TaskMarker = styled("span", {
   width: "34px",
   height: "6px",
@@ -33,19 +32,11 @@ const TaskCard = styled("div", {
   marginBottom: "4px",
   overflow: "hidden",
   textOverflow: "ellipsis",
-  // cursor: "grab",
   boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
   transition: "box-shadow 0.2s ease-in-out",
-  // display: "flex",
-  // flexDirection: "column",
-  // gap: "2px",
 
   "&:last-child": {
-    marginBottom: "0",
-  },
-
-  "&:hover": {
-    boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+    marginBottom: "0", // erase margin from last TaskCard in list
   },
 
   "& .task-title": {
@@ -55,18 +46,22 @@ const TaskCard = styled("div", {
     whiteSpace: "wrap",
   },
   variants: {
-    // Варианты для типов событий
+    // variants for eventType
     eventType: {
       task: {
+        "&:hover": {
+          boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+        },
         backgroundColor: "#f0f8ff",
-        border: "1px solid #d0d0d0",
+        // border: "1px solid #d0d0d0",
       },
       holiday: {
-        border: "1px solid #dc3545",
+        // border: "1px solid #dc3545",
         color: "red",
+        boxShadow: "0 2px 6px #dc3545",
       },
     },
-    // Варианты для цветов
+    // variants for color
     colors: {
       default: { borderColor: "#6c757d" },
       blue: { borderColor: "#007bff" },
@@ -80,11 +75,8 @@ const TaskCard = styled("div", {
         opacity: 0.5,
         boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
       },
-      false: {
-        // cursor: "pointer", // Удалено, т.к. теперь управляем через customCursor
-      },
     },
-    // !!!  CUSTOM CURSOR !!!
+    // CUSTOM CURSOR
     customCursor: {
       pointer: {
         cursor: "pointer",
@@ -102,7 +94,7 @@ const TaskCard = styled("div", {
     eventType: "task",
     colors: "default",
     isDragging: false,
-    customCursor: "pointer !important",
+    customCursor: "pointer ",
   },
 });
 
@@ -138,10 +130,10 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
     transition: "transform 0.2s ease-out",
   };
 
-  // Визначаємо остаточний курсор:
-  // Якщо це свято, курсор завжди 'default'
-  // Якщо це таск і перетягується, курсор 'grabbing'
-  // Інакше, використовуємо переданий пропс або дефолтний
+  // ----- define final cursor
+  // for holiday, cursor = 'default'
+  // for task & dragging, cursor ='grabbing'
+  // else, use props or default
   const finalCustomCursor = useMemo(() => {
     if (eventType === "holiday") {
       return "default";
@@ -149,8 +141,9 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
     if (isDragging) {
       return "grabbing";
     }
-    return propCustomCursor || "pointer"; // Використовуємо пропс, якщо він є, інакше "pointer"
+    return propCustomCursor || "pointer";
   }, [eventType, isDragging, propCustomCursor]);
+
   return (
     <TaskCard
       ref={setNodeRef}
