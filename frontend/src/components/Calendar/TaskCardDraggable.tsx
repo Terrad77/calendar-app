@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { styled } from "@stitches/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { CalendarEvent, ColorType } from "../../types"; // <--- ЗМІНА
+import type { CalendarEvent } from "../../types";
 
 const TaskMarker = styled("span", {
   width: "34px",
@@ -54,15 +54,11 @@ const TaskCard = styled("div", {
         backgroundColor: "#f0f8ff",
       },
       holiday: {
-        // border: "1px solid #dc3545", // Можливо, захочете повернути рамку для візуального акценту
-        color: "red", // Текст свят червоний
-        boxShadow: "0 2px 6px #dc3545", // Червона тінь для свят
+        color: "red",
+        boxShadow: "0 2px 6px #dc3545",
       },
     },
-    // variants for color - ці стилі, ймовірно, стосуються border.
-    // Якщо ви хочете, щоб TaskCard мав основний колір залежно від colors[0],
-    // то потрібно буде змінити backgroundColor тут.
-    // Наразі backgroundColor задається eventType, а colors використовуються для маркерів.
+
     colors: {
       default: { borderColor: "#6c757d" },
       blue: { borderColor: "#007bff" },
@@ -92,24 +88,24 @@ const TaskCard = styled("div", {
 
   defaultVariants: {
     eventType: "task",
-    colors: "default", // Це для borderColor, якщо TaskCard отримує colors
+    colors: "default",
     isDragging: false,
     customCursor: "pointer",
   },
 });
 
 interface TaskCardDraggableProps {
-  event: CalendarEvent; // <--- ЗМІНА: Тепер приймає весь об'єкт CalendarEvent
-  onCardClick?: (e: React.MouseEvent, event: CalendarEvent) => void; // <--- ЗМІНА
-  isDragging?: boolean; // Для DragOverlay
+  event: CalendarEvent;
+  onCardClick?: (e: React.MouseEvent, event: CalendarEvent) => void;
+  isDragging?: boolean;
   customCursor?: "pointer" | "default" | "grabbing";
 }
 
 export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
-  event, // <--- ЗМІНА
+  event,
   onCardClick,
   customCursor: propCustomCursor,
-  isDragging: propIsDragging, // З пропсів, використовується для DragOverlay
+  isDragging: propIsDragging,
 }) => {
   const {
     attributes,
@@ -123,10 +119,10 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
       eventType: event.eventType,
       colors: event.colors,
       title: event.title,
-      description: event.description, // Додано
-      countryCode: event.countryCode, // Додано
+      description: event.description,
+      countryCode: event.countryCode,
     },
-    disabled: event.eventType === "holiday", // Відключення перетягування для свят
+    disabled: event.eventType === "holiday", // off D&D for Holidays
   });
 
   const style = {
@@ -134,7 +130,6 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
     transition: "transform 0.2s ease-out",
   };
 
-  // Визначаємо, чи елемент зараз перетягується (або батьківський DragOverlay)
   const renderIsDragging =
     propIsDragging !== undefined ? propIsDragging : dndIsDragging;
 
@@ -154,19 +149,16 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
       style={style}
       {...listeners}
       {...attributes}
-      eventType={event.eventType} // <--- ПЕРЕДАЄМО event.eventType для стилізації
-      isDragging={renderIsDragging} // <--- ПЕРЕДАЄМО renderIsDragging
+      eventType={event.eventType}
+      isDragging={renderIsDragging}
       customCursor={finalCustomCursor}
       onClick={
-        onCardClick !== undefined
-          ? (e) => onCardClick(e, event) // <--- ПЕРЕДАЄМО ВЕСЬ ОБ'ЄКТ event
-          : undefined
+        onCardClick !== undefined ? (e) => onCardClick(e, event) : undefined
       }
     >
-      {/* Маркери кольорів тільки для завдань */}
       {event.eventType === "task" ? (
         <div style={{ display: "flex", gap: "4px" }}>
-          {/* event.colors може бути undefined для завдань, якщо вони не мають кольорів */}
+          {/* event.colors undefined for tasks, if has no color */}
           {(event.colors || ["default"]).slice(0, 3).map((color, idx) => (
             <TaskMarker key={idx} color={color} />
           ))}
@@ -175,14 +167,14 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
 
       <span className="task-title">{event.title}</span>
 
-      {/* Опис тільки для завдань */}
+      {/* description only for tasks */}
       {event.eventType === "task" && event.description && (
         <p style={{ fontSize: "0.65rem", color: "#666", marginTop: "2px" }}>
           {event.description}
         </p>
       )}
 
-      {/* Код країни тільки для свят */}
+      {/*country code only for holidays */}
       {event.eventType === "holiday" && event.countryCode && (
         <p style={{ fontSize: "0.65rem", color: "red", marginTop: "2px" }}>
           ({event.countryCode})
