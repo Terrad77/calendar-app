@@ -1,6 +1,6 @@
 interface CacheEntry<T> {
   value: T;
-  expiry: number; // Timestamp, коли кеш закінчується
+  expiry: number; // Timestamp, when cach outdated
 }
 
 // Key: string (e.g., "2025-UA")
@@ -18,7 +18,7 @@ export const getCache = <T>(key: string): T | undefined => {
     return undefined;
   }
   if (Date.now() > entry.expiry) {
-    cache.delete(key); // Кеш застарів, видаляємо
+    cache.delete(key); // cache is outdated, delete it
     return undefined;
   }
   return entry.value as T;
