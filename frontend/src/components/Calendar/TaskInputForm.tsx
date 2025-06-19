@@ -1,10 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { styled } from "@stitches/react";
-import {
-  type ColorType,
-  TASK_MARKER_COLORS_FOR_SELECTOR,
-  type Task,
-} from "./types";
+import { type ColorType, TASK_MARKER_COLORS, type Task } from "../../types";
 
 const TaskInputFormWrapper = styled("div", {
   marginTop: "2px",
@@ -151,7 +147,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
   }, [initialTask]);
 
   const availableColors: ColorType[] =
-    TASK_MARKER_COLORS_FOR_SELECTOR as unknown as ColorType[];
+    TASK_MARKER_COLORS as unknown as ColorType[];
 
   // --- ЛОГІКА КНОПКИ "ЗБЕРЕГТИ" ---
   const handleSaveClick = useCallback(() => {

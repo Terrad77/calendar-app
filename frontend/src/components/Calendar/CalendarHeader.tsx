@@ -1,6 +1,7 @@
 import { styled } from "@stitches/react";
-import { Dayjs } from "dayjs";
+import { CalendarHeaderProps } from "../../types";
 import Icon from "../Icon";
+import SearchInput from "./SearchInput";
 
 const HeaderWrapper = styled("div", {
   display: "flex",
@@ -112,58 +113,15 @@ const ViewButton = styled("button", {
   "&:active": { backgroundColor: "#c7cbcf" },
 });
 
-const CountrySelect = styled("select", {
-  padding: "6px 10px",
-  borderRadius: "3px",
-  border: "1px solid #e0e0e0",
-  backgroundColor: "#e3e5e6",
-  color: "#36343a",
-  fontSize: "1rem",
-  fontWeight: "700",
-  cursor: "pointer",
-  boxShadow: "0 1px 0 #ced0d1",
-  "&:focus, &:hover": {
-    backgroundColor: "#c7cbcf",
-    outline: "none",
-    borderColor: "#d0d0d0",
-  },
-  "&:disabled": {
-    backgroundColor: "#e0e0e0",
-    color: "#a0a0a0",
-    cursor: "not-allowed",
-    borderColor: "#d0d0d0",
-  },
-});
-
-const countryOptions = [
-  { code: "UA", name: "Ukraine" },
-  { code: "US", name: "USA" },
-  { code: "DE", name: "Germany" },
-  { code: "GB", name: "United Kingdom" },
-  { code: "PL", name: "Poland" },
-  { code: "CA", name: "Canada" },
-];
-
-interface CalendarHeaderProps {
-  currentDate: Dayjs;
-  viewMode: "month" | "week";
-  isPending: boolean;
-  countryCode: string;
-  onPrev: () => void;
-  onNext: () => void;
-  onCountryChange: (event: React.ChangeEvent<HTMLSelectElement>) => void;
-  onViewModeChange: (mode: "month" | "week") => void;
-}
-
 export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   currentDate,
   viewMode,
   isPending,
-  countryCode,
   onPrev,
   onNext,
-  onCountryChange,
   onViewModeChange,
+  onSearchChange,
+  searchInputValue,
 }) => {
   return (
     <HeaderWrapper>
@@ -187,17 +145,12 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         {currentDate.year()}
       </MonthLabel>
       <ButtonContainer gapSize="large">
-        <CountrySelect
-          value={countryCode}
-          onChange={onCountryChange}
-          disabled={isPending}
-        >
-          {countryOptions.map((option) => (
-            <option key={option.code} value={option.code}>
-              {option.name}
-            </option>
-          ))}
-        </CountrySelect>
+        <SearchInput
+          placeholder="Search task..."
+          onChange={onSearchChange}
+          value={searchInputValue}
+          css={{ margin: "0px", flexGrow: 1 }}
+        />
         <ButtonContainer>
           <ViewButton onClick={() => onViewModeChange("week")}>Week</ViewButton>
           <ViewButton onClick={() => onViewModeChange("month")}>

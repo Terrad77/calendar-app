@@ -4,7 +4,7 @@ import dayjs, { Dayjs } from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { useDroppable, type Active } from "@dnd-kit/core";
 import { SortableContext } from "@dnd-kit/sortable";
-import type { Task } from "./types";
+import type { CalendarEvent, EventType } from "../../types";
 import { TaskCardDraggable } from "./TaskCardDraggable";
 import { TaskInputForm } from "./TaskInputForm";
 
@@ -13,15 +13,15 @@ dayjs.extend(isBetween);
 interface CalendarDayCellProps {
   dayInLoop: Dayjs;
   currentMonth: Dayjs;
-  dailyTasks: Task[];
-  dailyHolidays: { id: string; title: string }[];
-  activeDragItem: Active | null;
+  dailyTasks: CalendarEvent[];
+  dailyHolidays: CalendarEvent[];
+  activeDragItem: CalendarEvent | null;
   activeDayForInput: string | null;
   setActiveDayForInput: React.Dispatch<React.SetStateAction<string | null>>;
-  editingTask: Task | null;
-  setEditingTask: React.Dispatch<React.SetStateAction<Task | null>>;
-  setAllTasks: React.Dispatch<React.SetStateAction<Task[]>>;
-  allTasks: Task[];
+  editingTask: CalendarEvent | null;
+  setEditingTask: (task: CalendarEvent | null) => void;
+  setAllTasks: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
+  allTasks: CalendarEvent[];
   isFiller: boolean;
 }
 
@@ -40,7 +40,6 @@ const DayCell = styled("div", {
     alignItems: "baseline",
     gap: "2px",
     marginBottom: "2px",
-    // minWidth: "150px",
   },
   "& .task-count": {
     color: "#97999a",
@@ -170,17 +169,15 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   const isToday = dayjs().isSame(dayInLoop, "day");
   const isPastDate = dayInLoop.isBefore(today, "day");
 
-  // const shouldBeInteractive = !isPastDate && !(isFiller && viewMode === "week");
   const shouldBeInteractive = !isPastDate;
 
-  // show abbr of month
+  // show abbr of month for first & last day of month
   const showMonthAbbr = useMemo(() => {
     const isFirstDayOfItsMonth = dayInLoop.date() === 1;
     const isLastDayOfItsMonth = dayInLoop.isSame(
       dayInLoop.endOf("month"),
       "day"
     );
-    // show abbr for first & last day of month
     return isFirstDayOfItsMonth || isLastDayOfItsMonth;
   }, [dayInLoop]);
 
@@ -212,7 +209,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
 
   //function to handle TaskCardClick (edit existing task)
   const handleTaskCardClick = useCallback(
-    (e: React.MouseEvent, event: Task) => {
+    (e: React.MouseEvent, event: CalendarEvent) => {
       e.stopPropagation(); // stop Event Bubbling, to prevent click from reaching DayCell
 
       if (!shouldBeInteractive || activeDragItem) return;
@@ -233,7 +230,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
 
   // Save function
   const handleSaveTaskForm = useCallback(
-    (taskData: Task) => {
+    (taskData: CalendarEvent) => {
       setAllTasks((prevTasks) => {
         // if exist initialTask (editingTask), editing
         if (editingTask) {
@@ -245,7 +242,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
           return [...prevTasks, taskData];
         }
       });
-      // Закриваємо форму після збереження
+      // Close forms after Save
       setActiveDayForInput(null);
       setEditingTask(null);
     },
@@ -273,7 +270,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   return (
     <DayCell
       ref={setDroppableRef}
-      isDragOver={isOver && activeDragItem?.data.current?.eventType === "task"}
+      isDragOver={isOver && activeDragItem?.eventType === "task"}
       isOutsideMonth={isOutsideActualMonth}
       isFiller={isFiller}
       isPastDate={isPastDate}
@@ -309,13 +306,8 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
           {dailyTasks.map((task) => (
             <TaskCardDraggable
               key={task.id}
-              id={task.id}
-              eventType={task.eventType}
-              colors={task.colors}
-              title={task.title}
-              date={task.date}
-              onCardClick={(e) => handleTaskCardClick(e, task)}
-              customCursor="pointer"
+              event={task}
+              onCardClick={handleTaskCardClick}
             />
           ))}
         </SortableContext>
