@@ -86,7 +86,7 @@ const StatusMessage = styled("div", {
 const LOCAL_STORAGE_KEY = "calendarTasks";
 
 // --- BASE URL---
-const BACKEND_API_BASE_URL = "http://localhost:3001/api/v1";
+const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
 
 export const Calendar = () => {
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
