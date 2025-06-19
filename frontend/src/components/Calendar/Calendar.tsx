@@ -171,13 +171,21 @@ export const Calendar = () => {
           }
           const data: Holiday[] = await response.json(); // Data will be an array of objects of type Holiday
 
-          const mappedHolidays: CalendarEvent[] = data.map((holiday) => ({
-            id: holiday.id, // ID from backend
-            date: holiday.date,
-            title: holiday.title,
-            eventType: "holiday",
-            countryCode: holiday.countryCode,
-          }));
+          const uniqueHolidaysMap = new Map<string, Holiday>();
+          data.forEach((holiday) => {
+            uniqueHolidaysMap.set(holiday.id, holiday);
+          });
+          const deduplicatedData = Array.from(uniqueHolidaysMap.values());
+
+          const mappedHolidays: CalendarEvent[] = deduplicatedData.map(
+            (holiday) => ({
+              id: holiday.id, // ID from backend
+              date: holiday.date,
+              title: holiday.title,
+              eventType: "holiday",
+              countryCode: holiday.countryCode,
+            })
+          );
 
           setPublicHolidaysWorldwide(mappedHolidays);
         } catch (error: unknown) {

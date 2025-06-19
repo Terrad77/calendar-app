@@ -1,5 +1,5 @@
 import { styled } from "@stitches/react";
-import { CalendarHeaderProps } from "../../types";
+import { type CalendarHeaderProps } from "../../types";
 import Icon from "../Icon";
 import SearchInput from "./SearchInput";
 
