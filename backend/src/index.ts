@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { getWorldwideHolidays } from "./nagerApi";
 
 const app = express();
@@ -8,14 +9,17 @@ const port = process.env.PORT || 3001; // port 3001 for backend
 app.use(express.json());
 
 // CORS (Cross-Origin Resource Sharing)
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*"); // Allow requests from any domain (for development)
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept"
-  );
-  next();
-});
+app.use(
+  cors({
+    origin: [
+      "https://calendar-app-pi-gold.vercel.app", // nain Vercel domain
+      "https://calendar-app-git-main-terrad77s-projects.vercel.app", // domain for branch 'main' on Vercel (for preview)
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
 // Endpoint for receiving worldwide holidays
 app.get("/api/v1/holidays/worldwide", async (req, res) => {
