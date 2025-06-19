@@ -14,6 +14,7 @@ app.use(
     origin: [
       "https://calendar-app-pi-gold.vercel.app", // nain Vercel domain
       "https://calendar-app-git-main-terrad77s-projects.vercel.app", // domain for branch 'main' on Vercel (for preview)
+      "https://calendar-app-7oetemppd-terrad77s-projects.vercel.app",
     ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
