@@ -15,10 +15,13 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@stitches/react": "^1.2.8",
     "@types/lodash.debounce": "^4.0.9",
+    "axios": "^1.10.0",
     "dayjs": "^1.11.13",
     "lodash.debounce": "^4.0.8",
+    "openai": "^5.12.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0"
   },
   "devDependencies": {
@@ -31,7 +34,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^16.0.0",
-    "typescript": "~5.8.3",
+    "typescript": "^5.8.3",
     "typescript-eslint": "^8.30.1",
     "vite": "^6.3.5"
   }

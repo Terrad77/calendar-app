@@ -24,8 +24,8 @@ import {
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 
-import type { CalendarEvent, ColorType, Holiday } from "../../types";
-import { TASK_MARKER_COLORS } from "../../types";
+import type { CalendarEvent, ColorType, Holiday } from "../../types/types";
+import { TASK_MARKER_COLORS } from "../../types/types";
 
 import { CalendarDayCell } from "./CalendarDayCell";
 import { TaskCardDraggable } from "./TaskCardDraggable";
@@ -85,7 +85,7 @@ const StatusMessage = styled("div", {
 // --- КЛЮЧ ДЛЯ LOCAL STORAGE ---
 const LOCAL_STORAGE_KEY = "calendarTasks";
 
-// --- BASE URL---
+// --- BASE URL, value for Vite building---
 const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
 
 export const Calendar = () => {

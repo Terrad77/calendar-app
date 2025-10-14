@@ -4,7 +4,7 @@ import {
   type ColorType,
   TASK_MARKER_COLORS,
   type CalendarEvent,
-} from "../../types";
+} from "../../types/types";
 
 const TaskInputFormWrapper = styled("div", {
   marginTop: "2px",

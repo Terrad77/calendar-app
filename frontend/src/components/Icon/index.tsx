@@ -9,6 +9,8 @@ import {
   FaQuestionCircle,
   FaSearch,
 } from "react-icons/fa";
+import { TbCalendarSad } from "react-icons/tb";
+
 // Material Design Icons (Md)
 import { MdCalendarMonth } from "react-icons/md";
 
@@ -19,6 +21,7 @@ const iconComponents = {
   calendar: MdCalendarMonth,
   search: FaSearch,
   "question-mark": FaQuestionCircle, // icon for fallback
+  "calendar-sad": TbCalendarSad, // custom icon
 };
 
 // define TypeScript for available icon names

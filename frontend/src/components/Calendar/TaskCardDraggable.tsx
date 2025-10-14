@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { styled } from "@stitches/react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { CalendarEvent } from "../../types";
+import type { CalendarEvent } from "../../types/types";
 
 const TaskMarker = styled("span", {
   width: "34px",

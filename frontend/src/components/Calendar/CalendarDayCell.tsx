@@ -4,7 +4,7 @@ import dayjs, { Dayjs } from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext } from "@dnd-kit/sortable";
-import type { CalendarEvent } from "../../types";
+import type { CalendarEvent } from "../../types/types";
 import { TaskCardDraggable } from "./TaskCardDraggable";
 import { TaskInputForm } from "./TaskInputForm";
 

@@ -1,0 +1,169 @@
+.container {
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 118px 16px 67px 16px;
+  background-color: var(--background);
+  border-radius: 30px;
+  width: 100%;
+  max-width: 344px;
+}
+
+.logo {
+  position: absolute;
+  left: 16px;
+  top: 24px;
+}
+
+.titles {
+  text-align: left;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--main-text);
+  margin-bottom: 16px;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+.subtitleUk {
+  font-family: var(--font-family);
+  font-size: 14px;
+  color: var(--main-text);
+  margin-bottom: 16px;
+  font-weight: 400;
+  line-height: 18px;
+}
+
+.title {
+  font-size: 38px;
+  color: var(--main);
+  margin-bottom: 32px;
+  line-height: 38px;
+  font-weight: 700;
+}
+
+.titleUk {
+  font-family: var(--font-family);
+  font-size: 38px;
+  color: var(--main);
+  margin-bottom: 32px;
+  line-height: 38px;
+  font-weight: 700;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.tryTracker {
+  padding: 14px 19px;
+  background-color: var(--accent);
+  color: var(--main);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 18px;
+  border-radius: 30px;
+  transition: all var(--transition);
+}
+
+.tryTrackerUk {
+  font-family: var(--font-family);
+  padding: 14px 19px;
+  background-color: var(--accent);
+  color: var(--main);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 18px;
+  border-radius: 30px;
+  transition: all var(--transition);
+}
+
+.signIn {
+  padding: 14px 28px;
+  background-color: var(--background);
+  color: var(--main);
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 700;
+  border-radius: 30px;
+  border: 1px solid var(--main);
+  transition: all var(--transition);
+}
+
+.signInUk {
+  font-family: var(--font-family);
+  padding: 14px 28px;
+  background-color: var(--background);
+  color: var(--main);
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 700;
+  border-radius: 30px;
+  border: 1px solid var(--main);
+  transition: all var(--transition);
+}
+
+.tryTracker:hover {
+  background-color: var(--accent-hover);
+}
+
+.signIn:hover {
+  border-color: var(--accent-hover);
+  color: var(--accent-hover);
+}
+
+@media screen and (min-width: 768px) {
+  .container {
+    display: flex;
+    padding: 106px 93px 50px 64px;
+    max-width: 704px;
+  }
+  .title {
+    font-size: 64px;
+    line-height: 70px;
+  }
+  .tryTracker {
+    padding: 18px 40px;
+  }
+  .signIn {
+    padding: 18px 40px;
+  }
+  .logo {
+    top: 32px;
+    left: 32px;
+  }
+  .subtitle {
+    font-size: 16px;
+    line-height: 24px;
+  }
+  .tryTracker,
+  .signIn {
+    font-size: 16px;
+    line-height: 24px;
+  }
+}
+
+@media screen and (min-width: 1440px) {
+  .container {
+    padding-top: 188px;
+    padding-bottom: 188px;
+    padding-left: 64px;
+    padding-right: 61px;
+    max-width: 672px;
+  }
+
+  .title {
+    font-size: 80px;
+    line-height: 76px;
+  }
+}

@@ -1,7 +1,7 @@
 import React from "react";
 import { styled } from "@stitches/react";
 import Icon from "../Icon";
-import { type SearchInputProps } from "../../types";
+import { type SearchInputProps } from "../../types/types";
 
 const InputWrapper = styled("div", {
   display: "flex",
