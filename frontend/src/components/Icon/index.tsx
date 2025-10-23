@@ -1,7 +1,8 @@
 import { type FC } from "react";
 import { styled, type CSS } from "@stitches/react";
 
-// import react-icons
+// -----  import react-icons
+
 // Font Awesome Icons(Fa)
 import {
   FaChevronUp,

@@ -1,6 +1,24 @@
-export const selectDayWater = state => state.water.dayWater.water || [];
-export const selectIsLoading = state => state.water.loading;
-export const selectActiveDay = state => state.water.activeDay;
-export const selectCurrentDayWater = state => state.water.currentDay;
-export const selectMonthWater = state => state.water.mounthWater;
-export default { selectDayWater };
+import type { RootState } from "../store";
+
+// Select active day
+export const selectActiveDay = (state: RootState) => state.task.activeDay;
+
+// Select loading status
+export const selectIsLoading = (state: RootState) => state.task.loading;
+
+// Select tasks grouped by day
+export const selectDayTasks = (state: RootState) => state.task.dayTasks;
+
+// Select tasks for the current day
+export const selectCurrentDay = (state: RootState) => state.task.currentDay;
+
+// Select tasks for the current month
+export const selectMonthTasks = (state: RootState) => state.task.monthTasks;
+
+export default {
+  selectActiveDay,
+  selectIsLoading,
+  selectDayTasks,
+  selectCurrentDay,
+  selectMonthTasks,
+};

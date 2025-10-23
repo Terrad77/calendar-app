@@ -1,10 +1,10 @@
-import googleLogo from '../../../icons/google-logo.svg';
-import css from './GoogleAuthBtn.module.css';
-import { motion } from 'framer-motion';
+import googleLogo from "../../../icons/google-logo.svg";
+import css from "./GoogleAuthBtn.module.css";
+import { motion } from "framer-motion";
 
-import { useTranslation } from 'react-i18next';
-import '../../../translate/index.js';
-import clsx from 'clsx';
+import { useTranslation } from "react-i18next";
+import "../../../translate/index.js";
+import clsx from "clsx";
 
 export default function GoogleAuthBtn() {
   const { t, i18n } = useTranslation();
@@ -12,21 +12,21 @@ export default function GoogleAuthBtn() {
     <div className={css.wrapper}>
       <p
         className={clsx(css.separator, {
-          [css.separatorUk]: i18n.language === 'uk',
+          [css.separatorUk]: i18n.language === "uk",
         })}
       >
-        {t('Or google')}
+        {t("Or google")}
       </p>
       <motion.a
         whileTap={{ scale: 1 }}
         whileHover={{ scale: 1.03 }}
-        href="https://aquatrack-api-crcb.onrender.com/api/users/google"
+        href="https://aquatrack-api-crcb.onrender.com/api/users/google" // Update with your backend URL
         className={clsx(css.googleBtn, {
-          [css.googleBtnUk]: i18n.language === 'uk',
+          [css.googleBtnUk]: i18n.language === "uk",
         })}
       >
         <img src={googleLogo} className={css.googleIcon} />
-        <p>{t('Sign google')}</p>
+        <p>{t("Sign google")}</p>
       </motion.a>
     </div>
   );

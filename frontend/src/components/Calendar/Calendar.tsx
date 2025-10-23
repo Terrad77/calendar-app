@@ -6,11 +6,11 @@ import {
   useMemo,
 } from "react";
 import { styled } from "@stitches/react";
-import dayjs, { Dayjs } from "dayjs";
+import * as dayjs from "dayjs";
+type Dayjs = dayjs.Dayjs;
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import debounce from "lodash.debounce";
-// dnd-kit for D&D functionality
 import {
   DndContext,
   DragOverlay,
@@ -21,12 +21,10 @@ import {
   useSensors,
   type Active,
   type DragEndEvent,
-} from "@dnd-kit/core";
+} from "@dnd-kit/core"; // dnd-kit for D&D functionality
 import { arrayMove } from "@dnd-kit/sortable";
-
 import type { CalendarEvent, ColorType, Holiday } from "../../types/types";
 import { TASK_MARKER_COLORS } from "../../types/types";
-
 import { CalendarDayCell } from "./CalendarDayCell";
 import { TaskCardDraggable } from "./TaskCardDraggable";
 import { CalendarHeader } from "./CalendarHeader";
@@ -60,7 +58,7 @@ const CalendarGrid = styled("div", {
 
 const StatusMessage = styled("div", {
   padding: "8px 16px",
-  backgroundColor: "#fffbebe6", // Поправив опечатку
+  backgroundColor: "#fffbebe6",
   color: "#856404",
   border: "1px solid #ffeeba",
   borderRadius: "4px",
@@ -82,10 +80,10 @@ const StatusMessage = styled("div", {
   },
 });
 
-// --- КЛЮЧ ДЛЯ LOCAL STORAGE ---
+// --- KEY for LOCAL STORAGE ---
 const LOCAL_STORAGE_KEY = "calendarTasks";
 
-// --- BASE URL, value for Vite building---
+// --- BASE URL, value for Vite building ---
 const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
 
 export const Calendar = () => {
@@ -169,7 +167,7 @@ export const Calendar = () => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
-          const data: Holiday[] = await response.json(); // Data will be an array of objects of type Holiday
+          const data: Holiday[] = await response.json(); // allowed Data will be an array of objects of type Holiday
 
           const uniqueHolidaysMap = new Map<string, Holiday>();
           data.forEach((holiday) => {
@@ -234,7 +232,7 @@ export const Calendar = () => {
   const [searchInputValue, setSearchInputValue] = useState(""); // immediate update input field
   const [searchQuery, setSearchQuery] = useState(""); // Delayed search
 
-  // function for debounce Search
+  // debounce-function  for delay Search input 200ms
   const debouncedSetSearchQuery = useMemo(
     () =>
       debounce((value: string) => {

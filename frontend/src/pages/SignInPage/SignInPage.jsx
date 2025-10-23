@@ -1,11 +1,11 @@
-import { Link } from 'react-router-dom';
-import Logo from '../../shared/components/Logo/Logo';
-import SignInForm from '../../components/SignInForm/SignInForm';
-import css from '../SignInPage/SignInPage.module.css';
-import AdvantagesSection from '../../components/AdvantagesSection/AdvantagesSection.jsx';
-import { useTranslation } from 'react-i18next';
-import '../../translate/index.js';
-import clsx from 'clsx';
+import { Link } from "react-router-dom";
+import Logo from "../../components/Logo/Logo";
+import SignInForm from "../../components/SignInForm/SignInForm";
+import css from "../SignInPage/SignInPage.module.css";
+import Calendar from "../../components/Calendar/Calendar";
+import { useTranslation } from "react-i18next";
+// import "../../translate/index.js";
+import clsx from "clsx";
 
 export default function SignIpPage() {
   const { t, i18n } = useTranslation();
@@ -18,27 +18,27 @@ export default function SignIpPage() {
         <div className={css.content}>
           <h2
             className={clsx(css.title, {
-              [css.titleUk]: i18n.language === 'uk',
+              [css.titleUk]: i18n.language === "uk",
             })}
           >
-            {t('Sign in')}
+            {t("Sign in")}
           </h2>
           <SignInForm />
           <p className={css.notify}>
-            {t('Do not')}{' '}
+            {t("Do not")}{" "}
             <Link
               className={clsx(css.navLink, {
-                [css.navLinkUk]: i18n.language === 'uk',
+                [css.navLinkUk]: i18n.language === "uk",
               })}
               to="/signup"
             >
-              {t('Register user form')}
+              {t("Register user form")}
             </Link>
           </p>
         </div>
       </div>
-      <div className={css.advantagesSection}>
-        <AdvantagesSection />
+      <div className={css.CalendarSection}>
+        <Calendar />
       </div>
     </div>
   );

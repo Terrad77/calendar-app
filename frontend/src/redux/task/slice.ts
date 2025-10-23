@@ -11,7 +11,7 @@ const initialState: TaskState = {
   loading: false,
 };
 
-const slice = createSlice({
+const taskSlice = createSlice({
   name: "task",
   initialState,
   reducers: {
@@ -144,5 +144,5 @@ const slice = createSlice({
       }),
 });
 
-export default slice.reducer;
-export const { setActiveDay } = slice.actions;
+export const { setActiveDay } = taskSlice.actions;
+export default taskSlice.reducer;

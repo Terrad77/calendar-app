@@ -1,30 +1,30 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import * as yup from 'yup';
-import { yupResolver } from '@hookform/resolvers/yup';
-import css from '../SignUpForm/SignUpForm.module.css';
-import Icon from '../../shared/components/Icon/Icon';
-import clsx from 'clsx';
-import { useDispatch, useSelector } from 'react-redux';
-import { register as registerUser } from '../../redux/user/operations';
-import GoogleAuthBtn from '../../shared/components/GoogleAuthBtn/GoogleAuthBtn';
-import { selectIsLoading } from '../../redux/user/selectors';
-import DotLoader from '../../shared/components/DotLoader/DotLoader.jsx';
-import { useTranslation } from 'react-i18next';
-import '../../translate/index.js';
-import SignUpModal from '../SignUpModal/SignUpModal.jsx';
-import Modal from '../../shared/components/Modal/Modal.jsx';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+import css from "../SignUpForm/SignUpForm.module.css";
+import Icon from "../../components/Icon";
+import clsx from "clsx";
+import { useDispatch, useSelector } from "react-redux";
+import { register as registerUser } from "../../redux/user/operations";
+import GoogleAuthBtn from "../../components/GoogleAuthBtn/GoogleAuthBtn";
+import { selectIsLoading } from "../../redux/user/selectors";
+import DotLoader from "../../components/DotLoader/DotLoader.jsx";
+import { useTranslation } from "react-i18next";
+// import "../../translate/index.js";
+import SignUpModal from "../SignUpModal/SignUpModal.jsx";
+import Modal from "../../components/Modal/Modal.jsx";
 
 const schema = yup.object().shape({
-  email: yup.string().email('Invalid email').required('Email is required'),
+  email: yup.string().email("Invalid email").required("Email is required"),
   password: yup
     .string()
-    .min(8, 'Password must be at least 8 characters')
-    .required('Password is required'),
+    .min(8, "Password must be at least 8 characters")
+    .required("Password is required"),
   repeatPassword: yup
     .string()
-    .oneOf([yup.ref('password'), null], 'Passwords must match')
-    .required('Repeat Password is required'),
+    .oneOf([yup.ref("password"), null], "Passwords must match")
+    .required("Repeat Password is required"),
 });
 
 export default function SignUpForm() {
@@ -42,18 +42,18 @@ export default function SignUpForm() {
     formState: { errors, isValid },
   } = useForm({
     resolver: yupResolver(schema),
-    mode: 'onChange',
+    mode: "onChange",
   });
 
   const toggleShowPassword = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleFormSubmit = data => {
+  const handleFormSubmit = (data) => {
     const { email, password } = data;
 
     dispatch(registerUser({ email, password }))
-      .then(action => {
+      .then((action) => {
         if (registerUser.fulfilled.match(action)) {
           // toast.success('Register successful');
           reset();
@@ -68,8 +68,8 @@ export default function SignUpForm() {
         //   );
         // }
       })
-      .catch(error => {
-        console.error('Unexpected error:', error);
+      .catch((error) => {
+        console.error("Unexpected error:", error);
       });
   };
 
@@ -99,46 +99,46 @@ export default function SignUpForm() {
       <form className={css.form} onSubmit={handleSubmit(handleFormSubmit)}>
         <div
           className={clsx(css.inputGroup, {
-            [css.inputGroupUk]: i18n.language === 'uk',
+            [css.inputGroupUk]: i18n.language === "uk",
           })}
         >
-          <label>{t('Email user')}</label>
+          <label>{t("Email user")}</label>
           <input
             type="text"
-            placeholder={t('Enter email')}
+            placeholder={t("Enter email")}
             name="email"
             autoComplete="off"
             className={clsx(
               css.inputGroupInput,
               errors.email && css.inputError,
               {
-                [css.inputGroupInputUk]: i18n.language === 'uk',
-              },
+                [css.inputGroupInputUk]: i18n.language === "uk",
+              }
             )}
-            {...register('email')}
+            {...register("email")}
           />
           {errors.email && <p className={css.error}>{errors.email.message}</p>}
         </div>
         <div
           className={clsx(css.inputGroup, {
-            [css.inputGroupUk]: i18n.language === 'uk',
+            [css.inputGroupUk]: i18n.language === "uk",
           })}
         >
-          <label>{t('Password user')}</label>
+          <label>{t("Password user")}</label>
           <div className={css.passwordContainer}>
             <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder={t('Enter password')}
+              type={showPassword ? "text" : "password"}
+              placeholder={t("Enter password")}
               name="password"
               autoComplete="new-password"
               className={clsx(
                 css.inputGroupInput,
                 errors.email && css.inputError,
                 {
-                  [css.inputGroupInputUk]: i18n.language === 'uk',
-                },
+                  [css.inputGroupInputUk]: i18n.language === "uk",
+                }
               )}
-              {...register('password')}
+              {...register("password")}
             />
             <button
               type="button"
@@ -159,23 +159,23 @@ export default function SignUpForm() {
         </div>
         <div
           className={clsx(css.inputGroup, {
-            [css.inputGroupUk]: i18n.language === 'uk',
+            [css.inputGroupUk]: i18n.language === "uk",
           })}
         >
-          <label>{t('Repeat password')}</label>
+          <label>{t("Repeat password")}</label>
           <div className={css.passwordContainer}>
             <input
-              type={showPassword ? 'text' : 'password'}
-              placeholder={t('Repeat password')}
+              type={showPassword ? "text" : "password"}
+              placeholder={t("Repeat password")}
               name="repeatPassword"
               autoComplete="password-confirmation"
-              {...register('repeatPassword')}
+              {...register("repeatPassword")}
               className={clsx(
                 css.inputGroupInput,
                 errors.email && css.inputError,
                 {
-                  [css.inputGroupInputUk]: i18n.language === 'uk',
-                },
+                  [css.inputGroupInputUk]: i18n.language === "uk",
+                }
               )}
             />
             <button
@@ -198,7 +198,7 @@ export default function SignUpForm() {
 
         <button
           className={clsx(css.submitButton, {
-            [css.submitButtonUk]: i18n.language === 'uk',
+            [css.submitButtonUk]: i18n.language === "uk",
           })}
           type="submit"
           disabled={!isValid}
@@ -206,7 +206,7 @@ export default function SignUpForm() {
           {isLoading ? (
             <DotLoader text="Signing Up" />
           ) : (
-            t('Register user form')
+            t("Register user form")
           )}
         </button>
         <GoogleAuthBtn />

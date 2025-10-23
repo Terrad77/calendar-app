@@ -1,53 +1,48 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import instance from "../../API/axiosInstance";
 import toastMaker from "../../utils/toastMaker/toastMaker";
-import { type ThunkConfig } from "../store";
+import type { ThunkConfig } from "../types/thunkConfig";
 import type { Task } from "./types";
 
-// Константа для минимальной допустимой даты (начало 2025 года)
+// MIN_DATE (beginning of 2025)
 export const MIN_DATE = new Date("2025-01-01T00:00:00.000Z").getTime();
 
-// Проверка, что дата не в прошлом (с учётом MIN_DATE)
+// check for date validity for use except past dates
 const isDateValid = (timestamp: number) => {
   const now = Date.now();
   return timestamp >= MIN_DATE && timestamp <= now;
 };
 
-// // type for task
-// export interface Task {
-//   id: string;
-//   date: number;
-//   [key: string]: unknown;
-// }
-
-export const getDayTask = createAsyncThunk<
-  Task[], // что возвращаем
-  string, // что принимаем (date)
-  ThunkConfig<string> // конфиг с типом ошибки
->("task/DayTask", async (date, thunkAPI) => {
-  try {
-    const timestamp = new Date(date).getTime();
-    // Если дата больше текущей (будущая) - возвращаем пустой массив
-    if (timestamp > Date.now()) {
-      return [];
+// Get tasks for a day
+export const getDayTask = createAsyncThunk<Task[], string, ThunkConfig<string>>(
+  "task/DayTask",
+  async (date, thunkAPI) => {
+    try {
+      const timestamp = new Date(date).getTime();
+      // if date is in the future - return empty array
+      if (timestamp > Date.now()) {
+        return [];
+      }
+      // if date is before MIN_DATE - return empty array
+      if (timestamp < MIN_DATE) {
+        return [];
+      }
+      const response = await instance.get(`api/task/day/${date}`);
+      return response.data.TaskData;
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      return thunkAPI.rejectWithValue(errorMessage);
     }
-    // Если дата раньше MIN_DATE - возвращаем пустой массив
-    if (timestamp < MIN_DATE) {
-      return [];
-    }
-    const response = await instance.get(`api/task/day/${date}`);
-    return response.data.TaskData;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    return thunkAPI.rejectWithValue(errorMessage);
   }
-});
+);
 
 export type NewNote = {
   date: number;
   [key: string]: unknown;
 };
 
+// Add a new task
 export const addTask = createAsyncThunk<Task, NewNote, ThunkConfig<string>>(
   "task/addTask",
   async (newNote, { rejectWithValue }) => {
@@ -60,7 +55,7 @@ export const addTask = createAsyncThunk<Task, NewNote, ThunkConfig<string>>(
       const { data } = await instance.post("api/task", newNote);
       console.log("addTask API response:", data);
       return data;
-    } catch (error) {
+    } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       return rejectWithValue(errorMessage);
@@ -68,6 +63,7 @@ export const addTask = createAsyncThunk<Task, NewNote, ThunkConfig<string>>(
   }
 );
 
+// Delete a task
 export const deleteTask = createAsyncThunk<
   { success: boolean; id: string }, // возвращаем
   string, // аргумент (id)
@@ -78,7 +74,7 @@ export const deleteTask = createAsyncThunk<
       `api/task/${id}`
     );
     return data;
-  } catch (error) {
+  } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return rejectWithValue(errorMessage);
   }
@@ -89,6 +85,7 @@ type EditTaskPayload = {
   newNote: Record<string, unknown>;
 };
 
+// Edit a task
 export const editTask = createAsyncThunk<
   Task, // возвращаем
   EditTaskPayload, // аргумент
@@ -97,15 +94,16 @@ export const editTask = createAsyncThunk<
   try {
     const { data } = await instance.put(`api/task/${id}`, newNote);
     return data;
-  } catch (error) {
+  } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return rejectWithValue(errorMessage);
   }
 });
 
+// Get month info
 export const getMonthInfo = createAsyncThunk<
-  Record<string, unknown>, // возвращаем
-  string, // аргумент (date)
+  Record<string, unknown>, // return type
+  string, // argument type
   ThunkConfig<string>
 >("task/getMonthInfo", async (date, { rejectWithValue }) => {
   try {
@@ -113,7 +111,7 @@ export const getMonthInfo = createAsyncThunk<
       `api/task/month/${date}`
     );
     return data;
-  } catch (error) {
+  } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return rejectWithValue(errorMessage);
   }

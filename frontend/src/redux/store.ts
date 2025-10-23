@@ -10,8 +10,9 @@ import {
   REGISTER,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import userReducer, { type UserState } from "./user/slice";
+import userReducer from "./user/slice";
 import taskReducer from "./task/slice";
+import type { UserState } from "./user/types";
 import type { TaskState } from "./task/types";
 
 type PersistPartialCustom = {
@@ -21,11 +22,13 @@ type PersistPartialCustom = {
   };
 };
 
+// persist config for user slice
 const userPersistConfig = {
   key: "user",
   storage,
-  whitelist: ["refreshToken"], // зберегти тільки токен
+  whitelist: ["refreshToken"], // save only refreshToken
 };
+
 const persistedUserReducer = persistReducer(userPersistConfig, userReducer);
 
 export const store = configureStore({
@@ -43,16 +46,10 @@ export const store = configureStore({
 
 export const persistor = persistStore(store);
 
-// Тип RootState для типізації getState
 export type RootState = {
   user: UserState & PersistPartialCustom;
   task: TaskState;
 };
 
+// infer types directly from store (Automatic types)
 export type AppDispatch = typeof store.dispatch;
-
-export type ThunkConfig<RejectValue = unknown> = {
-  state: RootState;
-  dispatch: AppDispatch;
-  rejectValue: RejectValue;
-};
