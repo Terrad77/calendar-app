@@ -1,16 +1,10 @@
-import {
-  useState,
-  useEffect,
-  useTransition,
-  useCallback,
-  useMemo,
-} from "react";
-import { styled } from "@stitches/react";
-import dayjs, { Dayjs } from "dayjs";
-import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
-import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
-import debounce from "lodash.debounce";
-// dnd-kit for D&D functionality
+import { useState, useEffect, useTransition, useCallback, useMemo } from 'react';
+import { styled } from '@stitches/react';
+import * as dayjs from 'dayjs';
+type Dayjs = dayjs.Dayjs;
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import debounce from 'lodash.debounce';
 import {
   DndContext,
   DragOverlay,
@@ -21,79 +15,85 @@ import {
   useSensors,
   type Active,
   type DragEndEvent,
-} from "@dnd-kit/core";
-import { arrayMove } from "@dnd-kit/sortable";
-
-import type { CalendarEvent, ColorType, Holiday } from "../../types";
-import { TASK_MARKER_COLORS } from "../../types";
-
-import { CalendarDayCell } from "./CalendarDayCell";
-import { TaskCardDraggable } from "./TaskCardDraggable";
-import { CalendarHeader } from "./CalendarHeader";
-import { CalendarGridHeader } from "./CalendarGridHeader";
+} from '@dnd-kit/core'; // dnd-kit for D&D functionality
+import { arrayMove } from '@dnd-kit/sortable';
+import type { CalendarEvent, ColorType, Holiday } from '../../types/types';
+import { TASK_MARKER_COLORS } from '../../types/types';
+import { CalendarDayCell } from './CalendarDayCell';
+import { TaskCardDraggable } from './TaskCardDraggable';
+import { CalendarHeader } from './CalendarHeader';
+import { CalendarGridHeader } from './CalendarGridHeader';
 
 // Extend dayjs with plugins for date comparison
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
-const Wrapper = styled("div", {
-  display: "flex",
-  flexDirection: "column",
-  width: "100%",
-  maxWidth: "1400px",
-  margin: "20px",
-  backgroundColor: "#fff",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-  overflow: "hidden",
+interface CalendarProps {
+  events?: CalendarEvent[];
+  setEvents?: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
+}
+
+const Wrapper = styled('div', {
+  display: 'flex',
+  flexDirection: 'column',
+  width: '100%',
+  maxWidth: '1400px',
+  margin: '20px',
+  backgroundColor: '#fff',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+  overflow: 'hidden',
 });
 
-const CalendarGrid = styled("div", {
-  display: "grid",
-  gridTemplateColumns: "repeat(7, minmax(150px, 1fr))",
-  gap: "4px",
-  backgroundColor: "#edeff1",
+const CalendarGrid = styled('div', {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(7, minmax(150px, 1fr))',
+  gap: '4px',
+  backgroundColor: '#edeff1',
   minHeight: `calc((var(--calendar-day-cell-min-height, 120px) * 6) + (4px * 5))`,
-  "@media (max-width: 768px)": {
+  '@media (max-width: 768px)': {
     minHeight: `auto`,
   },
 });
 
-const StatusMessage = styled("div", {
-  padding: "8px 16px",
-  backgroundColor: "#fffbebe6", // Поправив опечатку
-  color: "#856404",
-  border: "1px solid #ffeeba",
-  borderRadius: "4px",
-  margin: "12px",
-  textAlign: "center",
+const StatusMessage = styled('div', {
+  padding: '8px 16px',
+  backgroundColor: '#fffbebe6',
+  color: '#856404',
+  border: '1px solid #ffeeba',
+  borderRadius: '4px',
+  margin: '12px',
+  textAlign: 'center',
   variants: {
     type: {
       error: {
-        backgroundColor: "#f8d7da",
-        color: "#721c24",
-        border: "1px solid #f5c6cb",
+        backgroundColor: '#f8d7da',
+        color: '#721c24',
+        border: '1px solid #f5c6cb',
       },
       loading: {
-        backgroundColor: "#d1ecf1",
-        color: "#0c5460",
-        border: "1px solid #bee5eb",
+        backgroundColor: '#d1ecf1',
+        color: '#0c5460',
+        border: '1px solid #bee5eb',
       },
     },
   },
 });
 
-// --- КЛЮЧ ДЛЯ LOCAL STORAGE ---
-const LOCAL_STORAGE_KEY = "calendarTasks";
+// --- KEY for LOCAL STORAGE ---
+const LOCAL_STORAGE_KEY = 'calendarTasks';
 
-// --- BASE URL---
+// --- BASE URL, value for Vite building ---
 const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
 
-export const Calendar = () => {
+export const Calendar = ({
+  events: externalEvents,
+  setEvents: externalSetEvents,
+}: CalendarProps) => {
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
-  const [viewMode, setViewMode] = useState<"month" | "week">("month");
+  const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
 
   // --- parsing Tasks from Local Storage ---
-  const [tasks, setTasks] = useState<CalendarEvent[]>(() => {
+  const [internalTasks, setInternalTasks] = useState<CalendarEvent[]>(() => {
     try {
       const storedTasks = localStorage.getItem(LOCAL_STORAGE_KEY);
 
@@ -104,12 +104,12 @@ export const Calendar = () => {
           return parsedTasks
             .map((task: unknown) => {
               if (
-                typeof task === "object" &&
+                typeof task === 'object' &&
                 task !== null &&
-                "id" in task &&
-                "date" in task &&
-                "title" in task &&
-                "eventType" in task
+                'id' in task &&
+                'date' in task &&
+                'title' in task &&
+                'eventType' in task
               ) {
                 const t = task as {
                   id: string;
@@ -131,9 +131,9 @@ export const Calendar = () => {
                   id: t.id,
                   date: t.date,
                   title: t.title,
-                  description: t.description || "",
+                  description: t.description || '',
                   eventType: t.eventType,
-                  colors: t.eventType === "task" ? safeColors : undefined,
+                  colors: t.eventType === 'task' ? safeColors : undefined,
                   countryCode: t.countryCode,
                 } as CalendarEvent;
               }
@@ -145,10 +145,13 @@ export const Calendar = () => {
       }
       return [];
     } catch (error) {
-      console.error("Failed to load tasks from Local Storage:", error);
+      console.error('Failed to load tasks from Local Storage:', error);
       return [];
     }
   });
+
+  const tasks = externalEvents !== undefined ? externalEvents : internalTasks;
+  const setTasks = externalSetEvents !== undefined ? externalSetEvents : setInternalTasks;
 
   // --- loading WorldwideHolidays from own backend ---
   useEffect(() => {
@@ -157,8 +160,7 @@ export const Calendar = () => {
       startTransition(async () => {
         try {
           const year = currentDate.year();
-          const month =
-            viewMode === "month" ? currentDate.month() + 1 : undefined;
+          const month = viewMode === 'month' ? currentDate.month() + 1 : undefined;
 
           let url = `${BACKEND_API_BASE_URL}/api/v1/holidays/worldwide?year=${year}`;
           if (month) {
@@ -169,7 +171,7 @@ export const Calendar = () => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
-          const data: Holiday[] = await response.json(); // Data will be an array of objects of type Holiday
+          const data: Holiday[] = await response.json(); // allowed Data will be an array of objects of type Holiday
 
           const uniqueHolidaysMap = new Map<string, Holiday>();
           data.forEach((holiday) => {
@@ -177,30 +179,25 @@ export const Calendar = () => {
           });
           const deduplicatedData = Array.from(uniqueHolidaysMap.values());
 
-          const mappedHolidays: CalendarEvent[] = deduplicatedData.map(
-            (holiday) => ({
-              id: holiday.id, // ID from backend
-              date: holiday.date,
-              title: holiday.title,
-              eventType: "holiday",
-              countryCode: holiday.countryCode,
-            })
-          );
+          const mappedHolidays: CalendarEvent[] = deduplicatedData.map((holiday) => ({
+            id: holiday.id, // ID from backend
+            date: holiday.date,
+            title: holiday.title,
+            eventType: 'holiday',
+            countryCode: holiday.countryCode,
+          }));
 
           setPublicHolidaysWorldwide(mappedHolidays);
         } catch (error: unknown) {
-          console.error("Error fetching worldwide public holidays:", error);
+          console.error('Error fetching worldwide public holidays:', error);
           // type guard
           if (error instanceof Error) {
             setHolidayError(
-              error.message ||
-                "Failed to fetch worldwide public holidays from backend."
+              error.message || 'Failed to fetch worldwide public holidays from backend.'
             );
           } // general errormessage
           else {
-            setHolidayError(
-              "Failed to fetch worldwide public holidays from backend."
-            );
+            setHolidayError('Failed to fetch worldwide public holidays from backend.');
           }
           setPublicHolidaysWorldwide([]);
         }
@@ -214,34 +211,28 @@ export const Calendar = () => {
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(tasks));
     } catch (error) {
-      console.error("Failed to save tasks to Local Storage:", error);
+      console.error('Failed to save tasks to Local Storage:', error);
     }
   }, [tasks]);
 
-  const [publicHolidaysWorldwide, setPublicHolidaysWorldwide] = useState<
-    CalendarEvent[]
-  >([]);
+  const [publicHolidaysWorldwide, setPublicHolidaysWorldwide] = useState<CalendarEvent[]>([]);
   const [holidayError, setHolidayError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [activeDayForInput, setActiveDayForInput] = useState<string | null>(
-    null
-  );
+  const [activeDayForInput, setActiveDayForInput] = useState<string | null>(null);
   const [editingTask, setEditingTask] = useState<CalendarEvent | null>(null);
-  const [activeDragItem, setActiveDragItem] = useState<CalendarEvent | null>(
-    null
-  );
+  const [activeDragItem, setActiveDragItem] = useState<CalendarEvent | null>(null);
 
-  const [searchInputValue, setSearchInputValue] = useState(""); // immediate update input field
-  const [searchQuery, setSearchQuery] = useState(""); // Delayed search
+  const [searchInputValue, setSearchInputValue] = useState(''); // immediate update input field
+  const [searchQuery, setSearchQuery] = useState(''); // Delayed search
 
-  // function for debounce Search
+  // debounce-function  for delay Search input 200ms
   const debouncedSetSearchQuery = useMemo(
     () =>
       debounce((value: string) => {
-        if (value.trim() !== "") {
+        if (value.trim() !== '') {
           setSearchQuery(value);
         } else {
-          setSearchQuery("");
+          setSearchQuery('');
         }
       }, 200),
     []
@@ -260,10 +251,10 @@ export const Calendar = () => {
 
   // function to handle immediately Search icon click
   const handleSearchIconClick = useCallback(() => {
-    if (searchInputValue.trim() !== "") {
+    if (searchInputValue.trim() !== '') {
       setSearchQuery(searchInputValue);
     } else {
-      setSearchQuery("");
+      setSearchQuery('');
     }
   }, [searchInputValue]);
 
@@ -278,32 +269,30 @@ export const Calendar = () => {
     let startDate: Dayjs;
     let endDate: Dayjs;
 
-    if (viewMode === "month") {
-      const firstDayOfMonth = currentDate.startOf("month");
-      const lastDayOfMonth = currentDate.endOf("month");
-      startDate = firstDayOfMonth.startOf("week");
-      endDate = lastDayOfMonth.endOf("week");
+    if (viewMode === 'month') {
+      const firstDayOfMonth = currentDate.startOf('month');
+      const lastDayOfMonth = currentDate.endOf('month');
+      startDate = firstDayOfMonth.startOf('week');
+      endDate = lastDayOfMonth.endOf('week');
     } else {
-      startDate = currentDate.startOf("week");
-      endDate = currentDate.endOf("week");
+      startDate = currentDate.startOf('week');
+      endDate = currentDate.endOf('week');
     }
 
     let currentDayInLoop = dayjs(startDate);
 
-    while (currentDayInLoop.isSameOrBefore(endDate, "day")) {
-      const formattedDay = currentDayInLoop.format("YYYY-MM-DD");
+    while (currentDayInLoop.isSameOrBefore(endDate, 'day')) {
+      const formattedDay = currentDayInLoop.format('YYYY-MM-DD');
       result[formattedDay] = { tasks: [], holidays: [] };
-      currentDayInLoop = currentDayInLoop.add(1, "day");
+      currentDayInLoop = currentDayInLoop.add(1, 'day');
     }
 
     // group filtered Tasks
     tasks.forEach((task) => {
-      const matchesSearch = task.title
-        .toLowerCase()
-        .includes(lowerCaseSearchQuery);
+      const matchesSearch = task.title.toLowerCase().includes(lowerCaseSearchQuery);
 
-      if (matchesSearch || lowerCaseSearchQuery === "") {
-        const taskDate = dayjs(task.date).format("YYYY-MM-DD");
+      if (matchesSearch || lowerCaseSearchQuery === '') {
+        const taskDate = dayjs(task.date).format('YYYY-MM-DD');
         if (!result[taskDate]) {
           result[taskDate] = { tasks: [], holidays: [] };
         }
@@ -313,7 +302,7 @@ export const Calendar = () => {
 
     // group publicHolidays
     publicHolidaysWorldwide.forEach((holiday) => {
-      const holidayDate = dayjs(holiday.date).format("YYYY-MM-DD");
+      const holidayDate = dayjs(holiday.date).format('YYYY-MM-DD');
       if (!result[holidayDate]) {
         result[holidayDate] = { tasks: [], holidays: [] };
       }
@@ -344,23 +333,19 @@ export const Calendar = () => {
 
   const handlePrev = useCallback(() => {
     setCurrentDate((prev) =>
-      viewMode === "month"
-        ? prev.subtract(1, "month")
-        : prev.subtract(1, "week")
+      viewMode === 'month' ? prev.subtract(1, 'month') : prev.subtract(1, 'week')
     );
     setActiveDayForInput(null);
     setEditingTask(null);
   }, [viewMode]);
 
   const handleNext = useCallback(() => {
-    setCurrentDate((prev) =>
-      viewMode === "month" ? prev.add(1, "month") : prev.add(1, "week")
-    );
+    setCurrentDate((prev) => (viewMode === 'month' ? prev.add(1, 'month') : prev.add(1, 'week')));
     setActiveDayForInput(null);
     setEditingTask(null);
   }, [viewMode]);
 
-  const handleViewModeChange = useCallback((mode: "month" | "week") => {
+  const handleViewModeChange = useCallback((mode: 'month' | 'week') => {
     setViewMode(mode);
     setActiveDayForInput(null);
     setEditingTask(null);
@@ -371,7 +356,7 @@ export const Calendar = () => {
       // find object CalendarEvent by id with `active`
       const draggedItem = tasks.find((t) => t.id === event.active.id);
 
-      if (draggedItem && draggedItem.eventType === "task") {
+      if (draggedItem && draggedItem.eventType === 'task') {
         setActiveDragItem(draggedItem);
       } else {
         setActiveDragItem(null);
@@ -380,7 +365,7 @@ export const Calendar = () => {
     [tasks]
   );
 
-  const today = dayjs().startOf("day"); // define current day
+  const today = dayjs().startOf('day'); // define current day
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -389,8 +374,8 @@ export const Calendar = () => {
 
       // Extracting date from id drop zone
       let targetDay: dayjs.Dayjs | null = null;
-      if (typeof over.id === "string" && over.id.startsWith("day-")) {
-        const dateStr = over.id.replace("day-", "");
+      if (typeof over.id === 'string' && over.id.startsWith('day-')) {
+        const dateStr = over.id.replace('day-', '');
         targetDay = dayjs(dateStr);
       }
 
@@ -399,23 +384,23 @@ export const Calendar = () => {
         return;
       }
 
-      if (!activeDragItem || activeDragItem.eventType !== "task") {
+      if (!activeDragItem || activeDragItem.eventType !== 'task') {
         setActiveDragItem(null);
         return;
       }
 
       // Check that targetDay is valid and not earlier than today
-      if (targetDay && targetDay.isBefore(today, "day")) {
+      if (targetDay && targetDay.isBefore(today, 'day')) {
         setActiveDragItem(null);
         return;
       }
 
       // Drag to another day (change date)
-      if (targetDay && activeDragItem.date !== targetDay.format("YYYY-MM-DD")) {
+      if (targetDay && activeDragItem.date !== targetDay.format('YYYY-MM-DD')) {
         setTasks((prevTasks) => {
           const updatedTasks = prevTasks.map((task) =>
             task.id === activeDragItem.id
-              ? { ...task, date: targetDay!.format("YYYY-MM-DD") }
+              ? { ...task, date: targetDay!.format('YYYY-MM-DD') }
               : task
           );
           return updatedTasks;
@@ -424,38 +409,22 @@ export const Calendar = () => {
       // Drag and drop within a day (reorder)
       else if (
         // check that over is another task
-        typeof over.id === "string" &&
+        typeof over.id === 'string' &&
         tasks.some((t) => t.id === over.id)
       ) {
         const overTask = tasks.find((t) => t.id === over.id);
 
         // check tasks exist and are on the same date
-        if (
-          activeDragItem &&
-          overTask &&
-          activeDragItem.date === overTask.date
-        ) {
+        if (activeDragItem && overTask && activeDragItem.date === overTask.date) {
           setTasks((prevTasks) => {
-            const currentDayTasks = prevTasks.filter(
-              (task) => task.date === activeDragItem.date
-            );
-            const otherDayTasks = prevTasks.filter(
-              (task) => task.date !== activeDragItem.date
-            );
+            const currentDayTasks = prevTasks.filter((task) => task.date === activeDragItem.date);
+            const otherDayTasks = prevTasks.filter((task) => task.date !== activeDragItem.date);
 
-            const activeIndex = currentDayTasks.findIndex(
-              (task) => task.id === activeDragItem.id
-            );
-            const overIndex = currentDayTasks.findIndex(
-              (task) => task.id === over.id
-            );
+            const activeIndex = currentDayTasks.findIndex((task) => task.id === activeDragItem.id);
+            const overIndex = currentDayTasks.findIndex((task) => task.id === over.id);
 
             if (activeIndex !== -1 && overIndex !== -1) {
-              const newOrderDayTasks = arrayMove(
-                currentDayTasks,
-                activeIndex,
-                overIndex
-              );
+              const newOrderDayTasks = arrayMove(currentDayTasks, activeIndex, overIndex);
               return [...otherDayTasks, ...newOrderDayTasks];
             }
             return prevTasks;
@@ -473,25 +442,25 @@ export const Calendar = () => {
     // start and end dates for the grid based on view mode
     let startVisibleDate: Dayjs;
 
-    if (viewMode === "month") {
+    if (viewMode === 'month') {
       // For month view, start from the first day of the week of the first day of the month
-      startVisibleDate = currentDate.startOf("month").startOf("week");
+      startVisibleDate = currentDate.startOf('month').startOf('week');
       // Generate 42 days (6 weeks) to cover the entire month grid
       for (let i = 0; i < 42; i++) {
-        allDaysInGrid.push(startVisibleDate.add(i, "day"));
+        allDaysInGrid.push(startVisibleDate.add(i, 'day'));
       }
     } else {
       // viewMode === "week"
       //start from the first day of the current week
-      startVisibleDate = currentDate.startOf("week");
+      startVisibleDate = currentDate.startOf('week');
       // Generate 7 days for the week
       for (let i = 0; i < 7; i++) {
-        allDaysInGrid.push(startVisibleDate.add(i, "day"));
+        allDaysInGrid.push(startVisibleDate.add(i, 'day'));
       }
     }
 
     return allDaysInGrid.map((dayInLoop) => {
-      const formattedDay = dayInLoop.format("YYYY-MM-DD");
+      const formattedDay = dayInLoop.format('YYYY-MM-DD');
       const dayData = filteredTasksAndHolidaysByDay[formattedDay] || {
         tasks: [],
         holidays: [],
@@ -501,14 +470,14 @@ export const Calendar = () => {
       // A day is a "filler" if it's outside the current month (in month view) or outside the current week (in week view)
 
       const isFiller =
-        (viewMode === "month" && !dayInLoop.isSame(currentDate, "month")) ||
-        (viewMode === "week" &&
-          (!dayInLoop.isSameOrAfter(currentDate.startOf("week"), "day") ||
-            !dayInLoop.isSameOrBefore(currentDate.endOf("week"), "day")));
+        (viewMode === 'month' && !dayInLoop.isSame(currentDate, 'month')) ||
+        (viewMode === 'week' &&
+          (!dayInLoop.isSameOrAfter(currentDate.startOf('week'), 'day') ||
+            !dayInLoop.isSameOrBefore(currentDate.endOf('week'), 'day')));
 
       return (
         <CalendarDayCell
-          key={dayInLoop.format("YYYY-MM-DD")}
+          key={dayInLoop.format('YYYY-MM-DD')}
           dayInLoop={dayInLoop}
           currentMonth={currentDate}
           dailyTasks={dayData.tasks} // ={isFiller ? [] : dayData.tasks} to show empty tasks for fillers
@@ -556,25 +525,15 @@ export const Calendar = () => {
           onSearchClick={handleSearchIconClick}
         />
 
-        {isPending && (
-          <StatusMessage type="loading">
-            Loading worldwide holidays...
-          </StatusMessage>
-        )}
-        {holidayError && (
-          <StatusMessage type="error">{holidayError}</StatusMessage>
-        )}
+        {isPending && <StatusMessage type="loading">Loading worldwide holidays...</StatusMessage>}
+        {holidayError && <StatusMessage type="error">{holidayError}</StatusMessage>}
         <CalendarGridHeader />
 
         <CalendarGrid>{renderedDays}</CalendarGrid>
 
         <DragOverlay>
           {activeDragItem && (
-            <TaskCardDraggable
-              event={activeDragItem}
-              isDragging={true}
-              customCursor="grabbing"
-            />
+            <TaskCardDraggable event={activeDragItem} isDragging={true} customCursor="grabbing" />
           )}
         </DragOverlay>
       </DndContext>

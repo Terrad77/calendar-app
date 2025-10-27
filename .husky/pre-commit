@@ -1,0 +1,11 @@
+#!/bin/sh
+
+echo "🚀 Running lint-staged..."
+if npx lint-staged; then
+    echo "✅ Pre-commit checks passed"
+else
+    echo "❌ Pre-commit checks failed"
+    exit 1
+fi
+
+

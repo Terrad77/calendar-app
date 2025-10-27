@@ -1,0 +1,123 @@
+.container {
+  background-color: var(--background);
+
+  padding: 24px 16px;
+  width: 344px;
+  height: 780px;
+  border-radius: 30px;
+}
+.logo {
+  margin-bottom: 172px;
+}
+.title {
+  margin-bottom: 32px;
+  color: var(--main);
+  font-family: Poppins;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 32px;
+  letter-spacing: -1%;
+  text-transform: capitalize;
+}
+
+.titleUk {
+  font-family: var(--font-family);
+  margin-bottom: 32px;
+  color: var(--main);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 32px;
+  letter-spacing: -1%;
+  text-transform: capitalize;
+}
+
+.notify {
+  color: var(--main-placeholder);
+  font-size: 14px;
+  line-height: 18px;
+  letter-spacing: -1%;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.notifyUk {
+  font-family: var(--font-family);
+  color: var(--main-placeholder);
+  font-size: 14px;
+  line-height: 18px;
+  letter-spacing: -1%;
+  text-align: center;
+  margin-top: 16px;
+}
+
+.navLink {
+  color: var(--main);
+  font-family: Poppins;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 18px;
+  letter-spacing: -1%;
+  text-transform: capitalize;
+  transition: all var(--transition);
+}
+
+.navLinkUk {
+  font-family: var(--font-family);
+  color: var(--main);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 18px;
+  letter-spacing: -1%;
+  text-transform: capitalize;
+  transition: all var(--transition);
+}
+
+.navLink:hover {
+  color: var(--accent-hover);
+}
+
+.advantagesSection {
+  display: none;
+}
+@media screen and (min-width: 768px) {
+  .container {
+    padding: 32px;
+    width: 704px;
+    height: 960px;
+    display: flex;
+    flex-direction: column;
+  }
+  .content {
+    margin: 0 auto;
+  }
+  .logo {
+    margin-bottom: 225px;
+  }
+  .title {
+    font-size: 36px;
+  }
+  .notify {
+    font-size: 16px;
+  }
+  .navLink {
+    font-size: 16px;
+  }
+}
+@media screen and (min-width: 1440px) {
+  .container {
+    width: 672px;
+    height: 736px;
+  }
+  .logo {
+    margin-bottom: 113px;
+  }
+  .desctopContainer {
+    display: flex;
+    gap: 32px;
+  }
+  .advantagesSection {
+    width: 672px;
+    height: 736px;
+    display: block;
+  }
+}
