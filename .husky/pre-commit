@@ -1,5 +1,3 @@
-cat > .husky/pre-commit << 'EOF'
 #!/bin/sh
 echo "🚀 Running lint-staged..."
 npx lint-staged
-EOF
