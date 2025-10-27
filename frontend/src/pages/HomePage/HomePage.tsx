@@ -1,7 +1,7 @@
-import Calendar from "../../components/Calendar/Calendar";
-import WelcomeSection from "../../components/WelcomeSection/WelcomeSection";
-import type { CalendarEvent } from "../../services/aiService";
-import css from "./HomePage.module.css";
+import Calendar from '../../components/Calendar/Calendar';
+import WelcomeSection from '../../components/WelcomeSection/WelcomeSection';
+import type { CalendarEvent } from '../../services/aiService';
+import css from './HomePage.module.css';
 
 interface HomePageProps {
   events: CalendarEvent[];
@@ -16,4 +16,3 @@ export default function HomePage({ events, setEvents }: HomePageProps) {
     </div>
   );
 }
-

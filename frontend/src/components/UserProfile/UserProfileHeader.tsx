@@ -1,124 +1,124 @@
 // src/components/UserProfile/UserProfileHeader.tsx
-import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { styled } from "@stitches/react";
-import { logout } from "../../redux/user/operations";
-import { selectUser } from "../../redux/user/selectors";
-import { type AppDispatch } from "../../redux/store";
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { styled } from '@stitches/react';
+import { logout } from '../../redux/user/operations';
+import { selectUser } from '../../redux/user/selectors';
+import { type AppDispatch } from '../../redux/store';
 
-const HeaderContainer = styled("div", {
-  position: "relative",
-  display: "flex",
-  alignItems: "center",
-  gap: "12px",
+const HeaderContainer = styled('div', {
+  position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
 });
 
-const UserButton = styled("button", {
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  padding: "8px 12px",
-  borderRadius: "8px",
-  border: "1px solid #e5e7eb",
-  background: "white",
-  cursor: "pointer",
-  transition: "all 0.2s",
+const UserButton = styled('button', {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  padding: '8px 12px',
+  borderRadius: '8px',
+  border: '1px solid #e5e7eb',
+  background: 'white',
+  cursor: 'pointer',
+  transition: 'all 0.2s',
 
-  "&:hover": {
-    background: "#f9fafb",
-    borderColor: "#667eea",
+  '&:hover': {
+    background: '#f9fafb',
+    borderColor: '#667eea',
   },
 
-  "&:focus": {
-    outline: "none",
-    boxShadow: "0 0 0 3px rgba(102, 126, 234, 0.1)",
+  '&:focus': {
+    outline: 'none',
+    boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.1)',
   },
 });
 
-const Avatar = styled("div", {
-  width: "32px",
-  height: "32px",
-  borderRadius: "50%",
-  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  color: "white",
+const Avatar = styled('div', {
+  width: '32px',
+  height: '32px',
+  borderRadius: '50%',
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  color: 'white',
   fontWeight: 600,
-  fontSize: "14px",
+  fontSize: '14px',
 });
 
-const UserInfo = styled("div", {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "flex-start",
+const UserInfo = styled('div', {
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-start',
 
-  "@media (max-width: 768px)": {
-    display: "none",
+  '@media (max-width: 768px)': {
+    display: 'none',
   },
 });
 
-const UserName = styled("span", {
-  fontSize: "14px",
+const UserName = styled('span', {
+  fontSize: '14px',
   fontWeight: 600,
-  color: "#1f2937",
+  color: '#1f2937',
 });
 
-const UserEmail = styled("span", {
-  fontSize: "12px",
-  color: "#6b7280",
+const UserEmail = styled('span', {
+  fontSize: '12px',
+  color: '#6b7280',
 });
 
-const Dropdown = styled("div", {
-  position: "absolute",
-  top: "calc(100% + 8px)",
+const Dropdown = styled('div', {
+  position: 'absolute',
+  top: 'calc(100% + 8px)',
   right: 0,
-  width: "220px",
-  background: "white",
-  borderRadius: "8px",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.15)",
-  border: "1px solid #e5e7eb",
-  padding: "8px",
+  width: '220px',
+  background: 'white',
+  borderRadius: '8px',
+  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+  border: '1px solid #e5e7eb',
+  padding: '8px',
   zIndex: 1000,
 });
 
-const DropdownItem = styled("button", {
-  width: "100%",
-  padding: "10px 12px",
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  background: "none",
-  border: "none",
-  borderRadius: "6px",
-  cursor: "pointer",
-  fontSize: "14px",
-  color: "#374151",
-  transition: "all 0.2s",
-  textAlign: "left",
+const DropdownItem = styled('button', {
+  width: '100%',
+  padding: '10px 12px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  background: 'none',
+  border: 'none',
+  borderRadius: '6px',
+  cursor: 'pointer',
+  fontSize: '14px',
+  color: '#374151',
+  transition: 'all 0.2s',
+  textAlign: 'left',
 
-  "&:hover": {
-    background: "#f3f4f6",
+  '&:hover': {
+    background: '#f3f4f6',
   },
 
   variants: {
     variant: {
       danger: {
-        color: "#dc2626",
+        color: '#dc2626',
 
-        "&:hover": {
-          background: "#fee",
+        '&:hover': {
+          background: '#fee',
         },
       },
     },
   },
 });
 
-const Divider = styled("div", {
-  height: "1px",
-  background: "#e5e7eb",
-  margin: "8px 0",
+const Divider = styled('div', {
+  height: '1px',
+  background: '#e5e7eb',
+  margin: '8px 0',
 });
 
 export const UserProfileHeader = () => {
@@ -130,26 +130,23 @@ export const UserProfileHeader = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
 
     if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
 
   const handleLogout = async () => {
     await dispatch(logout());
-    navigate("/");
+    navigate('/');
   };
 
   if (!user) {
@@ -159,8 +156,8 @@ export const UserProfileHeader = () => {
   const initials = user.name
     .trim()
     .split(/\s+/)
-    .map((part: string) => part[0] ?? "")
-    .join("")
+    .map((part: string) => part[0] ?? '')
+    .join('')
     .toUpperCase()
     .slice(0, 2);
 
@@ -172,9 +169,7 @@ export const UserProfileHeader = () => {
           <UserName>{user.name}</UserName>
           <UserEmail>{user.email}</UserEmail>
         </UserInfo>
-        <span style={{ fontSize: "12px", color: "#6b7280" }}>
-          {isOpen ? "▲" : "▼"}
-        </span>
+        <span style={{ fontSize: '12px', color: '#6b7280' }}>{isOpen ? '▲' : '▼'}</span>
       </UserButton>
 
       {isOpen && (
@@ -183,9 +178,7 @@ export const UserProfileHeader = () => {
             <span>👤</span>
             <div>
               <div style={{ fontWeight: 600 }}>{user.name}</div>
-              <div style={{ fontSize: "12px", color: "#6b7280" }}>
-                {user.email}
-              </div>
+              <div style={{ fontSize: '12px', color: '#6b7280' }}>{user.email}</div>
             </div>
           </DropdownItem>
 

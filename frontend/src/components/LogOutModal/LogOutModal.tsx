@@ -23,11 +23,7 @@ export default function LogOutModal({ isModalOpen }) {
 
   return (
     <div className={css.modal}>
-      <h3
-        className={clsx(css.title, { [css.titleUk]: i18n.language === 'uk' })}
-      >
-        {t('Log out')}
-      </h3>
+      <h3 className={clsx(css.title, { [css.titleUk]: i18n.language === 'uk' })}>{t('Log out')}</h3>
       <p className={clsx(css.text, { [css.textUk]: i18n.language === 'uk' })}>
         {t('Do you really')}
       </p>

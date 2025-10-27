@@ -1,12 +1,12 @@
-import { Routes, Route, Navigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import WelcomeSection from "./components/WelcomeSection/WelcomeSection.jsx";
-import SignUpPage from "./pages/SignUpPage/SignUpPage.jsx";
-import SignInPage from "./pages/SignInPage/SignInPage.jsx";
-import HomePage from "./pages/HomePage/HomePage.jsx"; // main calendar page
-import { authenticationService } from "./services/authService";
-import { AIAssistant } from "./components/AIAssistant/AIAssistant";
-import type { CalendarEvent } from "./services/aiService";
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import WelcomeSection from './components/WelcomeSection/WelcomeSection.jsx';
+import SignUpPage from './pages/SignUpPage/SignUpPage.jsx';
+import SignInPage from './pages/SignInPage/SignInPage.jsx';
+import HomePage from './pages/HomePage/HomePage.jsx'; // main calendar page
+import { authenticationService } from './services/authService';
+import { AIAssistant } from './components/AIAssistant/AIAssistant';
+import type { CalendarEvent } from './services/aiService';
 
 // Protected Route wrapper component
 interface ProtectedRouteProps {
@@ -36,9 +36,7 @@ const PublicRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
 function App() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    authenticationService.isAuthenticated()
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(authenticationService.isAuthenticated());
 
   // Listen for authentication changes
   useEffect(() => {
@@ -63,9 +61,7 @@ function App() {
 
   const handleEventUpdate = (updatedEvent: CalendarEvent) => {
     setEvents((prev) =>
-      prev.map((event) =>
-        event.id === updatedEvent.id ? { ...event, ...updatedEvent } : event
-      )
+      prev.map((event) => (event.id === updatedEvent.id ? { ...event, ...updatedEvent } : event))
     );
   };
 

@@ -54,11 +54,5 @@
     "prettier": "^3.6.2",
     "typescript": "^5.8.3",
     "vite": "^6.3.5"
-  },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint --fix --config ./eslint.config.js",
-      "prettier --write"
-    ]
   }
 }

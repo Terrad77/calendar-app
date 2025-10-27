@@ -1,12 +1,12 @@
-import { NavLink } from "react-router-dom";
-import Logo from "../../components/Logo/Logo";
-import SignUpForm from "../../components/SignUpForm/SignUpForm";
-import css from "../SignUpPage/SignUpPage.module.css";
-import Calendar from "../../components/Calendar/Calendar";
+import { NavLink } from 'react-router-dom';
+import Logo from '../../components/Logo/Logo';
+import SignUpForm from '../../components/SignUpForm/SignUpForm';
+import css from '../SignUpPage/SignUpPage.module.css';
+import Calendar from '../../components/Calendar/Calendar';
 
-import { useTranslation } from "react-i18next";
+import { useTranslation } from 'react-i18next';
 // import "../../translate/index.js";
-import clsx from "clsx";
+import clsx from 'clsx';
 
 export default function SignUpPage() {
   const { t, i18n } = useTranslation();
@@ -19,25 +19,25 @@ export default function SignUpPage() {
         <div className={css.content}>
           <h2
             className={clsx(css.title, {
-              [css.titleUk]: i18n.language === "uk",
+              [css.titleUk]: i18n.language === 'uk',
             })}
           >
-            {t("Register user form")}
+            {t('Register user form')}
           </h2>
           <SignUpForm />
           <p
             className={clsx(css.notify, {
-              [css.notifyUk]: i18n.language === "uk",
+              [css.notifyUk]: i18n.language === 'uk',
             })}
           >
-            {t("Already have")}{" "}
+            {t('Already have')}{' '}
             <NavLink
               className={clsx(css.navLink, {
-                [css.navLinkUk]: i18n.language === "uk",
+                [css.navLinkUk]: i18n.language === 'uk',
               })}
               to="/signin"
             >
-              {t("Login user")}
+              {t('Login user')}
             </NavLink>
           </p>
         </div>

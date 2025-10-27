@@ -1,12 +1,12 @@
-import toast from "react-hot-toast";
-import css from "../toastMaker/toastMaker.module.css";
-import Icon from "../../components/Icon";
+import toast from 'react-hot-toast';
+import css from '../toastMaker/toastMaker.module.css';
+import Icon from '../../components/Icon';
 
-type ToastStatus = "success" | "error";
+type ToastStatus = 'success' | 'error';
 
 export default function toastMaker(text: string, status?: ToastStatus): void {
   switch (status) {
-    case "success":
+    case 'success':
       return toast((t: { id: string }) => (
         <div className={css.toastContainer}>
           <Icon name="calendar-sad" className={css.iconSuccess} />
@@ -15,7 +15,7 @@ export default function toastMaker(text: string, status?: ToastStatus): void {
         </div>
       ));
 
-    case "error":
+    case 'error':
       return toast((t: { id: string }) => (
         <div className={css.toastContainer}>
           <Icon name="calendar-sad" className={css.iconSuccess} />
