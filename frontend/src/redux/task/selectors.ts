@@ -1,4 +1,5 @@
-import type { RootState } from "../store";
+// import type { RootState } from '../store';
+import type { RootState } from '../types/storeTypes';
 
 // Select active day
 export const selectActiveDay = (state: RootState) => state.task.activeDay;

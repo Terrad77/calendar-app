@@ -1,7 +1,10 @@
 import { Router, Request, Response } from "express";
-import { authService, AuthService } from "../services/authService";
-import { authenticateToken, rateLimitAuth } from "../middleware/authMiddleware";
-import { RegisterData, UserCredentials } from "../types/auth.types";
+import { authService, AuthService } from "../services/authService.js";
+import {
+  authenticateToken,
+  rateLimitAuth,
+} from "../middleware/authMiddleware.js";
+import { RegisterData, UserCredentials } from "../types/auth.types.js";
 
 const router = Router();
 

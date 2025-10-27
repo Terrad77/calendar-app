@@ -15,8 +15,9 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
+    "types": ["react", "react-dom"],
 
-    // 💡 важливо для references
+    // 💡 important for references
     "composite": true,
 
     // 💅 path aliases
@@ -29,5 +30,6 @@
       "@utils/*": ["utils/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }

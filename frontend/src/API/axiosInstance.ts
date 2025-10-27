@@ -1,13 +1,14 @@
-import axios from "axios";
-import { store } from "../redux/store";
-import { clearCredentials } from "../redux/user/slice";
+// src/API/axiosInstance.ts
+import axios from 'axios';
+import { store } from '../redux/store';
+import { clearCredentials } from '../redux/user/slice';
 
-const API_URL = import.meta.env.VITE_AI_API_URL || "http://localhost:3001";
+const API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:3001';
 
 const instance = axios.create({
   baseURL: API_URL,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 
@@ -43,7 +44,7 @@ instance.interceptors.response.use(
         const refreshToken = state.user.refreshToken;
 
         if (!refreshToken) {
-          throw new Error("No refresh token available");
+          throw new Error('No refresh token available');
         }
 
         // Call refresh endpoint
@@ -51,7 +52,7 @@ instance.interceptors.response.use(
           refreshToken,
         });
 
-        const { accessToken } = response.data.tokens;
+        const { accessToken, refreshToken: newRefreshToken } = response.data.tokens;
 
         // Update token in store (this will be handled by the refreshUserToken action)
         // For now, just retry the original request with new token
@@ -63,8 +64,8 @@ instance.interceptors.response.use(
         store.dispatch(clearCredentials());
 
         // Redirect to login
-        if (typeof window !== "undefined") {
-          window.location.href = "/signin";
+        if (typeof window !== 'undefined') {
+          window.location.href = '/signin';
         }
 
         return Promise.reject(refreshError);

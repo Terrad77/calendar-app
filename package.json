@@ -1,0 +1,44 @@
+{
+  "name": "calendar-app",
+  "version": "1.0.0",
+  "description": "calendar app with Vite + React + TS + Stitches",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No test specified\"",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Terrad77/calendar-app.git"
+  },
+  "keywords": [],
+  "author": "DAT <terlovoy77@gmail.com>",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Terrad77/calendar-app/issues"
+  },
+  "homepage": "https://github.com/Terrad77/calendar-app#readme",
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "eslint": "^9.38.0",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "eslint-plugin-unused-imports": "^4.3.0",
+    "husky": "^9.1.7",
+    "typescript-eslint": "^8.46.2"
+  },
+  "lint-staged": {
+    "frontend/**/*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "backend/**/*.{js,ts}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}

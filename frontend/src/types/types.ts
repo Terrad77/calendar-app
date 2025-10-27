@@ -1,25 +1,25 @@
-import { Dayjs } from "dayjs";
-import type { CSS } from "@stitches/react";
+import { Dayjs } from 'dayjs';
+import type { CSS } from '@stitches/react';
 
 export const TASK_MARKER_COLORS = [
-  "blue",
-  "green",
-  "orange",
-  "purple",
-  "turquoise",
-  "yellow",
-  "default",
+  'blue',
+  'green',
+  'orange',
+  'purple',
+  'turquoise',
+  'yellow',
+  'default',
 ] as const;
 
 export type ColorType = (typeof TASK_MARKER_COLORS)[number];
 
-export type EventType = "task" | "holiday";
+export type EventType = 'task' | 'holiday';
 
 export interface CalendarEvent {
   id: string;
   date: string; // YYYY-MM-DD
   title: string;
-  eventType: "task" | "holiday";
+  eventType: 'task' | 'holiday';
   colors?: ColorType[];
   description?: string; // only for tasks
   countryCode?: string; // only for holidays
@@ -27,11 +27,11 @@ export interface CalendarEvent {
 
 export interface CalendarHeaderProps {
   currentDate: Dayjs;
-  viewMode: "month" | "week";
+  viewMode: 'month' | 'week';
   isPending: boolean;
   onPrev: () => void;
   onNext: () => void;
-  onViewModeChange: (mode: "month" | "week") => void;
+  onViewModeChange: (mode: 'month' | 'week') => void;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   searchInputValue: string; //props for input value, for control from CalendarHeader
   onSearchClick?: () => void;
@@ -42,7 +42,7 @@ export interface Holiday {
   date: string;
   title: string;
   countryCode: string;
-  eventType: "holiday";
+  eventType: 'holiday';
 }
 
 export interface SearchInputProps {
@@ -53,4 +53,8 @@ export interface SearchInputProps {
   css?: CSS; // props for passing styles via the 'css' prop Stitches
   className?: string;
   style?: React.CSSProperties;
+}
+
+export interface DotLoaderProps {
+  text: string;
 }
