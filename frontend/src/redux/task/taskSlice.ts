@@ -1,14 +1,17 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import taskOps from './operations';
-import { logout } from '../user/operations';
 import type { Task, TaskState } from './types';
+import { addTask, deleteTask, editTask, getDayTask, getMonthInfo } from './operations';
 
 const initialState: TaskState = {
   activeDay: '',
-  dayTasks: { date: '', tasks: [] },
+  dayTasks: {
+    date: '',
+    tasks: [],
+  },
   monthTasks: [],
   currentDay: [],
   loading: false,
+  error: null,
 };
 
 const taskSlice = createSlice({
@@ -18,38 +21,50 @@ const taskSlice = createSlice({
     setActiveDay: (state, action: PayloadAction<string>) => {
       state.activeDay = action.payload;
     },
+    clearTasks: (state) => {
+      state.dayTasks.tasks = [];
+      state.currentDay = [];
+      state.monthTasks = [];
+    },
   },
-  extraReducers: (builder) =>
+  extraReducers: (builder) => {
     builder
       // Add Task
-      .addCase(taskOps.addTask.pending, (state) => {
+      .addCase(addTask.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
-      .addCase(taskOps.addTask.fulfilled, (state, action: PayloadAction<Task>) => {
+      .addCase(addTask.fulfilled, (state, action: PayloadAction<Task>) => {
         state.loading = false;
 
         const date = new Date(action.payload.date);
         date.setUTCHours(0, 0, 0, 0);
         const requestDate = date.toISOString();
 
-        if (state.activeDay === requestDate) state.dayTasks.tasks.push(action.payload);
+        if (state.activeDay === requestDate) {
+          state.dayTasks.tasks.push(action.payload);
+        }
 
         const currentDate = new Date();
         currentDate.setUTCHours(0, 0, 0, 0);
         const currentDayISO = currentDate.toISOString();
 
-        if (currentDayISO === requestDate) state.currentDay.push(action.payload);
+        if (currentDayISO === requestDate) {
+          state.currentDay.push(action.payload);
+        }
       })
-      .addCase(taskOps.addTask.rejected, (state) => {
+      .addCase(addTask.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload as string;
       })
 
       // Delete Task
-      .addCase(taskOps.deleteTask.pending, (state) => {
+      .addCase(deleteTask.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(
-        taskOps.deleteTask.fulfilled,
+        deleteTask.fulfilled,
         (state, action: PayloadAction<{ success: boolean; id: string }>) => {
           state.loading = false;
           state.dayTasks.tasks = state.dayTasks.tasks.filter(
@@ -58,15 +73,17 @@ const taskSlice = createSlice({
           state.currentDay = state.currentDay.filter((item) => item._id !== action.payload.id);
         }
       )
-      .addCase(taskOps.deleteTask.rejected, (state) => {
+      .addCase(deleteTask.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload as string;
       })
 
       // Edit Task
-      .addCase(taskOps.editTask.pending, (state) => {
+      .addCase(editTask.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
-      .addCase(taskOps.editTask.fulfilled, (state, action: PayloadAction<Task>) => {
+      .addCase(editTask.fulfilled, (state, action: PayloadAction<Task>) => {
         state.loading = false;
         state.dayTasks.tasks = state.dayTasks.tasks.map((item) =>
           item._id === action.payload._id ? action.payload : item
@@ -75,17 +92,20 @@ const taskSlice = createSlice({
           item._id === action.payload._id ? action.payload : item
         );
       })
-      .addCase(taskOps.editTask.rejected, (state) => {
+      .addCase(editTask.rejected, (state, action) => {
         state.loading = false;
+        state.error = action.payload as string;
       })
 
       // Get Day Tasks
-      .addCase(taskOps.getDayTask.pending, (state) => {
+      .addCase(getDayTask.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
-      .addCase(taskOps.getDayTask.fulfilled, (state, action: PayloadAction<Task[]>) => {
+      .addCase(getDayTask.fulfilled, (state, action: PayloadAction<Task[]>) => {
         state.loading = false;
         state.dayTasks.tasks = action.payload;
+        state.dayTasks.date = state.activeDay;
 
         const currentDate = new Date();
         currentDate.setUTCHours(0, 0, 0, 0);
@@ -99,30 +119,27 @@ const taskSlice = createSlice({
           if (currentDayISO === requestDate) state.currentDay = action.payload;
         }
       })
-      .addCase(taskOps.getDayTask.rejected, (state) => {
+      .addCase(getDayTask.rejected, (state, action) => {
         state.loading = false;
         state.dayTasks.tasks = [];
+        state.error = action.payload as string;
       })
 
       // Get Month Info
-      .addCase(taskOps.getMonthInfo.pending, (state) => {
+      .addCase(getMonthInfo.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
-      .addCase(taskOps.getMonthInfo.fulfilled, (state, action: PayloadAction<Task[]>) => {
+      .addCase(getMonthInfo.fulfilled, (state, action: PayloadAction<Task[]>) => {
         state.loading = false;
         state.monthTasks = action.payload;
       })
-      .addCase(taskOps.getMonthInfo.rejected, (state) => {
+      .addCase(getMonthInfo.rejected, (state, action) => {
         state.loading = false;
-      })
-
-      // Logout — clearing tasks
-      .addCase(logout.fulfilled, (state) => {
-        state.dayTasks.tasks = [];
-        state.currentDay = [];
-        state.monthTasks = [];
-      }),
+        state.error = action.payload as string;
+      });
+  },
 });
 
-export const { setActiveDay } = taskSlice.actions;
+export const { setActiveDay, clearTasks } = taskSlice.actions;
 export default taskSlice.reducer;

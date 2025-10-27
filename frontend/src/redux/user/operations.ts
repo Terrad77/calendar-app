@@ -1,33 +1,8 @@
-// src/redux/user/operations.ts
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import instance from '../../API/axiosInstance';
 import toastMaker from '../../utils/toastMaker/toastMaker';
 import type { RootState, AppDispatch } from '../types/storeTypes';
-import type { User } from './userSlice';
-
-interface AxiosError {
-  response?: {
-    data?: {
-      message?: string;
-      error?: string;
-    };
-    status?: number;
-  };
-  message?: string;
-}
-
-// User login/register payloads
-interface UserInfo {
-  email: string;
-  password: string;
-}
-interface RegisterInfo extends UserInfo {
-  name: string;
-}
-interface UserData {
-  name?: string;
-  theme?: string;
-}
+import type { User, UserInfo, RegisterInfo, UserData, AxiosError } from './types';
 
 // --- Helpers to manage auth headers ---
 const setAuthHeader = (token: string) => {
@@ -37,9 +12,8 @@ const clearAuthHeader = () => {
   instance.defaults.headers.common['Authorization'] = '';
 };
 
-// ---------------------------
 // Login user
-// ---------------------------
+
 export const login = createAsyncThunk<
   { user: User; token: string; refreshToken: string },
   UserInfo,
@@ -60,9 +34,8 @@ export const login = createAsyncThunk<
   }
 });
 
-// ---------------------------
 // Register user
-// ---------------------------
+
 export const register = createAsyncThunk<
   { user: User; token: string; refreshToken: string },
   RegisterInfo,

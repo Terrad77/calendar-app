@@ -2,7 +2,7 @@
   "name": "calendar-backend",
   "version": "1.0.0",
   "description": "Backend service for calendar holidays",
-  "type": "module",
+  "type": "commonjs",
   "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
@@ -26,6 +26,8 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.14.2",
     "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
     "eslint": "^9.38.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.6",

@@ -1,8 +1,8 @@
-// src/API/axiosInstance.ts
 import axios from 'axios';
 import { store } from '../redux/store';
-import { clearCredentials } from '../redux/user/slice';
+import { clearCredentials } from '../redux/user/userSlice';
 
+// Используйте import.meta.env вместо process.env для Vite
 const API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:3001';
 
 const instance = axios.create({

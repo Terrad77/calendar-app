@@ -28,6 +28,11 @@ import { CalendarGridHeader } from './CalendarGridHeader';
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
+interface CalendarProps {
+  events?: CalendarEvent[];
+  setEvents?: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
+}
+
 const Wrapper = styled('div', {
   display: 'flex',
   flexDirection: 'column',
@@ -80,12 +85,15 @@ const LOCAL_STORAGE_KEY = 'calendarTasks';
 // --- BASE URL, value for Vite building ---
 const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
 
-export const Calendar = () => {
+export const Calendar = ({
+  events: externalEvents,
+  setEvents: externalSetEvents,
+}: CalendarProps) => {
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
   const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
 
   // --- parsing Tasks from Local Storage ---
-  const [tasks, setTasks] = useState<CalendarEvent[]>(() => {
+  const [internalTasks, setInternalTasks] = useState<CalendarEvent[]>(() => {
     try {
       const storedTasks = localStorage.getItem(LOCAL_STORAGE_KEY);
 
@@ -141,6 +149,9 @@ export const Calendar = () => {
       return [];
     }
   });
+
+  const tasks = externalEvents !== undefined ? externalEvents : internalTasks;
+  const setTasks = externalSetEvents !== undefined ? externalSetEvents : setInternalTasks;
 
   // --- loading WorldwideHolidays from own backend ---
   useEffect(() => {
