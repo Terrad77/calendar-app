@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import * as yup from 'yup';
+
 import { yupResolver } from '@hookform/resolvers/yup';
 import css from '../SignUpForm/SignUpForm.module.css';
 import Icon from '../Icon';
@@ -11,21 +11,10 @@ import GoogleAuthBtn from '../GoogleAuthBtn/GoogleAuthBtn';
 import { selectIsLoading } from '../../redux/user/selectors';
 import DotLoader from '../DotLoader/DotLoader.js';
 import { useTranslation } from 'react-i18next';
-// import "../../translate/index.js";
-import SignUpModal from '../SignUpModal/SignUpModal.jsx';
+import '../../translate/index.js';
+import SignUpModal from '../SignUpModal/SignUpModal';
 import Modal from '../Modal/Modal.js';
-
-const schema = yup.object().shape({
-  email: yup.string().email('Invalid email').required('Email is required'),
-  password: yup
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .required('Password is required'),
-  repeatPassword: yup
-    .string()
-    .oneOf([yup.ref('password'), null], 'Passwords must match')
-    .required('Repeat Password is required'),
-});
+import { signUpSchema } from '../../schemas/validationSchemas';
 
 export default function SignUpForm() {
   const dispatch = useDispatch();
@@ -41,7 +30,7 @@ export default function SignUpForm() {
     reset,
     formState: { errors, isValid },
   } = useForm({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(signUpSchema),
     mode: 'onChange',
   });
 
@@ -139,9 +128,9 @@ export default function SignUpForm() {
               tabIndex="-1"
             >
               {showPassword ? (
-                <Icon className={css.icon} id="eye" width={20} height={20} />
+                <Icon className={css.icon} name="eye" />
               ) : (
-                <Icon className={css.icon} id="eyeOff" width={20} height={20} />
+                <Icon className={css.icon} name="eyeOff" />
               )}
             </button>
           </div>
@@ -171,9 +160,9 @@ export default function SignUpForm() {
               tabIndex="-1"
             >
               {showPassword ? (
-                <Icon className={css.icon} id="eye" width={20} height={20} />
+                <Icon className={css.icon} name="eye" />
               ) : (
-                <Icon className={css.icon} id="eyeOff" width={20} height={20} />
+                <Icon className={css.icon} name="eyeOff" />
               )}
             </button>
           </div>

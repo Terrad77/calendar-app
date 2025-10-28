@@ -1,29 +1,5 @@
-const API_URL = import.meta.env.VITE_AI_API_URL || "http://localhost:3001";
-
-export interface CalendarEvent {
-  id?: string;
-  title: string;
-  description?: string;
-  startDate: string;
-  endDate: string;
-  startTime?: string;
-  endTime?: string;
-  color?: string;
-  location?: string;
-  participants?: string[];
-}
-
-export interface AIResponse {
-  action: "create" | "update" | "delete" | "query" | "analyze";
-  event?: CalendarEvent;
-  message: string;
-  events?: CalendarEvent[];
-}
-
-export interface ConversationMessage {
-  role: "user" | "assistant";
-  content: string;
-}
+import type { CalendarEvent, AIResponse, ConversationMessage } from '../types/types';
+const API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:3001';
 
 class AIService {
   private conversationHistory: ConversationMessage[] = [];
@@ -31,15 +7,12 @@ class AIService {
   /**
    * Send message to AI assistant with current calendar context
    */
-  async chat(
-    message: string,
-    currentEvents: CalendarEvent[] = []
-  ): Promise<AIResponse> {
+  async chat(message: string, currentEvents: CalendarEvent[] = []): Promise<AIResponse> {
     try {
       const response = await fetch(`${API_URL}/api/ai/chat`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           message,
@@ -50,20 +23,18 @@ class AIService {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(
-          errorData.error || `AI service error: ${response.statusText}`
-        );
+        throw new Error(errorData.error || `AI service error: ${response.statusText}`);
       }
 
       const data = await response.json();
 
       // Update conversation history
       this.conversationHistory.push({
-        role: "user",
+        role: 'user',
         content: message,
       });
       this.conversationHistory.push({
-        role: "assistant",
+        role: 'assistant',
         content: data.response.message,
       });
 
@@ -74,7 +45,7 @@ class AIService {
 
       return data.response;
     } catch (error) {
-      console.error("Error in AI chat:", error);
+      console.error('Error in AI chat:', error);
       throw error;
     }
   }
@@ -82,15 +53,12 @@ class AIService {
   /**
    * Analyze schedule for a given time range
    */
-  async analyzeSchedule(
-    events: CalendarEvent[],
-    timeRange: string = "week"
-  ): Promise<string> {
+  async analyzeSchedule(events: CalendarEvent[], timeRange: string = 'week'): Promise<string> {
     try {
       const response = await fetch(`${API_URL}/api/ai/analyze-schedule`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           events,
@@ -105,7 +73,7 @@ class AIService {
       const data = await response.json();
       return data.analysis;
     } catch (error) {
-      console.error("Error analyzing schedule:", error);
+      console.error('Error analyzing schedule:', error);
       throw error;
     }
   }
@@ -122,9 +90,9 @@ class AIService {
   ): Promise<string> {
     try {
       const response = await fetch(`${API_URL}/api/ai/find-time`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           events,
@@ -140,7 +108,7 @@ class AIService {
       const data = await response.json();
       return data.suggestions;
     } catch (error) {
-      console.error("Error finding optimal time:", error);
+      console.error('Error finding optimal time:', error);
       throw error;
     }
   }
@@ -160,9 +128,9 @@ class AIService {
     try {
       const response = await fetch(`${API_URL}/health`);
       const data = await response.json();
-      return data.status === "ok";
+      return data.status === 'ok';
     } catch (error) {
-      console.error("AI service health check failed:", error);
+      console.error('AI service health check failed:', error);
       return false;
     }
   }

@@ -1,19 +1,20 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import WelcomeSection from './components/WelcomeSection/WelcomeSection.jsx';
-import SignUpPage from './pages/SignUpPage/SignUpPage.jsx';
-import SignInPage from './pages/SignInPage/SignInPage.jsx';
-import HomePage from './pages/HomePage/HomePage.jsx'; // main calendar page
+import WelcomeSection from './components/WelcomeSection/WelcomeSection';
+import SignUpPage from './pages/SignUpPage/SignUpPage';
+import SignInPage from './pages/SignInPage/SignInPage';
+import HomePage from './pages/HomePage/HomePage'; // main calendar page
 import { authenticationService } from './services/authService';
 import { AIAssistant } from './components/AIAssistant/AIAssistant';
-import type { CalendarEvent } from './services/aiService';
+import type { CalendarEvent } from './types/types';
+import './App.css';
 
 // Protected Route wrapper component
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const isAuthenticated = authenticationService.isAuthenticated();
 
   if (!isAuthenticated) {
@@ -23,8 +24,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   return <>{children}</>;
 };
 
-// Public Route wrapper (redirect to calendar if already authenticated)
-const PublicRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+// Public Route wrapper
+interface PublicRouteProps {
+  children: React.ReactNode;
+}
+
+const PublicRoute = ({ children }: PublicRouteProps) => {
   const isAuthenticated = authenticationService.isAuthenticated();
 
   if (isAuthenticated) {
@@ -38,19 +43,15 @@ function App() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(authenticationService.isAuthenticated());
 
-  // Listen for authentication changes
   useEffect(() => {
     const checkAuth = () => {
       setIsAuthenticated(authenticationService.isAuthenticated());
     };
 
-    // Check auth status periodically
     const interval = setInterval(checkAuth, 5000);
-
     return () => clearInterval(interval);
   }, []);
 
-  // Event handlers for AI Assistant
   const handleEventCreate = (event: CalendarEvent) => {
     const newEvent: CalendarEvent = {
       ...event,
@@ -72,14 +73,9 @@ function App() {
   return (
     <>
       <Routes>
-        {/* Public routes */}
         <Route
           path="/"
-          element={
-            <PublicRoute>
-              <WelcomeSection />
-            </PublicRoute>
-          }
+          element={isAuthenticated ? <Navigate to="/calendar" replace /> : <WelcomeSection />}
         />
 
         <Route
@@ -100,7 +96,6 @@ function App() {
           }
         />
 
-        {/* Protected routes */}
         <Route
           path="/calendar"
           element={
@@ -110,11 +105,14 @@ function App() {
           }
         />
 
-        {/* Catch all - redirect to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route
+          path="*"
+          element={
+            isAuthenticated ? <Navigate to="/calendar" replace /> : <Navigate to="/" replace />
+          }
+        />
       </Routes>
 
-      {/* AI Assistant - only show when authenticated */}
       {isAuthenticated && (
         <AIAssistant
           currentEvents={events}

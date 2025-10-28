@@ -5,7 +5,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #aca7a7;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,21 +13,65 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+/* Reset and base styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
-a:hover {
-  color: #535bf2;
+
+* {
+  margin: 0;
 }
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  padding: 8px;
+}
+
+/* Responsive padding for larger screens */
+@media (min-width: 768px) {
+  body {
+    padding: 16px;
+  }
+}
+
+/* add background gradient for larger screens */
+@media (min-width: 1400px) {
+  body {
+    background: linear-gradient(
+      90deg,
+      #f0f0f0 0%,
+      #f0f0f0 calc(50% - 600px),
+      #aca7a7 calc(50% - 600px),
+      #aca7a7 calc(50% + 600px),
+      #f0f0f0 calc(50% + 600px)
+    );
+  }
+}
+
+/* main container */
+#root {
+  width: 100%;
+  height: 100%;
+  max-width: 1200px;
+  /* horizontal center content */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* margin: 0 auto; */
+}
+
+/* Typography */
+a {
+  font-weight: 500;
+  color: #646cff;
+  text-decoration: none;
+}
+a:hover {
+  color: #535bf2;
 }
 
 h1 {
@@ -54,9 +98,22 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Color schemes */
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
+    background-color: #ffffff;
+  }
+  body {
     background-color: #ffffff;
   }
   a:hover {

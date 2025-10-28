@@ -21,7 +21,7 @@
     "@stitches/react": "^1.2.8",
     "@types/lodash.debounce": "^4.0.9",
     "axios": "^1.12.2",
-    "dayjs": "^1.11.13",
+    "dayjs": "^1.11.18",
     "framer-motion": "^12.23.24",
     "i18next": "^25.6.0",
     "lodash.debounce": "^4.0.8",

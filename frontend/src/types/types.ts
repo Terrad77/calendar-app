@@ -23,6 +23,14 @@ export interface CalendarEvent {
   colors?: ColorType[];
   description?: string; // only for tasks
   countryCode?: string; // only for holidays
+  // for compatibility with AIAssistant
+  startDate?: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  color?: string;
+  location?: string;
+  participants?: string[];
 }
 
 export interface CalendarHeaderProps {
@@ -57,4 +65,21 @@ export interface SearchInputProps {
 
 export interface DotLoaderProps {
   text: string;
+}
+
+export interface HomePageProps {
+  events: CalendarEvent[];
+  setEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
+}
+
+export interface AIResponse {
+  action: 'create' | 'update' | 'delete' | 'query' | 'analyze';
+  event?: CalendarEvent;
+  message: string;
+  events?: CalendarEvent[];
+}
+
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
 }

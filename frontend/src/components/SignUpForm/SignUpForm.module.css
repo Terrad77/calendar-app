@@ -2,16 +2,24 @@
   display: flex;
   flex-direction: column;
   width: 310px;
+  padding: 40px 20px;
+  background-color: gray;
+  border-radius: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
+
 .inputGroup {
   display: flex;
   flex-direction: column;
   position: relative;
   width: 100%;
+  margin-bottom: 16px;
 }
-.inputGroup:nth-child(-n + 2) {
-  padding-bottom: 16px;
+
+.inputGroup:last-of-type {
+  margin-bottom: 0;
 }
+
 .inputGroup > label {
   color: var(--main-text);
   font-family: Poppins;
@@ -37,10 +45,16 @@
   width: 100%;
   border-radius: 15px;
   border: 1px solid var(--main-border);
-  background-color: transparent;
+  background-color: var(--main-white, #ffffff);
   padding: 16px;
   outline: none;
   height: 50px;
+  transition: all var(--transition);
+}
+
+.inputGroupInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(74, 86, 226, 0.2);
 }
 
 .inputGroupInput::placeholder {
@@ -63,42 +77,71 @@
   border: 1px solid var(--validation-error);
   color: var(--validation-error);
 }
+
+.inputError:focus {
+  border-color: var(--validation-error);
+  box-shadow: 0 0 0 2px rgba(234, 84, 85, 0.2);
+}
+
 .error {
   color: var(--validation-error);
-  font-size: 14px;
-  line-height: 18px;
+  font-size: 12px;
+  line-height: 14px;
   letter-spacing: -1%;
-  margin-top: 10px;
+  margin-top: 6px;
+  padding-left: 8px;
 }
+
 .passwordContainer {
   position: relative;
 }
+
 .passwordToggle {
   position: absolute;
   border: none;
   line-height: 0;
   right: 16px;
-  top: 4px;
-  padding: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 8px;
   background-color: transparent;
-  /* display: none; */
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color var(--transition);
+}
+
+.passwordToggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .icon {
-  fill: transparent;
+  color: var(--main-placeholder);
+  transition: color var(--transition);
 }
+
+.passwordToggle:hover .icon {
+  color: var(--main-text);
+}
+
 .submitButton {
   background: var(--accent);
   border-radius: 30px;
   border: none;
-  margin-top: 32px;
-  font-weight: bold;
+  margin-top: 24px;
+  font-weight: 700;
+  font-size: 14px;
   padding: 16px;
+  color: var(--main-white);
   transition: all var(--transition);
+  cursor: pointer;
+  font-family: Poppins;
 }
+
 .submitButton:hover,
 .submitButton:focus {
   background-color: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 86, 226, 0.3);
 }
 
 .submitButtonUk {
@@ -106,49 +149,94 @@
   background: var(--accent);
   border-radius: 30px;
   border: none;
-  margin-top: 32px;
-  font-weight: bold;
+  margin-top: 24px;
+  font-weight: 700;
+  font-size: 14px;
   padding: 16px;
+  color: var(--main-white);
   transition: all var(--transition);
+  cursor: pointer;
 }
 
 .submitButton:disabled {
-  background-color: transparent;
+  background-color: var(--main-border);
+  color: var(--main-placeholder);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.submitButton:disabled:hover {
+  background-color: var(--main-border);
+  transform: none;
+  box-shadow: none;
+}
+
+/* Google Auth Button стилизация под общий стиль */
+.googleAuthBtn {
+  margin-top: 16px;
+  border-radius: 30px;
+  padding: 16px;
   border: 1px solid var(--main-border);
-  color: var(--main-border);
+  background: var(--main-white);
+  color: var(--main-text);
+  font-weight: 700;
+  font-size: 14px;
+  transition: all var(--transition);
+  cursor: pointer;
+}
+
+.googleAuthBtn:hover {
+  border-color: var(--accent);
+  background-color: var(--background);
 }
 
 @media screen and (min-width: 768px) {
   .form {
     width: 436px;
+    padding: 50px 40px;
   }
 
-  .inputGroup:nth-child(-n + 2) {
-    padding-bottom: 20px;
+  .inputGroup {
+    margin-bottom: 20px;
   }
 
   .inputGroup > label {
     font-size: 16px;
   }
+
   .inputGroupInput::placeholder {
     font-size: 16px;
   }
 
   .inputGroupInput {
     height: 56px;
+    font-size: 16px;
   }
 
   .passwordToggle {
-    display: block;
-    top: 16px;
-    padding: 0;
+    padding: 10px;
   }
 
   .submitButton {
     padding: 18px;
+    font-size: 16px;
+    margin-top: 32px;
+  }
+
+  .googleAuthBtn {
+    padding: 18px;
+    font-size: 16px;
+    margin-top: 20px;
+  }
+
+  .error {
+    font-size: 14px;
+    line-height: 16px;
   }
 }
-/* ------------------------     стилі modal --------------------------------- */
+
+/* Стили для модалки остаются без изменений */
 .modal {
   border-radius: 15px;
   padding: 40px 14px;

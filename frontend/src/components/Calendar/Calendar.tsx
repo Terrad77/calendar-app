@@ -1,7 +1,7 @@
 import { useState, useEffect, useTransition, useCallback, useMemo } from 'react';
 import { styled } from '@stitches/react';
-import * as dayjs from 'dayjs';
-type Dayjs = dayjs.Dayjs;
+import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import debounce from 'lodash.debounce';

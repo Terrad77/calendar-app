@@ -1,16 +1,20 @@
 import { type FC } from 'react';
 import { styled, type CSS } from '@stitches/react';
-
 // -----  import react-icons
-
-// Font Awesome Icons(Fa)
-import { FaChevronUp, FaChevronDown, FaQuestionCircle, FaSearch } from 'react-icons/fa';
 import { TbCalendarSad } from 'react-icons/tb';
-
+// Font Awesome Icons(Fa)
+import {
+  FaChevronUp,
+  FaChevronDown,
+  FaQuestionCircle,
+  FaSearch,
+  FaEye,
+  FaEyeSlash,
+} from 'react-icons/fa';
 // Material Design Icons (Md)
 import { MdCalendarMonth } from 'react-icons/md';
 
-// mapping key-value for icons
+// mapping for icons
 const iconComponents = {
   'chevron-up': FaChevronUp,
   'chevron-down': FaChevronDown,
@@ -18,6 +22,8 @@ const iconComponents = {
   search: FaSearch,
   'question-mark': FaQuestionCircle, // icon for fallback
   'calendar-sad': TbCalendarSad, // custom icon
+  eye: FaEye,
+  eyeOff: FaEyeSlash,
 };
 
 // define TypeScript for available icon names

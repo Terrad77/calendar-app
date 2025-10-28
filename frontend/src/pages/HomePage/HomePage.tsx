@@ -1,13 +1,11 @@
 import Calendar from '../../components/Calendar/Calendar';
-import WelcomeSection from '../../components/WelcomeSection/WelcomeSection';
-import type { CalendarEvent } from '../../services/aiService';
 import css from './HomePage.module.css';
+import type { HomePageProps } from '../../types/types';
 
-export default function HomePage() {
+export default function HomePage({ events, setEvents }: HomePageProps) {
   return (
     <div className={css.homeContainer}>
-      <Calendar />
-      <WelcomeSection />
+      <Calendar events={events} setEvents={setEvents} />
     </div>
   );
 }
