@@ -2,9 +2,7 @@ import { Link } from 'react-router-dom';
 import Logo from '../Logo/Logo';
 import css from './WelcomeSection.module.css';
 import clsx from 'clsx';
-
 import { useTranslation } from 'react-i18next';
-// import "../../translate/index.js";
 
 export default function WelcomeSection() {
   const { t, i18n } = useTranslation();
@@ -20,10 +18,10 @@ export default function WelcomeSection() {
             [css.subtitleUk]: i18n.language === 'uk',
           })}
         >
-          {t('Daily online planner')}
+          {t('daily_online_planner')}
         </h2>
         <h1 className={clsx(css.title, { [css.titleUk]: i18n.language === 'uk' })}>
-          {t('Calendar App')}
+          {t('calendar_app')}
         </h1>
       </div>
       <div className={css.buttons}>
@@ -33,7 +31,7 @@ export default function WelcomeSection() {
             [css.tryTrackerUk]: i18n.language === 'uk',
           })}
         >
-          {t('Register user')}
+          {t('register_user')}
         </Link>
         <Link
           to="/signin"
@@ -41,7 +39,7 @@ export default function WelcomeSection() {
             [css.signInUk]: i18n.language === 'uk',
           })}
         >
-          {t('Login user')}
+          {t('login_user')}
         </Link>
       </div>
     </div>

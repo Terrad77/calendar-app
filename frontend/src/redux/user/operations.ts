@@ -39,7 +39,7 @@ export const login = createAsyncThunk<
 export const register = createAsyncThunk<
   { user: User; token: string; refreshToken: string },
   RegisterInfo,
-  { state: RootState; dispatch: AppDispatch; rejectValue: string }
+  { state: RootState; dispatch: AppDispatch; rejectValue: { message: string; statusCode?: number } }
 >('user/register', async (userInfo, thunkAPI) => {
   try {
     const { data } = await instance.post('/api/auth/register', userInfo);
@@ -51,12 +51,16 @@ export const register = createAsyncThunk<
     };
   } catch (error: unknown) {
     const axiosError = error as AxiosError;
-    const msg =
+    const message =
       axiosError.response?.data?.message ||
       axiosError.response?.data?.error ||
       'Registration failed';
-    toastMaker(msg, 'error');
-    return thunkAPI.rejectWithValue(msg);
+
+    toastMaker(message, 'error');
+    return thunkAPI.rejectWithValue({
+      message,
+      statusCode: axiosError.response?.status,
+    });
   }
 });
 

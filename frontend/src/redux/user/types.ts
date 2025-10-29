@@ -20,7 +20,7 @@ export interface UserInfo {
 }
 
 export interface RegisterInfo extends UserInfo {
-  name: string;
+  name?: string;
 }
 
 export interface UserData {

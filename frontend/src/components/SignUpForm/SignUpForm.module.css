@@ -3,12 +3,14 @@
   flex-direction: column;
   width: 310px;
   padding: 40px 20px;
-  background-color: gray;
-  border-radius: 30px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  color: var(--main-text);
+  /* background-color: gray; */
+  /* border-radius: 30px; */
+  /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); */
 }
 
 .inputGroup {
+  color: var(--main-text);
   display: flex;
   flex-direction: column;
   position: relative;

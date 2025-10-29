@@ -6,6 +6,7 @@ import SignInPage from './pages/SignInPage/SignInPage';
 import HomePage from './pages/HomePage/HomePage'; // main calendar page
 import { authenticationService } from './services/authService';
 import { AIAssistant } from './components/AIAssistant/AIAssistant';
+
 import type { CalendarEvent } from './types/types';
 import './App.css';
 
@@ -71,7 +72,7 @@ function App() {
   };
 
   return (
-    <>
+    <div className="app">
       <Routes>
         <Route
           path="/"
@@ -121,7 +122,7 @@ function App() {
           onEventDelete={handleEventDelete}
         />
       )}
-    </>
+    </div>
   );
 }
 

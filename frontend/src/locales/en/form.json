@@ -1,0 +1,10 @@
+{
+  "email_user": "Email",
+  "password_user": "Password",
+  "repeat_password": "Repeat password",
+  "register_user_form": "Register",
+  "enter_email": "Enter email",
+  "enter_password": "Enter password",
+  "repeat_password_placeholder": "Repeat password",
+  "signing_up": "Signing Up"
+}

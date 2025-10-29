@@ -83,3 +83,14 @@ export interface ConversationMessage {
   role: 'user' | 'assistant';
   content: string;
 }
+
+export interface SignUpFormData {
+  email: string;
+  password: string;
+  repeatPassword: string;
+}
+
+export interface RegisterError {
+  message: string;
+  statusCode?: number;
+}

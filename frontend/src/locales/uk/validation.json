@@ -1,0 +1,7 @@
+{
+  "email_required": "Електронна пошта обов'язкова",
+  "email_invalid": "Невірний формат email",
+  "password_required": "Пароль обов'язковий",
+  "password_min_length": "Пароль має містити щонайменше 6 символів",
+  "passwords_must_match": "Паролі мають співпадати"
+}

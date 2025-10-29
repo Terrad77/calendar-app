@@ -2,7 +2,7 @@ import googleLogo from '../../assets/icons/google-logo.svg';
 import css from './GoogleAuthBtn.module.css';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import '../../translate/index.js';
+
 import clsx from 'clsx';
 
 export default function GoogleAuthBtn() {

@@ -40,3 +40,18 @@
 .read-the-docs {
   color: #888;
 }
+
+.language-switcher-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+/* from 0 to 768px for mobile devices */
+@media (max-width: 768px) {
+  .language-switcher-container {
+    top: 10px;
+    right: 10px;
+  }
+}

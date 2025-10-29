@@ -1,0 +1,48 @@
+.languageSwitcher {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.languageButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.languageButton:hover {
+  border-color: #646cff;
+  transform: translateY(-1px);
+}
+
+.languageButton.active {
+  background: #646cff;
+  color: white;
+  border-color: #646cff;
+}
+
+.flag {
+  font-size: 16px;
+}
+
+.code {
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .languageButton {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .flag {
+    font-size: 14px;
+  }
+}

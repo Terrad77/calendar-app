@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-
 import { yupResolver } from '@hookform/resolvers/yup';
 import css from '../SignUpForm/SignUpForm.module.css';
 import Icon from '../Icon';
@@ -11,25 +10,27 @@ import GoogleAuthBtn from '../GoogleAuthBtn/GoogleAuthBtn';
 import { selectIsLoading } from '../../redux/user/selectors';
 import DotLoader from '../DotLoader/DotLoader.js';
 import { useTranslation } from 'react-i18next';
-import '../../translate/index.js';
 import SignUpModal from '../SignUpModal/SignUpModal';
 import Modal from '../Modal/Modal.js';
 import { signUpSchema } from '../../schemas/validationSchemas';
+import { SignUpFormData, RegisterError } from '../../types/types';
+import toast from 'react-hot-toast';
+import { AppDispatch } from '../../redux/types';
 
 export default function SignUpForm() {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [showPassword, setShowPassword] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isLoading = useSelector(selectIsLoading);
   const { t, i18n } = useTranslation();
 
-  // об'єкт конфігурації параметрів хука useForm
+  // object config parameters for useForm hook
   const {
-    register,
+    register, // from react-hook-form to register inputs
     handleSubmit,
     reset,
     formState: { errors, isValid },
-  } = useForm({
+  } = useForm<SignUpFormData>({
     resolver: yupResolver(signUpSchema),
     mode: 'onChange',
   });
@@ -38,52 +39,39 @@ export default function SignUpForm() {
     setShowPassword(!showPassword);
   };
 
-  const handleFormSubmit = (data) => {
+  // handler form submit
+  const handleFormSubmit = async (data: SignUpFormData) => {
     const { email, password } = data;
+    const name = email.split('@')[0] || 'User';
 
-    dispatch(registerUser({ email, password }))
-      .then((action) => {
-        if (registerUser.fulfilled.match(action)) {
-          // toast.success('Register successful');
-          reset();
-          setIsModalOpen(true);
-        }
-        // else if (registerUser.rejected.match(action)) {
-        //   const errorMessage = action.payload?.message || 'Login failed';
-        //   const statusCode = action.payload ? action.payload.statusCode : null;
-
-        //   console.error(
-        //     `Login failed with status code ${statusCode}: ${errorMessage}`,
-        //   );
-        // }
-      })
-      .catch((error) => {
+    try {
+      await dispatch(registerUser({ name, email, password })).unwrap();
+      toast.success('Register successful');
+      reset();
+      setIsModalOpen(true);
+    } catch (error: unknown) {
+      // safe type error handling
+      if (typeof error === 'object' && error !== null && 'message' in error) {
+        const registerError = error as RegisterError;
+        console.error('Registration failed:', registerError.message);
+        toast.error(registerError.message);
+      } else {
         console.error('Unexpected error:', error);
-      });
+        toast.error('Registration failed');
+      }
+    }
   };
 
-  // const handleModalConfirm = () => {
-  //   Логика при нажатии кнопки "Pease verify emai" в модалке
-  //   dispatch(logout())
-  //     .unwrap()
-  //     .then(() => setIsModalOpen(false))
-  //     .catch(() => toast.error(t('Sorry, try again later')));
-  // };
-
   const handleModalCancel = () => {
-    // Логика при нажатии кнопки "Cancel" в модалке
     setIsModalOpen(false);
   };
 
   return (
     <>
       {isModalOpen && (
-        <Modal
-          children={<SignUpModal />}
-          isOpen={setIsModalOpen}
-          onClose={handleModalCancel}
-          // btnClassName={''}
-        />
+        <Modal isOpen={isModalOpen} onClose={handleModalCancel} btnClassName={''}>
+          <SignUpModal />
+        </Modal>
       )}
       <form className={css.form} onSubmit={handleSubmit(handleFormSubmit)}>
         <div
@@ -91,11 +79,10 @@ export default function SignUpForm() {
             [css.inputGroupUk]: i18n.language === 'uk',
           })}
         >
-          <label>{t('Email user')}</label>
+          <label>{t('email user')}</label>
           <input
             type="text"
-            placeholder={t('Enter email')}
-            name="email"
+            placeholder={t('enter email')}
             autoComplete="off"
             className={clsx(css.inputGroupInput, errors.email && css.inputError, {
               [css.inputGroupInputUk]: i18n.language === 'uk',
@@ -109,14 +96,13 @@ export default function SignUpForm() {
             [css.inputGroupUk]: i18n.language === 'uk',
           })}
         >
-          <label>{t('Password user')}</label>
+          <label>{t('password user')}</label>
           <div className={css.passwordContainer}>
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder={t('Enter password')}
-              name="password"
               autoComplete="new-password"
-              className={clsx(css.inputGroupInput, errors.email && css.inputError, {
+              className={clsx(css.inputGroupInput, errors.password && css.inputError, {
                 [css.inputGroupInputUk]: i18n.language === 'uk',
               })}
               {...register('password')}
@@ -125,7 +111,7 @@ export default function SignUpForm() {
               type="button"
               className={css.passwordToggle}
               onClick={toggleShowPassword}
-              tabIndex="-1"
+              tabIndex={-1}
             >
               {showPassword ? (
                 <Icon className={css.icon} name="eye" />
@@ -141,15 +127,14 @@ export default function SignUpForm() {
             [css.inputGroupUk]: i18n.language === 'uk',
           })}
         >
-          <label>{t('Repeat password')}</label>
+          <label>{t('repeat password')}</label>
           <div className={css.passwordContainer}>
             <input
               type={showPassword ? 'text' : 'password'}
               placeholder={t('Repeat password')}
-              name="repeatPassword"
               autoComplete="password-confirmation"
               {...register('repeatPassword')}
-              className={clsx(css.inputGroupInput, errors.email && css.inputError, {
+              className={clsx(css.inputGroupInput, errors.repeatPassword && css.inputError, {
                 [css.inputGroupInputUk]: i18n.language === 'uk',
               })}
             />
@@ -157,7 +142,7 @@ export default function SignUpForm() {
               type="button"
               className={css.passwordToggle}
               onClick={toggleShowPassword}
-              tabIndex="-1"
+              tabIndex={-1}
             >
               {showPassword ? (
                 <Icon className={css.icon} name="eye" />
@@ -174,9 +159,9 @@ export default function SignUpForm() {
             [css.submitButtonUk]: i18n.language === 'uk',
           })}
           type="submit"
-          disabled={!isValid}
+          disabled={!isValid || isLoading}
         >
-          {isLoading ? <DotLoader text="Signing Up" /> : t('Register user form')}
+          {isLoading ? <DotLoader text={t('loading')} /> : t('register user form')}
         </button>
         <GoogleAuthBtn />
       </form>
