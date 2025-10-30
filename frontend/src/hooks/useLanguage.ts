@@ -4,7 +4,15 @@ export const useLanguage = () => {
   const { i18n } = useTranslation();
 
   const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
+    console.log('Changing language to:', lng); // Debug log
+    i18n
+      .changeLanguage(lng)
+      .then(() => {
+        console.log('Language changed successfully to:', lng);
+      })
+      .catch((error) => {
+        console.error('Error changing language:', error);
+      });
   };
 
   const currentLanguage = i18n.language;

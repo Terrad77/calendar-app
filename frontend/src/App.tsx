@@ -6,7 +6,7 @@ import SignInPage from './pages/SignInPage/SignInPage';
 import HomePage from './pages/HomePage/HomePage'; // main calendar page
 import { authenticationService } from './services/authService';
 import { AIAssistant } from './components/AIAssistant/AIAssistant';
-
+import { Layout } from './components/Layout/Layout';
 import type { CalendarEvent } from './types/types';
 import './App.css';
 
@@ -25,7 +25,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   return <>{children}</>;
 };
 
-// Public Route wrapper
+// Public Route wrapper - redirects authenticated users to calendar
 interface PublicRouteProps {
   children: React.ReactNode;
 }
@@ -49,6 +49,7 @@ function App() {
       setIsAuthenticated(authenticationService.isAuthenticated());
     };
 
+    // Check authentication status every 5 seconds
     const interval = setInterval(checkAuth, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -74,16 +75,28 @@ function App() {
   return (
     <div className="app">
       <Routes>
+        {/* Home route with conditional rendering */}
         <Route
           path="/"
-          element={isAuthenticated ? <Navigate to="/calendar" replace /> : <WelcomeSection />}
+          element={
+            isAuthenticated ? (
+              <Navigate to="/calendar" replace />
+            ) : (
+              <Layout>
+                <WelcomeSection />
+              </Layout>
+            )
+          }
         />
 
+        {/* Authentication routes */}
         <Route
           path="/signup"
           element={
             <PublicRoute>
-              <SignUpPage />
+              <Layout>
+                <SignUpPage />
+              </Layout>
             </PublicRoute>
           }
         />
@@ -92,20 +105,26 @@ function App() {
           path="/signin"
           element={
             <PublicRoute>
-              <SignInPage />
+              <Layout>
+                <SignInPage />
+              </Layout>
             </PublicRoute>
           }
         />
 
+        {/* Main calendar route - protected */}
         <Route
           path="/calendar"
           element={
             <ProtectedRoute>
-              <HomePage events={events} setEvents={setEvents} />
+              <Layout>
+                <HomePage events={events} setEvents={setEvents} />
+              </Layout>
             </ProtectedRoute>
           }
         />
 
+        {/* Fallback route - redirect to appropriate page */}
         <Route
           path="*"
           element={
@@ -114,6 +133,7 @@ function App() {
         />
       </Routes>
 
+      {/* AI Assistant - only show when user is authenticated */}
       {isAuthenticated && (
         <AIAssistant
           currentEvents={events}

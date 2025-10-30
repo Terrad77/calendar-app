@@ -1,7 +1,9 @@
 import { type FC } from 'react';
 import { styled, type CSS } from '@stitches/react';
+
 // -----  import react-icons
 import { TbCalendarSad } from 'react-icons/tb';
+
 // Font Awesome Icons(Fa)
 import {
   FaChevronUp,
@@ -10,7 +12,10 @@ import {
   FaSearch,
   FaEye,
   FaEyeSlash,
+  FaSun,
+  FaMoon,
 } from 'react-icons/fa';
+
 // Material Design Icons (Md)
 import { MdCalendarMonth } from 'react-icons/md';
 
@@ -24,6 +29,8 @@ const iconComponents = {
   'calendar-sad': TbCalendarSad, // custom icon
   eye: FaEye,
   eyeOff: FaEyeSlash,
+  sun: FaSun,
+  moon: FaMoon,
 };
 
 // define TypeScript for available icon names

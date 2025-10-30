@@ -2,14 +2,13 @@ import { NavLink } from 'react-router-dom';
 import Logo from '../../components/Logo/Logo';
 import SignUpForm from '../../components/SignUpForm/SignUpForm';
 import css from '../SignUpPage/SignUpPage.module.css';
-import Calendar from '../../components/Calendar/Calendar';
-
 import { useTranslation } from 'react-i18next';
-// import "../../translate/index.js";
 import clsx from 'clsx';
 
 export default function SignUpPage() {
-  const { t, i18n } = useTranslation();
+  // Specify namespaces for translations
+  const { t, i18n } = useTranslation(['auth', 'form']);
+
   return (
     <div className={css.desctopContainer}>
       <div className={css.container}>
@@ -22,7 +21,7 @@ export default function SignUpPage() {
               [css.titleUk]: i18n.language === 'uk',
             })}
           >
-            {t('Register user form')}
+            {t('register_user_form', { ns: 'form' })}
           </h2>
           <SignUpForm />
           <p
@@ -30,20 +29,17 @@ export default function SignUpPage() {
               [css.notifyUk]: i18n.language === 'uk',
             })}
           >
-            {t('Already have')}{' '}
+            {t('already_have', { ns: 'auth' })}{' '}
             <NavLink
               className={clsx(css.navLink, {
                 [css.navLinkUk]: i18n.language === 'uk',
               })}
               to="/signin"
             >
-              {t('Login user')}
+              {t('login_user', { ns: 'auth' })}
             </NavLink>
           </p>
         </div>
-      </div>
-      <div>
-        <Calendar />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
-//import files with translations
+// Import translation files
 import enAuth from './en/auth.json';
 import enForm from './en/form.json';
 import enValidation from './en/validation.json';
@@ -31,16 +31,16 @@ i18n.use(initReactI18next).init({
       calendar: ukCalendar,
     },
   },
-  lng: 'en',
+  lng: 'en', // default language
   fallbackLng: 'en',
   ns: ['auth', 'form', 'validation', 'common', 'calendar'],
   defaultNS: 'common',
   interpolation: {
-    escapeValue: false,
+    escapeValue: false, // React already safes from XSS
   },
-  debug: process.env.NODE_ENV === 'development',
+  debug: process.env.NODE_ENV === 'development', // Enable debug in development
   react: {
-    useSuspense: false,
+    useSuspense: false, // Disable Suspense for compatibility
   },
 });
 

@@ -5,7 +5,9 @@ import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 
 export default function WelcomeSection() {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation(['auth', 'common']); // Specify namespaces
+
+  console.log('WelcomeSection current language:', i18n.language); // Debug
 
   return (
     <div className={css.container}>

@@ -1,4 +1,5 @@
 import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher';
+import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
 import css from './Layout.module.css';
 
 interface LayoutProps {
@@ -8,11 +9,10 @@ interface LayoutProps {
 export const Layout = ({ children }: LayoutProps) => {
   return (
     <div className={css.layout}>
-      {/* Language Switcher on all pages */}
-      <div className={css.languageContainer}>
+      <div className={css.controls}>
+        <ThemeSwitcher />
         <LanguageSwitcher />
       </div>
-
       <main className={css.content}>{children}</main>
     </div>
   );

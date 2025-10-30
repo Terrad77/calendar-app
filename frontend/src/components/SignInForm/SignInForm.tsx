@@ -64,7 +64,6 @@ export default function SignInForm() {
           })}
           type="text"
           placeholder={t('Enter email')}
-          name="email"
           autoComplete="on"
           {...register('email')}
         />
@@ -80,7 +79,6 @@ export default function SignInForm() {
           <input
             type={showPassword ? 'text' : 'password'}
             placeholder={t('Enter password')}
-            name="password"
             autoComplete="on"
             {...register('password')}
             className={clsx(css.inputGroupInput, errors.email && css.inputError, {
@@ -91,12 +89,12 @@ export default function SignInForm() {
             type="button"
             className={css.passwordToggle}
             onClick={toggleShowPassword}
-            tabIndex="-1"
+            tabIndex={-1}
           >
             {showPassword ? (
-              <Icon className={css.icon} id="eye" width={20} height={20} />
+              <Icon className={css.icon} name="eye" />
             ) : (
-              <Icon className={css.icon} id="eyeOff" width={20} height={20} />
+              <Icon className={css.icon} name="eyeOff" />
             )}
           </button>
         </div>

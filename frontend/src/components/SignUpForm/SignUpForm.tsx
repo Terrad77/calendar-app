@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import css from '../SignUpForm/SignUpForm.module.css';
+import css from './SignUpForm.module.css';
 import Icon from '../Icon';
 import clsx from 'clsx';
 import { useDispatch, useSelector } from 'react-redux';
@@ -22,11 +22,11 @@ export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isLoading = useSelector(selectIsLoading);
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation(['form', 'validation']);
 
-  // object config parameters for useForm hook
+  // Form configuration
   const {
-    register, // from react-hook-form to register inputs
+    register,
     handleSubmit,
     reset,
     formState: { errors, isValid },
@@ -39,25 +39,24 @@ export default function SignUpForm() {
     setShowPassword(!showPassword);
   };
 
-  // handler form submit
   const handleFormSubmit = async (data: SignUpFormData) => {
     const { email, password } = data;
     const name = email.split('@')[0] || 'User';
 
     try {
       await dispatch(registerUser({ name, email, password })).unwrap();
-      toast.success('Register successful');
+      toast.success(t('register_successful', { ns: 'common' })); // Use translation
       reset();
       setIsModalOpen(true);
     } catch (error: unknown) {
-      // safe type error handling
+      // Error handling
       if (typeof error === 'object' && error !== null && 'message' in error) {
         const registerError = error as RegisterError;
         console.error('Registration failed:', registerError.message);
         toast.error(registerError.message);
       } else {
         console.error('Unexpected error:', error);
-        toast.error('Registration failed');
+        toast.error(t('registration_failed', { ns: 'common' }));
       }
     }
   };
@@ -79,28 +78,32 @@ export default function SignUpForm() {
             [css.inputGroupUk]: i18n.language === 'uk',
           })}
         >
-          <label>{t('email user')}</label>
+          <label>{t('email_user', { ns: 'form' })}</label>
           <input
             type="text"
-            placeholder={t('enter email')}
+            placeholder={t('enter_email', { ns: 'form' })}
             autoComplete="off"
             className={clsx(css.inputGroupInput, errors.email && css.inputError, {
               [css.inputGroupInputUk]: i18n.language === 'uk',
             })}
             {...register('email')}
           />
-          {errors.email && <p className={css.error}>{errors.email.message}</p>}
+          {errors.email && (
+            <p className={css.error}>
+              {t(errors.email.message || 'email_required', { ns: 'validation' })}
+            </p>
+          )}
         </div>
         <div
           className={clsx(css.inputGroup, {
             [css.inputGroupUk]: i18n.language === 'uk',
           })}
         >
-          <label>{t('password user')}</label>
+          <label>{t('password_user', { ns: 'form' })}</label>
           <div className={css.passwordContainer}>
             <input
               type={showPassword ? 'text' : 'password'}
-              placeholder={t('Enter password')}
+              placeholder={t('enter_password', { ns: 'form' })}
               autoComplete="new-password"
               className={clsx(css.inputGroupInput, errors.password && css.inputError, {
                 [css.inputGroupInputUk]: i18n.language === 'uk',
@@ -120,18 +123,22 @@ export default function SignUpForm() {
               )}
             </button>
           </div>
-          {errors.password && <p className={css.error}>{errors.password.message}</p>}
+          {errors.password && (
+            <p className={css.error}>
+              {t(errors.password.message || 'password_required', { ns: 'validation' })}
+            </p>
+          )}
         </div>
         <div
           className={clsx(css.inputGroup, {
             [css.inputGroupUk]: i18n.language === 'uk',
           })}
         >
-          <label>{t('repeat password')}</label>
+          <label>{t('repeat_password', { ns: 'form' })}</label>
           <div className={css.passwordContainer}>
             <input
               type={showPassword ? 'text' : 'password'}
-              placeholder={t('Repeat password')}
+              placeholder={t('repeat_password_placeholder', { ns: 'form' })}
               autoComplete="password-confirmation"
               {...register('repeatPassword')}
               className={clsx(css.inputGroupInput, errors.repeatPassword && css.inputError, {
@@ -151,7 +158,11 @@ export default function SignUpForm() {
               )}
             </button>
           </div>
-          {errors.repeatPassword && <p className={css.error}>{errors.repeatPassword.message}</p>}
+          {errors.repeatPassword && (
+            <p className={css.error}>
+              {t(errors.repeatPassword.message || 'passwords_must_match', { ns: 'validation' })}
+            </p>
+          )}
         </div>
 
         <button
@@ -161,7 +172,11 @@ export default function SignUpForm() {
           type="submit"
           disabled={!isValid || isLoading}
         >
-          {isLoading ? <DotLoader text={t('loading')} /> : t('register user form')}
+          {isLoading ? (
+            <DotLoader text={t('signing_up', { ns: 'form' })} />
+          ) : (
+            t('register_user_form', { ns: 'form' })
+          )}
         </button>
         <GoogleAuthBtn />
       </form>

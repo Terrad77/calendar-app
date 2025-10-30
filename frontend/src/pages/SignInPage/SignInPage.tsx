@@ -37,9 +37,6 @@ export default function SignIpPage() {
           </p>
         </div>
       </div>
-      <div className={css.CalendarSection}>
-        <Calendar />
-      </div>
     </div>
   );
 }

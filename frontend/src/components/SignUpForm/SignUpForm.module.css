@@ -6,7 +6,7 @@
   color: var(--main-text);
   /* background-color: gray; */
   /* border-radius: 30px; */
-  /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); */
+  /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);*/
 }
 
 .inputGroup {
@@ -47,7 +47,7 @@
   width: 100%;
   border-radius: 15px;
   border: 1px solid var(--main-border);
-  background-color: var(--main-white, #ffffff);
+  background-color: var(--input-bg);
   padding: 16px;
   outline: none;
   height: 50px;
@@ -174,7 +174,6 @@
   box-shadow: none;
 }
 
-/* Google Auth Button стилизация под общий стиль */
 .googleAuthBtn {
   margin-top: 16px;
   border-radius: 30px;
