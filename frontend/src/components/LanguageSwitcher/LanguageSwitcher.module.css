@@ -2,24 +2,25 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  /* min-height: 100%; */
 }
 
 .languageButton {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  /* padding: 8px 12px; */
   border: 1px solid #ddd;
   border-radius: 6px;
   background: white;
   cursor: pointer;
-  transition: all 0.2s ease;
   font-size: 14px;
+  height: 40px;
 }
 
 .languageButton:hover {
   border-color: #646cff;
-  transform: translateY(-1px);
+  background: var(--hover-bg);
 }
 
 .languageButton.active {
@@ -40,9 +41,10 @@
   .languageButton {
     padding: 6px 10px;
     font-size: 12px;
+    height: 36px;
   }
 
   .flag {
-    font-size: 14px;
+    display: none; /* hide on mobile */
   }
 }

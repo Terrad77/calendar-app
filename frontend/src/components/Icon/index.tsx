@@ -14,6 +14,7 @@ import {
   FaEyeSlash,
   FaSun,
   FaMoon,
+  FaTimes,
 } from 'react-icons/fa';
 
 // Material Design Icons (Md)
@@ -31,6 +32,7 @@ const iconComponents = {
   eyeOff: FaEyeSlash,
   sun: FaSun,
   moon: FaMoon,
+  'x-close': FaTimes,
 };
 
 // define TypeScript for available icon names

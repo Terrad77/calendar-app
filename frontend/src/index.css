@@ -55,19 +55,19 @@
 }
 
 * {
-  margin: 0;
+  margin: 0; /* Reset default margin for all elements */
 }
 
 body {
-  margin: 0;
-  min-width: 320px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   min-height: 100vh;
+
   padding: 8px;
   color: var(--main-text);
-  background-color: var(--main-bg);
-  transition:
-    background-color 0.3s ease,
-    color 0.3s ease;
+  /* background-color: var(--main-bg); */
+  transition: all 0.3s ease;
 }
 
 /* Responsive padding for larger screens */

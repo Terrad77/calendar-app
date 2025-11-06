@@ -39,7 +39,7 @@ export default function Modal({ children, isOpen, onClose, btnClassName }) {
             {isLoading && <DotLoader />}{' '}
             <div className={css.modal} onClick={(e) => e.stopPropagation()}>
               <button className={clsx(css.closeButton, btnClassName)} onClick={onClose}>
-                <Icon id="x-close" width="24" height="24" className={css.closeIcon} />
+                <Icon name="x-close" className={css.closeIcon} />
               </button>
               {children}
             </div>

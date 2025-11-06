@@ -7,7 +7,7 @@ export const ThemeSwitcher = () => {
 
   return (
     <button
-      className={css.themeSwitcher}
+      className={css.themeButton}
       onClick={toggleTheme}
       title={`Switch to ${isDark ? 'light' : 'dark'} theme`}
     >
