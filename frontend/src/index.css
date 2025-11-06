@@ -167,13 +167,24 @@ button {
   cursor: pointer;
   transition: all 0.3s ease;
 }
-button:hover {
+
+/* hover styles only for interactive buttons */
+button:not(:disabled):hover {
   background-color: var(--accent-hover);
-  transform: translateY(-1px);
 }
+
+/* disabled buttons */
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  /* transform: none !important; */
+}
+
+/* Focus styles */
 button:focus,
 button:focus-visible {
-  outline: 1px auto -webkit-focus-ring-color;
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
 }
 
 /* Secondary buttons */

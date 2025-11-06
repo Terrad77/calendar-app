@@ -16,13 +16,17 @@ import { signUpSchema } from '../../schemas/validationSchemas';
 import { SignUpFormData, RegisterError } from '../../types/types';
 import toast from 'react-hot-toast';
 import { AppDispatch } from '../../redux/types';
+import { useTogglePassword } from '../../hooks/useTogglePassword';
 
 export default function SignUpForm() {
   const dispatch = useDispatch<AppDispatch>();
-  const [showPassword, setShowPassword] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isLoading = useSelector(selectIsLoading);
   const { t, i18n } = useTranslation(['form', 'validation']);
+
+  // Password visibility toggles
+  const passwordField = useTogglePassword();
+  const repeatPasswordField = useTogglePassword();
 
   // Form configuration
   const {
@@ -34,10 +38,6 @@ export default function SignUpForm() {
     resolver: yupResolver(signUpSchema),
     mode: 'onChange',
   });
-
-  const toggleShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
 
   const handleFormSubmit = async (data: SignUpFormData) => {
     const { email, password } = data;
@@ -102,7 +102,7 @@ export default function SignUpForm() {
           <label>{t('password_user', { ns: 'form' })}</label>
           <div className={css.passwordContainer}>
             <input
-              type={showPassword ? 'text' : 'password'}
+              type={passwordField.inputType}
               placeholder={t('enter_password', { ns: 'form' })}
               autoComplete="new-password"
               className={clsx(css.inputGroupInput, errors.password && css.inputError, {
@@ -112,15 +112,12 @@ export default function SignUpForm() {
             />
             <button
               type="button"
-              className={css.passwordToggle}
-              onClick={toggleShowPassword}
+              className={clsx(css.passwordToggle, 'no-transform')}
+              onClick={passwordField.toggle}
               tabIndex={-1}
+              aria-label={passwordField.ariaLabel}
             >
-              {showPassword ? (
-                <Icon className={css.icon} name="eye" />
-              ) : (
-                <Icon className={css.icon} name="eyeOff" />
-              )}
+              <Icon className={css.icon} name={passwordField.iconName} />
             </button>
           </div>
           {errors.password && (
@@ -137,7 +134,7 @@ export default function SignUpForm() {
           <label>{t('repeat_password', { ns: 'form' })}</label>
           <div className={css.passwordContainer}>
             <input
-              type={showPassword ? 'text' : 'password'}
+              type={repeatPasswordField.inputType}
               placeholder={t('repeat_password_placeholder', { ns: 'form' })}
               autoComplete="password-confirmation"
               {...register('repeatPassword')}
@@ -147,15 +144,12 @@ export default function SignUpForm() {
             />
             <button
               type="button"
-              className={css.passwordToggle}
-              onClick={toggleShowPassword}
+              className={clsx(css.passwordToggle, 'no-transform')}
+              onClick={repeatPasswordField.toggle}
               tabIndex={-1}
+              aria-label={repeatPasswordField.ariaLabel}
             >
-              {showPassword ? (
-                <Icon className={css.icon} name="eye" />
-              ) : (
-                <Icon className={css.icon} name="eyeOff" />
-              )}
+              <Icon className={css.icon} name={repeatPasswordField.iconName} />
             </button>
           </div>
           {errors.repeatPassword && (
