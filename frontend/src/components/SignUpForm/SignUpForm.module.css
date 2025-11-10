@@ -3,14 +3,14 @@
   flex-direction: column;
   width: 310px;
   padding: 40px 20px;
-  color: var(--main-text);
-  /* background-color: gray; */
-  /* border-radius: 30px; */
+  color: var(--primary-text);
+  background-color: var(--secondary-bg);
+  border-radius: 30px;
   /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);*/
 }
 
 .inputGroup {
-  color: var(--main-text);
+  color: var(--primary-text);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -23,7 +23,7 @@
 }
 
 .inputGroup > label {
-  color: var(--main-text);
+  color: var(--primary-text);
   font-family: Poppins;
   font-size: 14px;
   font-weight: 700;
@@ -34,7 +34,7 @@
 
 .inputGroupUk > label {
   font-family: var(--font-family);
-  color: var(--main-text);
+  color: var(--primary-text);
   font-size: 14px;
   font-weight: 700;
   line-height: 18px;
@@ -68,8 +68,8 @@
 }
 
 .inputGroupInputUk::placeholder {
-  color: var(--main-placeholder);
   font-family: var(--font-family);
+  color: var(--main-placeholder);
   font-size: 14px;
   line-height: 18px;
   letter-spacing: -1%;
@@ -106,7 +106,7 @@
   top: 50%;
   transform: translateY(-50%);
   padding: 8px;
-  background-color: transparent;
+  background-color: var(--secondary-bg);
   cursor: pointer;
   border-radius: 50%;
   transition: background-color var(--transition);
@@ -127,7 +127,7 @@
 }
 
 .passwordToggle:hover .icon {
-  color: var(--main-text);
+  color: var(--primary-text);
 }
 
 .submitButton {
@@ -185,7 +185,7 @@
   padding: 16px;
   border: 1px solid var(--main-border);
   background: var(--main-white);
-  color: var(--main-text);
+  color: var(--primary-text);
   font-weight: 700;
   font-size: 14px;
   transition: all var(--transition);

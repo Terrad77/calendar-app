@@ -12,11 +12,11 @@ export const ThemeSwitcher = () => {
       title={`Switch to ${isDark ? 'light' : 'dark'} theme`}
     >
       {isDark ? (
-        <Icon className={css.icon} name="sun" />
+        <Icon name="sun" aria-label="Switch to light theme" />
       ) : (
-        <Icon className={css.icon} name="moon" />
+        <Icon name="moon" aria-label="Switch to dark theme" />
       )}
-      <span className={css.text}>{isDark ? 'Light' : 'Dark'}</span>
+      <span className={css.textButton}>{isDark ? 'Light' : 'Dark'}</span>
     </button>
   );
 };

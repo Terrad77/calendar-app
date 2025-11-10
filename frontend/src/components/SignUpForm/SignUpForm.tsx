@@ -5,7 +5,7 @@ import css from './SignUpForm.module.css';
 import Icon from '../Icon';
 import clsx from 'clsx';
 import { useDispatch, useSelector } from 'react-redux';
-import { register as registerUser } from '../../redux/user/operations';
+import { registerUser } from '../../redux/user/operations';
 import GoogleAuthBtn from '../GoogleAuthBtn/GoogleAuthBtn';
 import { selectIsLoading } from '../../redux/user/selectors';
 import DotLoader from '../DotLoader/DotLoader.js';
@@ -28,7 +28,7 @@ export default function SignUpForm() {
   const passwordField = useTogglePassword();
   const repeatPasswordField = useTogglePassword();
 
-  // Form configuration
+  // configure useForm
   const {
     register,
     handleSubmit,
@@ -45,7 +45,7 @@ export default function SignUpForm() {
 
     try {
       await dispatch(registerUser({ name, email, password })).unwrap();
-      toast.success(t('register_successful', { ns: 'common' })); // Use translation
+      toast.success(t('register_successful', { ns: 'common' }));
       reset();
       setIsModalOpen(true);
     } catch (error: unknown) {

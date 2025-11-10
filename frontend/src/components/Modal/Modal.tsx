@@ -36,7 +36,7 @@ export default function Modal({ children, isOpen, onClose, btnClassName }) {
       {createPortal(
         <div className={css.backdrop} onClick={onClose}>
           <div className={css.modalWrapper}>
-            {isLoading && <DotLoader />}{' '}
+            {isLoading && <DotLoader text="Loading..." />}
             <div className={css.modal} onClick={(e) => e.stopPropagation()}>
               <button className={clsx(css.closeButton, btnClassName)} onClick={onClose}>
                 <Icon name="x-close" className={css.closeIcon} />

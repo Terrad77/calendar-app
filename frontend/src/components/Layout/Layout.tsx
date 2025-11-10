@@ -9,7 +9,7 @@ interface LayoutProps {
 export const Layout = ({ children }: LayoutProps) => {
   return (
     <div className={css.layout}>
-      <div className={css.controls}>
+      <div className={css.floatingControls}>
         <ThemeSwitcher />
         <LanguageSwitcher />
       </div>

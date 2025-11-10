@@ -14,7 +14,7 @@ const clearAuthHeader = () => {
 
 // Login user
 
-export const login = createAsyncThunk<
+export const loginUser = createAsyncThunk<
   { user: User; token: string; refreshToken: string },
   UserInfo,
   { state: RootState; dispatch: AppDispatch; rejectValue: string }
@@ -36,7 +36,7 @@ export const login = createAsyncThunk<
 
 // Register user
 
-export const register = createAsyncThunk<
+export const registerUser = createAsyncThunk<
   { user: User; token: string; refreshToken: string },
   RegisterInfo,
   { state: RootState; dispatch: AppDispatch; rejectValue: { message: string; statusCode?: number } }

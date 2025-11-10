@@ -1,43 +1,40 @@
 .themeButton {
   display: flex;
+  gap: var(--space-sm);
   align-items: center;
-  gap: 8px;
-  /* padding: 8px 12px; */
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--card-bg);
-  color: var(--main-text);
-  cursor: pointer;
-  height: 40px;
 
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 0 16px;
+  min-width: 50px;
   font-size: 14px;
 }
 
-.themeButto:hover {
-  border-color: var(--accent-color);
-  background: var(--hover-bg);
+.themeButton:hover {
+  border-color: var(--color-accent-hover);
+  opacity: 1;
 }
 
-.icon {
-  font-size: 16px;
-}
-
-.text {
+.textButton {
   font-weight: 500;
 }
 
+/* from 0 to 768px */
 @media (max-width: 768px) {
-  .themeSwitcher {
-    /* padding: 6px 10px; */
-    font-size: 12px;
-    height: 36px;
+  .themeButton {
+    padding: 0 18px;
+    border-radius: var(--radius-sm);
   }
 
   .icon {
     font-size: 12px;
   }
 
-  .text {
+  .textButton {
     display: none; /* hide on mobile */
   }
 }

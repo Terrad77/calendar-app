@@ -84,9 +84,12 @@ export interface ConversationMessage {
   content: string;
 }
 
-export interface SignUpFormData {
+export interface SignInFormData {
   email: string;
   password: string;
+}
+
+export interface SignUpFormData extends SignInFormData {
   repeatPassword: string;
 }
 

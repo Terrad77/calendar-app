@@ -1,32 +1,38 @@
 .languageSwitcher {
   display: flex;
-  gap: 8px;
+  gap: var(--space-sm);
   align-items: center;
-  /* min-height: 100%; */
 }
 
 .languageButton {
   display: flex;
   align-items: center;
-  gap: 6px;
-  /* padding: 8px 12px; */
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
+  color: var(--color-text-primary);
+  opacity: 0.7;
+  font-weight: 500;
+
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
   cursor: pointer;
+  gap: 6px;
+
   font-size: 14px;
   height: 40px;
+  padding: 0 18px;
 }
 
 .languageButton:hover {
-  border-color: #646cff;
-  background: var(--hover-bg);
+  border-color: var(--color-accent-hover);
+  opacity: 1;
 }
 
 .languageButton.active {
-  background: #646cff;
-  color: white;
-  border-color: #646cff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  opacity: 1;
+
+  color: var(--color-text-primary);
 }
 
 .flag {
@@ -37,14 +43,18 @@
   font-weight: 500;
 }
 
+/* from 0 to 768px */
 @media (max-width: 768px) {
   .languageButton {
-    padding: 6px 10px;
     font-size: 12px;
     height: 36px;
+    padding: 0 14px;
+    border-radius: var(--radius-sm);
   }
-
   .flag {
     display: none; /* hide on mobile */
+  }
+  .languageSwitcher {
+    gap: var(--space-xs);
   }
 }

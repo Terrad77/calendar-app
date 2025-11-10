@@ -6,7 +6,7 @@
   right: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7); /* Более темный overlay */
+  background: rgba(0, 0, 0, 0.7);
   z-index: 1000;
   overflow: hidden;
   display: flex;
@@ -24,20 +24,66 @@
   box-shadow: 0 4px 50px 0 var(--shadow);
   max-width: 344px;
   background: var(--card-bg);
-  border-radius: 15px;
-  overflow-y: scroll;
-  overflow-x: hidden;
-  color: var(--main-text);
+  border-radius: 18px;
+
+  color: var(--primary-text);
+
+  /* Neon effect */
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--card-bg), var(--card-bg)) padding-box,
+    linear-gradient(135deg, var(--accent-hover), rgba(74, 86, 226, 0.3), var(--accent-hover))
+      border-box;
+  position: relative;
+}
+/* Pseudo-element for neon effect */
+.modal::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  background: transparent;
+  border-radius: 20px; /*neon range +2px to modal border radius */
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+/* effect on hover backdrop */
+.backdrop:hover .modal::after {
+  opacity: 1;
+  animation: neon-glow 2s ease-in-out infinite alternate;
+}
+
+/* animation neon-glow */
+@keyframes neon-glow {
+  from {
+    box-shadow:
+      0 0 5px var(--accent-hover),
+      0 0 10px var(--accent-hover),
+      0 0 15px var(--accent-hover);
+  }
+  to {
+    box-shadow:
+      0 0 10px var(--accent-hover),
+      0 0 20px var(--accent-hover),
+      0 0 30px var(--accent-hover);
+  }
 }
 
 .modal::-webkit-scrollbar {
   margin-left: 20px;
   width: 20px;
   border-radius: 30px;
+  background: transparent;
 }
 .modal::-webkit-scrollbar-track {
   margin-top: 228px;
   background: inherit;
+  border-radius: 30px;
 }
 .modal::-webkit-scrollbar-thumb {
   max-height: 240px;
@@ -54,13 +100,18 @@
 .closeButton {
   z-index: 1;
   position: absolute;
-  top: 20px;
-  right: 1px;
+  top: 8px;
+  right: 8px;
   background: none;
   border: none;
   cursor: pointer;
   width: 24px;
   height: 24px;
+  /* for сenter the icon */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .top40pxBtn {
@@ -69,6 +120,7 @@
 .closeIcon {
   stroke: var(--main);
   transition: all var(--transition);
+  position: relative;
 }
 
 .closeButton:focus {
@@ -79,6 +131,7 @@
   stroke: var(--logout-btn);
 }
 
+/* from 768px */
 @media screen and (min-width: 768px) {
   .modal {
     max-width: 100%;

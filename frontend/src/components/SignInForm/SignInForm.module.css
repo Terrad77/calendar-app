@@ -2,34 +2,29 @@
   display: flex;
   flex-direction: column;
   width: 310px;
+  padding: 40px 20px;
+  color: var(--primary-text);
+  background-color: var(--secondary-bg);
+  border-radius: 30px;
+  /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);*/
 }
 .inputGroup {
+  color: var(--primary-text);
   display: flex;
   flex-direction: column;
   position: relative;
   width: 100%;
+  margin-bottom: 16px;
 }
 .inputGroup:first-child {
   padding-bottom: 16px;
 }
 
 .inputGroup > label {
-  color: var(--main-text);
-  font-family: Poppins;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 18px;
-  letter-spacing: -1%;
   margin-bottom: 8px;
 }
 
 .inputGroupUk > label {
-  font-family: var(--font-family);
-  color: var(--main-text);
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 18px;
-  letter-spacing: -1%;
   margin-bottom: 8px;
 }
 
@@ -38,15 +33,21 @@
   width: 100%;
   border-radius: 15px;
   border: 1px solid var(--main-border);
-  background-color: transparent;
+  background-color: red;
   padding: 16px;
   outline: none;
   height: 50px;
+  transition: all var(--transition);
+}
+
+.inputGroupInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(74, 86, 226, 0.2);
 }
 
 .inputGroupInput::placeholder {
   color: var(--main-placeholder);
-  font-family: Poppins;
+  /* font-family: Poppins; */
   font-size: 14px;
   line-height: 18px;
   letter-spacing: -1%;
@@ -64,38 +65,63 @@
   border: 1px solid var(--validation-error);
   color: var(--validation-error);
 }
+.inputError:focus {
+  border-color: var(--validation-error);
+  box-shadow: 0 0 0 2px rgba(234, 84, 85, 0.2);
+}
 .error {
   color: var(--validation-error);
   font-size: 14px;
   line-height: 18px;
   letter-spacing: -1%;
   margin-top: 10px;
+  padding-left: 8px;
 }
 
 .passwordContainer {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 .passwordToggle {
   position: absolute;
   border: none;
   line-height: 0;
-  right: 16px;
-  top: 4px;
+  /* right: 16px;
+  top: 4px; */
   padding: 10px;
-  background-color: transparent;
-  /* display: none; */
+  background-color: var(--secondary-bg);
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color var(--transition);
 }
+
+.passwordToggle:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* for dark theme */
+[data-theme='dark'] .passwordToggle:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
 .icon {
-  fill: transparent;
+  color: var(--main-placeholder);
+  transition: color var(--transition);
+}
+.passwordToggle:hover .icon {
+  color: var(--primary-text);
 }
 
 .submitButton {
-  background: var(--accent);
+  background: var(--input-bg);
   border-radius: 30px;
   border: none;
-  margin-top: 32px;
-  font-weight: bold;
+  margin-top: 24px;
+  font-weight: 700;
+  font-size: 14px;
   padding: 16px;
+  color: var(--main-white);
   transition: all var(--transition);
 }
 

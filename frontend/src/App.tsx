@@ -73,7 +73,7 @@ function App() {
   };
 
   return (
-    <div className="app">
+    <div className="app-container">
       <Routes>
         {/* Home route with conditional rendering */}
         <Route

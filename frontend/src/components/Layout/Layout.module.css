@@ -1,30 +1,38 @@
 .layout {
   min-height: 100vh;
-  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
-.controls {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 999;
+.floatingControls {
+  position: sticky;
+  /* top: 2px; */
   display: flex;
-  gap: 10px;
-  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+
+  margin-bottom: 40px;
+
+  background: var(--color-bg-primary);
+
+  z-index: 100;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .content {
-  padding-top: 20px;
+  flex: 1; /* Take all remaining space */
+  padding: 2px; /* prevents content sticky to sides */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
+/* from 0 to 768px */
 @media (max-width: 768px) {
-  .controls {
-    top: 10px;
-    right: 10px;
-    gap: 8px;
-  }
-
-  .content {
-    padding-top: 10px;
+  .floatingControls {
+    gap: var(--space-xs);
+    padding: var(--space-xs);
+    margin-bottom: 10px;
   }
 }

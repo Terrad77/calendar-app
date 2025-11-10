@@ -1,114 +1,130 @@
-import css from '../SignInForm/SignInForm.module.css';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import * as yup from 'yup';
+import css from '../SignInForm/SignInForm.module.css';
 import Icon from '../Icon';
-import { useState } from 'react';
 import clsx from 'clsx';
-import { login } from '../../redux/user/operations';
+import { loginUser } from '../../redux/user/operations';
 import { useDispatch, useSelector } from 'react-redux';
 import GoogleAuthBtn from '../GoogleAuthBtn/GoogleAuthBtn';
 import { selectIsLoading } from '../../redux/user/selectors';
 import DotLoader from '../../components/DotLoader/DotLoader.jsx';
-
+import { signInSchema } from '../../schemas/validationSchemas';
+import { SignInFormData } from '../../types/types';
 import { useTranslation } from 'react-i18next';
-// import "../../translate/index.js";
-
-const schema = yup.object().shape({
-  email: yup.string().email('Invalid email format').required('Email is required'),
-  password: yup
-    .string()
-    .min(8, 'Password must be at least 8 characters')
-    .required('Password is required'),
-});
+import toast from 'react-hot-toast';
+import { AppDispatch } from '../../redux/types';
+import { useTogglePassword } from '../../hooks/useTogglePassword';
 
 export default function SignInForm() {
-  const dispatch = useDispatch();
-  const [showPassword, setShowPassword] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
   const isLoading = useSelector(selectIsLoading);
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation(['form', 'validation']);
 
-  // об'єкт конфігурації параметрів хука useForm
+  // Password visibility toggle
+  const passwordField = useTogglePassword();
+
+  // Form configuration
   const {
     register,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm({
-    resolver: yupResolver(schema),
+  } = useForm<SignInFormData>({
+    resolver: yupResolver(signInSchema),
     mode: 'onChange',
   });
 
-  const toggleShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleFormSubmit = (data) => {
-    dispatch(login(data))
-      .then()
-      .catch((error) => {
+  const handleFormSubmit = async (data: SignInFormData) => {
+    try {
+      await dispatch(loginUser(data)).unwrap();
+      toast.success(t('login_successful', { ns: 'common' }));
+    } catch (error: unknown) {
+      // Error handling
+      if (typeof error === 'object' && error !== null && 'message' in error) {
+        const loginError = error as { message: string };
+        console.error('Login failed:', loginError.message);
+        toast.error(loginError.message);
+      } else {
         console.error('Unexpected error:', error);
-      });
+        toast.error(t('login_failed', { ns: 'common' }));
+      }
+    }
   };
 
   return (
     <form className={css.form} onSubmit={handleSubmit(handleFormSubmit)}>
+      {/* Email input field */}
       <div
         className={clsx(css.inputGroup, {
           [css.inputGroupUk]: i18n.language === 'uk',
         })}
       >
-        <label>{t('Email user')}</label>
+        <label>{t('email_user', { ns: 'form' })}</label>
         <input
           className={clsx(css.inputGroupInput, errors.email && css.inputError, {
             [css.inputGroupInputUk]: i18n.language === 'uk',
           })}
           type="text"
-          placeholder={t('Enter email')}
-          autoComplete="on"
+          placeholder={t('enter_email', { ns: 'form' })}
+          autoComplete="email"
           {...register('email')}
         />
-        {errors.email && <p className={css.error}>{errors.email.message}</p>}
+        {errors.email && (
+          <p className={css.error}>
+            {t(errors.email.message || 'email_required', { ns: 'validation' })}
+          </p>
+        )}
       </div>
+
+      {/* Password input field with visibility toggle */}
       <div
         className={clsx(css.inputGroup, {
           [css.inputGroupUk]: i18n.language === 'uk',
         })}
       >
-        <label>{t('Password user')}</label>
+        <label>{t('password_user', { ns: 'form' })}</label>
         <div className={css.passwordContainer}>
           <input
-            type={showPassword ? 'text' : 'password'}
-            placeholder={t('Enter password')}
-            autoComplete="on"
+            type={passwordField.inputType}
+            placeholder={t('enter_password', { ns: 'form' })}
+            autoComplete="current-password"
             {...register('password')}
-            className={clsx(css.inputGroupInput, errors.email && css.inputError, {
+            className={clsx(css.inputGroupInput, errors.password && css.inputError, {
               [css.inputGroupInputUk]: i18n.language === 'uk',
             })}
           />
           <button
             type="button"
-            className={css.passwordToggle}
-            onClick={toggleShowPassword}
+            className={clsx(css.passwordToggle, 'no-transform')}
+            onClick={passwordField.toggle}
             tabIndex={-1}
+            aria-label={passwordField.ariaLabel}
           >
-            {showPassword ? (
-              <Icon className={css.icon} name="eye" />
-            ) : (
-              <Icon className={css.icon} name="eyeOff" />
-            )}
+            <Icon className={css.icon} name={passwordField.iconName} />
           </button>
         </div>
-        {errors.password && <p className={css.error}>{errors.password.message}</p>}
+        {errors.password && (
+          <p className={css.error}>
+            {t(errors.password.message || 'password_required', { ns: 'validation' })}
+          </p>
+        )}
       </div>
+
+      {/* Submit button */}
       <button
         type="submit"
         className={clsx(css.submitButton, {
           [css.submitButtonUk]: i18n.language === 'uk',
         })}
-        disabled={!isValid}
+        disabled={!isValid || isLoading}
       >
-        {isLoading ? <DotLoader text="Signing In" /> : t('Login user')}
+        {isLoading ? (
+          <DotLoader text={t('signing_in', { ns: 'form' })} />
+        ) : (
+          t('login_user', { ns: 'auth' })
+        )}
       </button>
+
+      {/* Google authentication button */}
       <GoogleAuthBtn />
     </form>
   );
