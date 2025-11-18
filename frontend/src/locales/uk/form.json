@@ -2,9 +2,10 @@
   "email_user": "Електронна пошта",
   "password_user": "Пароль",
   "repeat_password": "Повторіть пароль",
-  "register_user_form": "Зареєструватися",
+  "register_user": "Зареєструватися",
   "enter_email": "Введіть email",
   "enter_password": "Введіть пароль",
   "repeat_password_placeholder": "Повторіть пароль",
-  "signing_up": "Реєстрація"
+  "signing_up": "Реєстрація",
+  "signing_in": "Вхід"
 }

@@ -8,7 +8,7 @@ export default function WelcomeSection() {
   const { t, i18n } = useTranslation(['auth', 'common']);
 
   return (
-    <div className={css.container}>
+    <div className={css.sectionContainer}>
       <div className={css.logo}>
         <Logo />
       </div>
@@ -16,7 +16,7 @@ export default function WelcomeSection() {
         <h1 className={clsx(css.title, i18n.language === 'uk')}>{t('calendar_app')}</h1>
         <h2 className={clsx(css.subtitle, i18n.language === 'uk')}>{t('daily_online_planner')}</h2>
       </div>
-      <div className={css.buttons}>
+      <div className={css.linksContainer}>
         <Link to="/signup" className={clsx(css.link, i18n.language === 'uk')}>
           {t('register_user')}
         </Link>

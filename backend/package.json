@@ -11,12 +11,15 @@
     "test": "echo \"Skipping tests for now...\" && exit 0"
   },
   "dependencies": {
+    "@types/passport-google-oauth20": "^2.0.17",
     "axios": "^1.7.2",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "uuid": "^13.0.0"
   },
   "devDependencies": {

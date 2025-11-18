@@ -1,11 +1,12 @@
-import express, { Request, Response } from "express";
-import Anthropic from "@anthropic-ai/sdk";
-import cors from "cors";
-import dotenv from "dotenv";
-import { getWorldwideHolidays } from "./nagerApi";
-import { CalendarEvent, AIResponse } from "./types";
-import { authenticateToken } from "./middleware/authMiddleware";
-import authRoutes from "./routes/authRoutes";
+import express, { Request, Response } from 'express';
+import Anthropic from '@anthropic-ai/sdk';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { getWorldwideHolidays } from './nagerApi';
+import { CalendarEvent, AIResponse } from './types';
+import { authenticateToken } from './middleware/authMiddleware';
+import authRoutes from './routes/authRoutes';
+import { type JSONSchema } from 'json-schema-typed';
 
 dotenv.config();
 
@@ -52,32 +53,66 @@ const CALENDAR_SYSTEM_PROMPT = `Ти - розумний AI-асістент ка
 Формат часу: 24-годинний
 Мова: визначай автоматично за запитом користувача (українська або англійська)`;
 
+// --- JSON SCHEMA DEFINITION for Tool Use ---
+// Визначаємо схему JSON, яку ми очікуємо від Claude
+const CALENDAR_ACTION_SCHEMA: JSONSchema = {
+  type: 'object',
+  properties: {
+    action: {
+      type: 'string',
+      enum: ['create', 'update', 'delete', 'query', 'analyze'],
+      description: 'Тип дії: створення, оновлення, видалення, запит або аналіз.',
+    },
+    event: {
+      type: 'object',
+      description: "Дані про подію. Включається лише для 'create', 'update', 'delete'.",
+      properties: {
+        title: { type: 'string' },
+        description: { type: 'string' },
+        startDate: { type: 'string', format: 'date' },
+        endDate: { type: 'string', format: 'date' },
+        startTime: { type: 'string', pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$' },
+        endTime: { type: 'string', pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$' },
+        color: { type: 'string', pattern: '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$' },
+        location: { type: 'string' },
+        participants: { type: 'array', items: { type: 'string', format: 'email' } },
+      },
+      required: ['action'],
+    },
+    message: {
+      type: 'string',
+      description: "Дружнє повідомлення користувачу. Обов'язково для всіх дій.",
+    },
+  },
+  required: ['action', 'message'],
+} as JSONSchema;
+
 // Middleware
 app.use(express.json());
 app.use(
   cors({
     origin: [
-      "https://calendar-app-pi-gold.vercel.app",
-      "https://calendar-app-git-main-terrad77s-projects.vercel.app",
-      "https://calendar-app-7oetemppd-terrad77s-projects.vercel.app",
-      "http://localhost:5173",
+      'https://calendar-app-pi-gold.vercel.app',
+      'https://calendar-app-git-main-terrad77s-projects.vercel.app',
+      'https://calendar-app-7oetemppd-terrad77s-projects.vercel.app',
+      'http://localhost:5173',
     ],
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   })
 );
 
 // Authentication routes (public)
-app.use("/api/auth", authRoutes);
+app.use('/api/auth', authRoutes);
 
 // Health check endpoints (public)
-app.get("/health", (req: Request, res: Response) => {
-  res.json({ status: "ok", service: "Calendar AI Assistant" });
+app.get('/health', (req: Request, res: Response) => {
+  res.json({ status: 'ok', service: 'Calendar AI Assistant' });
 });
 
-app.get("/", (req, res) => {
-  res.status(200).json({ message: "Backend is running!" });
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'Backend is running!' });
 });
 
 // Protected AI endpoints - require authentication
@@ -85,95 +120,112 @@ app.get("/", (req, res) => {
  * POST /api/ai/chat
  * Chat with AI assistant (requires authentication)
  */
-app.post(
-  "/api/ai/chat",
-  authenticateToken,
-  async (req: Request, res: Response): Promise<void> => {
-    try {
-      const { message, events, conversationHistory } = req.body;
-      const userId = req.user?.userId;
+app.post('/api/ai/chat', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { message, events, conversationHistory } = req.body;
+    const userId = req.user?.userId;
 
-      if (!message) {
-        res.status(400).json({ error: "Message is required" });
-        return;
-      }
+    if (!message) {
+      res.status(400).json({ error: 'Message is required' });
+      return;
+    }
 
-      // Add user context to the message
-      let contextMessage = `User ID: ${userId}\n${message}`;
+    // Add user context to the message
+    let contextMessage = `User ID: ${userId}\n${message}`;
 
-      if (events && events.length > 0) {
-        contextMessage += `\n\nCurrent calendar events:\n${JSON.stringify(
-          events,
-          null,
-          2
-        )}`;
-      }
+    if (events && events.length > 0) {
+      contextMessage += `\n\nCurrent calendar events:\n${JSON.stringify(events, null, 2)}`;
+    }
 
-      const messages: Anthropic.MessageParam[] = [
-        ...(conversationHistory || []),
+    const messages: Anthropic.MessageParam[] = [
+      ...(conversationHistory || []),
+      {
+        role: 'user',
+        content: contextMessage,
+      },
+    ];
+
+    const response = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4096,
+      system: CALENDAR_SYSTEM_PROMPT,
+      messages: messages,
+      tools: [
         {
-          role: "user",
-          content: contextMessage,
+          name: 'calendar_action',
+          description:
+            'Викликається для створення, оновлення, видалення, запиту або аналізу подій у календарі.',
+          input_schema: CALENDAR_ACTION_SCHEMA,
         },
-      ];
+      ],
+    });
 
-      const response = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 4096,
-        system: CALENDAR_SYSTEM_PROMPT,
-        messages: messages,
-      });
+    let aiResponse: AIResponse;
+    const content = response.content[0];
+    if (content.type === 'tool_use') {
+      // Якщо Claude вирішив викликати інструмент (дію з календарем)
+      const toolCall = content;
+      try {
+        // Вміст tool_use.input - це вже валідований JSON-об'єкт (AIResponse)
+        aiResponse = toolCall.input as AIResponse;
+      } catch (e) {
+        console.error('Tool Input Parsing Error:', e);
+        aiResponse = {
+          action: 'query',
+          message: 'Виникла помилка при обробці запиту на створення події.',
+        };
+      }
+    } else if (content.type === 'text') {
+      // Якщо Claude надав пряму текстову відповідь (query/analyze)
+      const text = content.text;
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
 
-      const content = response.content[0];
-      let aiResponse: AIResponse;
-
-      if (content.type === "text") {
-        const text = content.text;
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-
-        if (jsonMatch) {
-          try {
-            aiResponse = JSON.parse(jsonMatch[0]);
-          } catch {
-            aiResponse = {
-              action: "query",
-              message: text,
-            };
-          }
-        } else {
+      if (jsonMatch) {
+        try {
+          // Спроба парсингу для сумісності з попереднім кодом (Backup)
+          aiResponse = JSON.parse(jsonMatch[0]) as AIResponse;
+        } catch {
+          // Якщо не вдалося розібрати як JSON, це просто текстовий запит
           aiResponse = {
-            action: "query",
+            action: 'query',
             message: text,
           };
         }
       } else {
+        // Це звичайна текстова відповідь
         aiResponse = {
-          action: "query",
-          message: "Sorry, I could not process your request.",
+          action: 'query',
+          message: text,
         };
       }
-
-      res.json({
-        response: aiResponse,
-        conversationId: response.id,
-        userId: userId, // Include user ID for verification
-      });
-    } catch (error) {
-      console.error("Error communicating with Claude:", error);
-      res.status(500).json({
-        error: "Failed to process AI request",
-        details: error instanceof Error ? error.message : "Unknown error",
-      });
+    } else {
+      // Інший тип контенту, не очікуваний
+      aiResponse = {
+        action: 'query',
+        message: 'Sorry, I could not process your request.',
+      };
     }
+
+    res.json({
+      response: aiResponse,
+      conversationId: response.id,
+      userId: userId, // Include user ID for verification
+    });
+  } catch (error) {
+    console.error('Error communicating with Claude:', error);
+    res.status(500).json({
+      error: 'Failed to process AI request',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
-);
+});
 
 /**
  * POST /api/ai/analyze-schedule
  * Analyze user's schedule (requires authentication)
  */
 app.post(
-  "/api/ai/analyze-schedule",
+  '/api/ai/analyze-schedule',
   authenticateToken,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -181,7 +233,7 @@ app.post(
       const userId = req.user?.userId;
 
       const message = `User ID: ${userId}\nПроаналізуй наступний розклад за період ${
-        timeRange || "тиждень"
+        timeRange || 'тиждень'
       } та надай рекомендації:
       
 Події: ${JSON.stringify(events, null, 2)}
@@ -193,27 +245,27 @@ app.post(
 4. Пропозиції по оптимізації`;
 
       const response = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 2048,
         system: CALENDAR_SYSTEM_PROMPT,
         messages: [
           {
-            role: "user",
+            role: 'user',
             content: message,
           },
         ],
       });
 
       const content = response.content[0];
-      const analysisText = content.type === "text" ? content.text : "";
+      const analysisText = content.type === 'text' ? content.text : 'Не вдалося отримати аналіз.';
 
       res.json({
         analysis: analysisText,
         userId: userId,
       });
     } catch (error) {
-      console.error("Error analyzing schedule:", error);
-      res.status(500).json({ error: "Failed to analyze schedule" });
+      console.error('Error analyzing schedule:', error);
+      res.status(500).json({ error: 'Failed to analyze schedule' });
     }
   }
 );
@@ -223,7 +275,7 @@ app.post(
  * Find optimal meeting time (requires authentication)
  */
 app.post(
-  "/api/ai/find-time",
+  '/api/ai/find-time',
   authenticateToken,
   async (req: Request, res: Response): Promise<void> => {
     try {
@@ -238,27 +290,28 @@ app.post(
 Запропонуй 3-5 найкращих варіантів часу з поясненням, чому вони підходять.`;
 
       const response = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 2048,
         system: CALENDAR_SYSTEM_PROMPT,
         messages: [
           {
-            role: "user",
+            role: 'user',
             content: message,
           },
         ],
       });
 
       const content = response.content[0];
-      const suggestions = content.type === "text" ? content.text : "";
+      const suggestions =
+        content.type === 'text' ? content.text : 'Не вдалося отримати пропозиції.';
 
       res.json({
         suggestions,
         userId: userId,
       });
     } catch (error) {
-      console.error("Error finding time:", error);
-      res.status(500).json({ error: "Failed to find optimal time" });
+      console.error('Error finding time:', error);
+      res.status(500).json({ error: 'Failed to find optimal time' });
     }
   }
 );
@@ -267,14 +320,12 @@ app.post(
  * GET /api/v1/holidays/worldwide
  * Get worldwide holidays (public endpoint)
  */
-app.get("/api/v1/holidays/worldwide", async (req, res) => {
+app.get('/api/v1/holidays/worldwide', async (req, res) => {
   const yearParam = req.query.year as string;
   const monthParam = req.query.month as string;
 
   if (!yearParam || isNaN(parseInt(yearParam))) {
-    return res
-      .status(400)
-      .json({ error: 'Valid "year" query parameter is required.' });
+    return res.status(400).json({ error: 'Valid "year" query parameter is required.' });
   }
 
   const year = parseInt(yearParam);
@@ -284,8 +335,7 @@ app.get("/api/v1/holidays/worldwide", async (req, res) => {
     const parsedMonth = parseInt(monthParam);
     if (isNaN(parsedMonth) || parsedMonth < 1 || parsedMonth > 12) {
       return res.status(400).json({
-        error:
-          'Optional "month" query parameter must be a number between 1 and 12.',
+        error: 'Optional "month" query parameter must be a number between 1 and 12.',
       });
     }
     month = parsedMonth;
@@ -295,8 +345,8 @@ app.get("/api/v1/holidays/worldwide", async (req, res) => {
     const holidays = await getWorldwideHolidays(year, month);
     res.json(holidays);
   } catch (error) {
-    console.error("Error in /api/v1/holidays/worldwide:", error);
-    res.status(500).json({ error: "Failed to retrieve worldwide holidays." });
+    console.error('Error in /api/v1/holidays/worldwide:', error);
+    res.status(500).json({ error: 'Failed to retrieve worldwide holidays.' });
   }
 });
 
@@ -305,9 +355,7 @@ app.listen(PORT, () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);
   console.log(`🔒 Authentication enabled`);
   console.log(`🤖 AI Calendar Assistant ready`);
-  console.log(
-    `📅 API endpoint: /api/v1/holidays/worldwide?year=<YEAR>&month=<OPTIONAL_MONTH>`
-  );
+  console.log(`📅 API endpoint: /api/v1/holidays/worldwide?year=<YEAR>&month=<OPTIONAL_MONTH>`);
 });
 
 export default app;

@@ -31,6 +31,8 @@
   background: var(--color-accent);
   border-color: var(--color-accent);
   opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px var(--color-accent-hover);
 
   color: var(--color-text-primary);
 }

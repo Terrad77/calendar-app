@@ -14,7 +14,7 @@ export const useTogglePassword = (initialState = false) => {
     show,
     hide,
     inputType: isVisible ? 'text' : 'password',
-    iconName: (isVisible ? 'eye' : 'eyeOff') as IconName,
+    iconName: (isVisible ? 'eyeOff' : 'eye') as IconName,
     ariaLabel: isVisible ? 'Hide password' : 'Show password',
   };
 };

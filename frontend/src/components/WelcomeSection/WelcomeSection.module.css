@@ -1,27 +1,24 @@
-.container {
-  position: relative;
+.sectionContainer {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
+  padding: 10px 20px;
   background-color: var(--color-bg-secondary);
   border-radius: 20px;
-  /* width: 312px; */
   width: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .logo {
-  position: absolute;
-  left: 16px;
-  top: 24px;
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 40px;
 }
 
 .titlesContainer {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 40px;
 }
 
@@ -32,14 +29,16 @@
 .subtitle {
   font-size: 14px;
   color: var(--color-accent);
-  /* margin-bottom: 12px; */
-  font-weight: 400;
-  /* line-height: 18px; */
+
+  font-weight: 300;
 }
 
-.buttons {
+.linksContainer {
   display: flex;
-  gap: 40px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0px 100px;
 }
 
 .link {
@@ -60,9 +59,9 @@
 
 /* from 768px */
 @media screen and (min-width: 768px) {
-  .container {
+  .sectionContainer {
     display: flex;
-    padding: 120px 60px 50px 60px;
+    padding: 20px 40px;
     max-width: 704px;
   }
   .title {
@@ -89,11 +88,8 @@
 
 /* from 1440px */
 @media screen and (min-width: 1440px) {
-  .container {
-    padding-top: 188px;
-    padding-bottom: 188px;
-    padding-left: 64px;
-    padding-right: 61px;
+  .sectionContainer {
+    padding: 40px 64px;
     max-width: 672px;
   }
 

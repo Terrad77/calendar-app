@@ -1,21 +1,32 @@
 .logo {
-  display: block;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  /* justify-content: center; */
   text-transform: uppercase;
   color: var(--main);
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
   line-height: 20px;
   letter-spacing: -0.01em;
 }
+.logo span {
+  color: var(--color-accent);
+  box-shadow: 2px 0 8px var(--color-accent-hover);
+  padding: 2px;
+  border-radius: 50%;
+  text-transform: none;
+}
 
 @media screen and (min-width: 375px) {
   .logo {
+    font-size: 14px;
   }
 }
 
 @media screen and (min-width: 768px) {
   .logo {
-    font-size: 24px;
+    font-size: 18px;
     line-height: 24px;
   }
 }

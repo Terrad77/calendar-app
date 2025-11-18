@@ -3,9 +3,10 @@
   gap: var(--space-sm);
   align-items: center;
 
+  background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  background: var(--color-bg-secondary);
+
   color: var(--color-text-primary);
   opacity: 0.7;
   cursor: pointer;
@@ -14,9 +15,12 @@
   font-size: 14px;
 }
 
-.themeButton:hover {
+.themeButton:hover,
+.themeButton:focus {
   border-color: var(--color-accent-hover);
   opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px var(--color-accent-hover);
 }
 
 .textButton {

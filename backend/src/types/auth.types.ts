@@ -4,6 +4,15 @@ export interface User {
   name: string;
   createdAt: Date;
   updatedAt: Date;
+  googleId?: string;
+  isVerified: boolean;
+  verificationToken?: string;
+  verificationTokenExpiry?: number;
+}
+export interface SocialUserData {
+  email: string;
+  name: string;
+  googleId: string;
 }
 
 export interface UserCredentials {
@@ -28,7 +37,7 @@ export interface TokenPayload {
 }
 
 export interface AuthResponse {
-  user: Omit<User, "password">;
+  user: Omit<User, 'password'>;
   tokens: AuthTokens;
 }
 

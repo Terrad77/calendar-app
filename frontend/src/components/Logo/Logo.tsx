@@ -1,9 +1,13 @@
+import { NavLink } from 'react-router-dom';
 import css from '../Logo/Logo.module.css';
 
 export default function Logo() {
   return (
-    <>
-      <span className={css.logo}>CalendAIr</span>
-    </>
+    <NavLink className={css.navLink} to="/">
+      <div className={css.logo}>
+        Calend
+        <span>AIr</span>
+      </div>
+    </NavLink>
   );
 }

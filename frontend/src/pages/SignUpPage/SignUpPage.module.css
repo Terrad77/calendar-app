@@ -1,47 +1,25 @@
-.container {
-  box-sizing: border-box;
-  background-color: var(--secondary-bg);
+.sectionContainer {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 20px;
+  background-color: var(--color-bg-secondary);
+  border-radius: 10px;
   width: 100%;
-  max-width: 375px;
-  padding: 24px 16px;
-  /* height: 780px; */
-  border-radius: 30px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 .logo {
-  margin-bottom: 126px;
+  margin-bottom: 40px;
 }
 .title {
-  margin-bottom: 32px;
-  color: var(--main);
-  font-family: Poppins;
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 32px;
-  letter-spacing: -1%;
-}
+  margin-bottom: 22px;
+  color: var(--color-text-primary);
 
-.titleUk {
-  font-family: var(--font-family);
-  margin-bottom: 32px;
-  color: var(--main);
   font-size: 32px;
   font-weight: 700;
-  line-height: 32px;
-  letter-spacing: -1%;
 }
 
 .notify {
-  color: var(--main-placeholder);
-  font-size: 14px;
-  line-height: 18px;
-  letter-spacing: -1%;
-  text-align: center;
-  margin-top: 16px;
-}
-
-.notifyUk {
-  font-family: var(--font-family);
-  color: var(--main-placeholder);
+  color: var(--color-text-placeholder);
   font-size: 14px;
   line-height: 18px;
   letter-spacing: -1%;
@@ -50,19 +28,8 @@
 }
 
 .navLink {
-  color: var(--main);
-  font-family: Poppins;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 18px;
-  letter-spacing: -1%;
-  text-transform: capitalize;
-  transition: all var(--transition);
-}
+  color: var(--color-accent);
 
-.navLinkUk {
-  font-family: var(--font-family);
-  color: var(--main);
   font-size: 14px;
   font-weight: 700;
   line-height: 18px;
@@ -72,19 +39,20 @@
 }
 
 .navLink:hover {
-  color: var(--accent-hover);
+  color: var(--color-accent-hover);
 }
 
 .advantagesSection {
   display: none;
 }
+/* from 768px */
 @media screen and (min-width: 768px) {
-  .container {
-    max-width: none;
-    padding: 32px;
-    width: 704px;
-    height: 960px;
+  .sectionContainer {
     display: flex;
+    max-width: none;
+    padding: 120px 60px 50px 60px;
+    max-width: 704px;
+
     flex-direction: column;
   }
   .content {
@@ -103,18 +71,22 @@
     font-size: 16px;
   }
 }
+/* from 1440px */
 @media screen and (min-width: 1440px) {
-  .container {
-    width: 672px;
-    height: 736px;
+  .sectionContainer {
+    padding-top: 188px;
+    padding-bottom: 188px;
+    padding-left: 64px;
+    padding-right: 61px;
+    max-width: 672px;
   }
   .logo {
     margin-bottom: 74px;
   }
-  .desctopContainer {
+  /* .desctopContainer {
     display: flex;
     gap: 32px;
-  }
+  } */
   .advantagesSection {
     width: 672px;
     height: 736px;
