@@ -1,44 +1,62 @@
+.themeButtonContainer {
+  display: flex;
+  align-items: center;
+}
+
 .themeButton {
   display: flex;
-  gap: var(--space-sm);
   align-items: center;
+  min-height: 40px;
+  color: var(--color-text-primary);
+  gap: var(--space-sm);
 
   background: var(--color-bg-secondary);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
 
-  color: var(--color-text-primary);
   opacity: 0.7;
   cursor: pointer;
-  padding: 0 16px;
-  min-width: 50px;
-  font-size: 14px;
+  padding: 0 18px;
 }
 
 .themeButton:hover,
 .themeButton:focus {
   border-color: var(--color-accent-hover);
   opacity: 1;
+  /* transform: translateY(-2px);
+  box-shadow: inset 0 2px 6px var(--color-accent-hover); */
+}
+/* for override Stitches css prop icon sizes */
+.icon {
+  font-size: 16px !important;
+}
+.themeButton.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  opacity: 1;
   transform: translateY(-2px);
-  box-shadow: 0 2px 6px var(--color-accent-hover);
+  box-shadow: inset 0 2px 6px var(--color-accent-hover);
+  color: var(--color-text-primary);
 }
 
 .textButton {
-  font-weight: 500;
+  display: none;
+  font-size: 16px;
+  /* font-weight: 500; */
 }
 
-/* from 0 to 768px */
-@media (max-width: 768px) {
+/* from 768px */
+@media (min-width: 768px) {
   .themeButton {
     padding: 0 18px;
     border-radius: var(--radius-sm);
   }
 
   .icon {
-    font-size: 12px;
+    font-size: 16px !important;
   }
 
   .textButton {
-    display: none; /* hide on mobile */
+    display: block; /* hide on mobile */
   }
 }

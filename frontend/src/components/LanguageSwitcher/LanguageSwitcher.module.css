@@ -1,4 +1,4 @@
-.languageSwitcher {
+.languageButtonContainer {
   display: flex;
   gap: var(--space-sm);
   align-items: center;
@@ -7,22 +7,25 @@
 .languageButton {
   display: flex;
   align-items: center;
+  min-height: 40px;
   color: var(--color-text-primary);
-  opacity: 0.7;
-  font-weight: 500;
+  gap: var(--space-sm);
 
   background: var(--color-bg-secondary);
-  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  cursor: pointer;
-  gap: 6px;
+  border-radius: var(--radius-md);
 
-  font-size: 14px;
-  height: 40px;
-  padding: 0 18px;
+  opacity: 0.7;
+  cursor: pointer;
+
+  font-size: 12px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: var(--radius-sm);
 }
 
-.languageButton:hover {
+.languageButton:hover,
+.languageButton:focus {
   border-color: var(--color-accent-hover);
   opacity: 1;
 }
@@ -32,8 +35,7 @@
   border-color: var(--color-accent);
   opacity: 1;
   transform: translateY(-2px);
-  box-shadow: 0 2px 6px var(--color-accent-hover);
-
+  box-shadow: inset 0 2px 6px var(--color-accent-hover);
   color: var(--color-text-primary);
 }
 
@@ -45,18 +47,15 @@
   font-weight: 500;
 }
 
-/* from 0 to 768px */
-@media (max-width: 768px) {
+/* from 768px */
+@media (min-width: 768px) {
   .languageButton {
-    font-size: 12px;
-    height: 36px;
-    padding: 0 14px;
-    border-radius: var(--radius-sm);
+    padding: 0 18px;
   }
   .flag {
     display: none; /* hide on mobile */
   }
-  .languageSwitcher {
+  .languageButtonContainer {
     gap: var(--space-xs);
   }
 }

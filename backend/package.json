@@ -8,7 +8,8 @@
     "start": "node dist/server.js",
     "build": "tsc",
     "dev": "nodemon --exec ts-node src/server.ts",
-    "test": "echo \"Skipping tests for now...\" && exit 0"
+    "test": "echo \"Skipping tests for now...\" && exit 0",
+    "auto-start": "npm run build && npm start"
   },
   "dependencies": {
     "@types/passport-google-oauth20": "^2.0.17",

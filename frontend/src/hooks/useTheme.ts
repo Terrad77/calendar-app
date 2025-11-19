@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 type Theme = 'light' | 'dark';
 
@@ -7,13 +8,12 @@ export const useTheme = () => {
     // Check saved theme from localStorage
     const savedTheme = localStorage.getItem('theme') as Theme;
     if (savedTheme) return savedTheme;
-
     // Check system preference
     if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return 'dark';
     }
 
-    return 'light';
+    return savedTheme;
   });
 
   useEffect(() => {
@@ -43,6 +43,9 @@ export const useTheme = () => {
   };
 
   const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+
+    toast.success(`Theme changed to ${newTheme === 'dark' ? '🌙 Dark' : '☀️ Light'}`);
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 

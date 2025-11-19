@@ -53,16 +53,14 @@ export default function SignInForm() {
   return (
     <form className={css.form} onSubmit={handleSubmit(handleFormSubmit)}>
       {/* Email input field */}
-      <div
-        className={clsx(css.inputGroup, {
-          [css.inputGroupUk]: i18n.language === 'uk',
-        })}
-      >
+      <div className={clsx(css.inputGroup, i18n.language === 'uk')}>
         <label>{t('email_user', { ns: 'form' })}</label>
         <input
-          className={clsx(css.inputGroupInput, errors.email && css.inputError, {
-            [css.inputGroupInputUk]: i18n.language === 'uk',
-          })}
+          className={clsx(
+            css.inputGroupInput,
+            errors.email && css.inputError,
+            i18n.language === 'uk'
+          )}
           type="text"
           placeholder={t('enter_email', { ns: 'form' })}
           autoComplete="email"
@@ -76,11 +74,7 @@ export default function SignInForm() {
       </div>
 
       {/* Password input field with visibility toggle */}
-      <div
-        className={clsx(css.inputGroup, {
-          [css.inputGroupUk]: i18n.language === 'uk',
-        })}
-      >
+      <div className={clsx(css.inputGroup, i18n.language === 'uk')}>
         <label>{t('password_user', { ns: 'form' })}</label>
         <div className={css.passwordContainer}>
           <input
@@ -88,9 +82,11 @@ export default function SignInForm() {
             placeholder={t('enter_password', { ns: 'form' })}
             autoComplete="current-password"
             {...register('password')}
-            className={clsx(css.inputGroupInput, errors.password && css.inputError, {
-              [css.inputGroupInputUk]: i18n.language === 'uk',
-            })}
+            className={clsx(
+              css.inputGroupInput,
+              errors.password && css.inputError,
+              i18n.language === 'uk'
+            )}
           />
           <button
             type="button"

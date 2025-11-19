@@ -5,7 +5,7 @@ export const LanguageSwitcher = () => {
   const { changeLanguage, currentLanguage, languages } = useLanguage();
 
   return (
-    <div className={css.languageSwitcher}>
+    <div className={css.languageButtonContainer}>
       {languages.map((language) => (
         <button
           key={language.code}

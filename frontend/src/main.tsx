@@ -19,11 +19,17 @@ createRoot(document.getElementById('root')!).render(
           <Toaster
             position="top-left"
             toastOptions={{
-              duration: 4000,
+              duration: 2000,
               style: {
                 background: 'var(--secondary-bg)',
                 color: 'var(--primary-text)',
               },
+            }}
+            containerStyle={{
+              position: 'absolute',
+              top: '4px',
+              left: '140px',
+              borderRadius: '8px',
             }}
           />
         </BrowserRouter>

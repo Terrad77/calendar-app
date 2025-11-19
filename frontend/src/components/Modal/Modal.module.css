@@ -119,7 +119,7 @@
 }
 .closeIcon {
   stroke: var(--main);
-  transition: all var(--transition);
+
   position: relative;
 }
 
