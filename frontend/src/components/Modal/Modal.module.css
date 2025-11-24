@@ -1,126 +1,67 @@
 .backdrop {
   position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  z-index: 1000;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px) saturate(180%);
+  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  display: flex; /* добавляем flex для центрирования */
   align-items: center;
+  justify-content: center;
+  z-index: 1000; /* убедитесь что z-index достаточный */
 }
 
 .modal {
-  position: relative;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  max-height: 100vh;
+  position: relative; /* for catch the close button */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 46px 10px 10px;
+  /* max-height: 90vh;
+  width: 90%; */
+  color: var(--color-text-primary);
   box-shadow: 0 4px 50px 0 var(--shadow);
-  max-width: 344px;
-  background: var(--card-bg);
+
   border-radius: 18px;
 
-  color: var(--primary-text);
-
+  box-shadow: inset 0 2px 6px var(--color-accent-hover);
   /* Neon effect */
-  border: 2px solid transparent;
+  border: 2px solid var(--color-accent);
   background:
-    linear-gradient(var(--card-bg), var(--card-bg)) padding-box,
-    linear-gradient(135deg, var(--accent-hover), rgba(74, 86, 226, 0.3), var(--accent-hover))
-      border-box;
-  position: relative;
-}
-/* Pseudo-element for neon effect */
-.modal::after {
-  content: '';
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  right: -4px;
-  bottom: -4px;
-  background: transparent;
-  border-radius: 20px; /*neon range +2px to modal border radius */
-  z-index: -1;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
+    linear-gradient(var(--color-bg-card), var(--color-bg-card)) padding-box,
+    linear-gradient(
+      135deg,
+      var(--color-accent-hover),
+      rgba(74, 86, 226, 0.3),
+      var(--color-accent-hover)
+    );
 }
 
-/* effect on hover backdrop */
-.backdrop:hover .modal::after {
-  opacity: 1;
-  animation: neon-glow 2s ease-in-out infinite alternate;
-}
-
-/* animation neon-glow */
-@keyframes neon-glow {
-  from {
-    box-shadow:
-      0 0 5px var(--accent-hover),
-      0 0 10px var(--accent-hover),
-      0 0 15px var(--accent-hover);
-  }
-  to {
-    box-shadow:
-      0 0 10px var(--accent-hover),
-      0 0 20px var(--accent-hover),
-      0 0 30px var(--accent-hover);
-  }
-}
-
-.modal::-webkit-scrollbar {
-  margin-left: 20px;
-  width: 20px;
-  border-radius: 30px;
-  background: transparent;
-}
-.modal::-webkit-scrollbar-track {
-  margin-top: 228px;
-  background: inherit;
-  border-radius: 30px;
-}
-.modal::-webkit-scrollbar-thumb {
-  max-height: 240px;
-  background: var(--background);
-  border-radius: 30px;
-  background-clip: content-box;
-  border: 7px solid transparent;
-}
-.modal::-webkit-scrollbar-thumb:hover {
-  background: rgba(81, 83, 84, 0.3);
-  background-clip: content-box;
-  border: 7px solid transparent;
-}
 .closeButton {
-  z-index: 1;
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  width: 24px;
-  height: 24px;
-  /* for сenter the icon */
+  /* for centering the icon indside */
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
+
+  color: var(--color-text-primary);
+
+  z-index: 1;
+
+  position: absolute;
+  top: 8px;
+  right: 8px;
+
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  cursor: pointer;
+
+  padding: 2px;
+  font-size: 18px; /* closeIcon size */
 }
 
-.top40pxBtn {
-  right: 16px;
-}
 .closeIcon {
-  stroke: var(--main);
-
-  position: relative;
+  padding: 4px;
 }
 
 .closeButton:focus {
@@ -134,32 +75,12 @@
 /* from 768px */
 @media screen and (min-width: 768px) {
   .modal {
-    max-width: 100%;
-  }
-  .modal::-webkit-scrollbar {
-    width: 40px;
-  }
-  .modal::-webkit-scrollbar-track {
-    margin-top: 268px;
-  }
-  .modal::-webkit-scrollbar-thumb {
-    border: 16px solid transparent;
-  }
-  .modal::-webkit-scrollbar-thumb:hover {
-    background: rgba(81, 83, 84, 0.3);
-    background-clip: content-box;
-    border: 16px solid transparent;
+    padding: 64px 20px 20px;
   }
   .closeButton {
-    width: 28px;
-    height: 28px;
-  }
-  .top40pxBtn {
-    top: 40px;
-    right: 40px;
-  }
-  .closeIcon {
-    width: 28px;
-    height: 28px;
+    top: 12px;
+    right: 12px;
+    padding: 2px;
+    font-size: 24px;
   }
 }

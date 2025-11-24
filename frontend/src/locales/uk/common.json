@@ -3,5 +3,16 @@
   "cancel": "Скасувати",
   "submit": "Відправити",
   "success": "Успіх",
-  "error": "Помилка"
+  "error": "Помилка",
+  "verify_email": "Будь ласка, підтвердьте вашу електронну пошту",
+  "check_email": "Перевірте вашу пошту, щоб підтвердити email адресу.",
+  "login_successful": "Вхід успішний!",
+  "login_failed": "Помилка входу",
+  "register_successful": "Реєстрація успішна!",
+  "registration_failed": "Помилка реєстрації",
+  "log_out": "Вийти",
+  "do_you_really": "Ви дійсно хочете вийти?",
+  "logging_out": "Вихід...",
+  "log_exit": "Скасувати",
+  "sorry_try_again_later": "Вибачте, спробуйте пізніше"
 }

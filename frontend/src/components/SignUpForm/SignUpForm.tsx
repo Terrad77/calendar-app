@@ -20,9 +20,9 @@ import { useTogglePassword } from '../../hooks/useTogglePassword';
 
 export default function SignUpForm() {
   const dispatch = useDispatch<AppDispatch>();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(true); //(true) for development
   const isLoading = useSelector(selectIsLoading);
-  const { t, i18n } = useTranslation(['form', 'validation']);
+  const { t } = useTranslation(['form', 'validation']);
 
   // Password visibility toggles
   const passwordField = useTogglePassword();
@@ -39,6 +39,7 @@ export default function SignUpForm() {
     mode: 'onChange',
   });
 
+  // function to handle form submission
   const handleFormSubmit = async (data: SignUpFormData) => {
     const { email, password } = data;
     const name = email.split('@')[0] || 'User';
@@ -52,7 +53,6 @@ export default function SignUpForm() {
       // Error handling
       if (typeof error === 'object' && error !== null && 'message' in error) {
         const registerError = error as RegisterError;
-        console.error('Registration failed:', registerError.message);
         toast.error(registerError.message);
       } else {
         console.error('Unexpected error:', error);
@@ -61,6 +61,7 @@ export default function SignUpForm() {
     }
   };
 
+  // function to handle modal close
   const handleModalCancel = () => {
     setIsModalOpen(false);
   };
@@ -73,17 +74,14 @@ export default function SignUpForm() {
         </Modal>
       )}
       <form className={css.form} onSubmit={handleSubmit(handleFormSubmit)}>
-        <div className={clsx(css.inputGroup, i18n.language === 'uk')}>
-          <label>{t('email_user', { ns: 'form' })}</label>
+        <div className={clsx(css.inputGroup)}>
+          {/* Email field */}
+          <label htmlFor="email">{t('email_user', { ns: 'form' })}</label>
           <input
             type="text"
             placeholder={t('enter_email', { ns: 'form' })}
             autoComplete="off"
-            className={clsx(
-              css.inputGroupInput,
-              errors.email && css.inputError,
-              i18n.language === 'uk'
-            )}
+            className={clsx(css.inputGroupInput, errors.email && css.inputError)}
             {...register('email')}
           />
           {errors.email && (
@@ -92,24 +90,24 @@ export default function SignUpForm() {
             </p>
           )}
         </div>
-        <div className={clsx(css.inputGroup, i18n.language === 'uk')}>
-          <label>{t('password_user', { ns: 'form' })}</label>
+        <div className={clsx(css.inputGroup)}>
+          {/* Password field */}
+          <label htmlFor="password">{t('password_user', { ns: 'form' })}</label>
           <div className={css.passwordContainer}>
             <input
               type={passwordField.inputType}
               placeholder={t('enter_password', { ns: 'form' })}
               autoComplete="new-password"
-              className={clsx(
-                css.inputGroupInput,
-                errors.password && css.inputError,
-                i18n.language === 'uk'
-              )}
+              className={clsx(css.inputGroupInput, errors.password && css.inputError)}
               {...register('password')}
             />
             <button
               type="button"
               className={clsx(css.passwordToggle, 'no-transform')}
-              onClick={passwordField.toggle}
+              onClick={(e) => {
+                e.stopPropagation();
+                passwordField.toggle();
+              }}
               tabIndex={-1}
               aria-label={passwordField.ariaLabel}
             >
@@ -122,24 +120,24 @@ export default function SignUpForm() {
             </p>
           )}
         </div>
-        <div className={clsx(css.inputGroup, i18n.language === 'uk')}>
-          <label>{t('repeat_password', { ns: 'form' })}</label>
+        <div className={clsx(css.inputGroup)}>
+          {/* Repeat Password field */}
+          <label htmlFor="repeatPassword">{t('repeat_password', { ns: 'form' })}</label>
           <div className={css.passwordContainer}>
             <input
               type={repeatPasswordField.inputType}
               placeholder={t('repeat_password_placeholder', { ns: 'form' })}
               autoComplete="password-confirmation"
               {...register('repeatPassword')}
-              className={clsx(
-                css.inputGroupInput,
-                errors.repeatPassword && css.inputError,
-                i18n.language === 'uk'
-              )}
+              className={clsx(css.inputGroupInput, errors.repeatPassword && css.inputError)}
             />
             <button
               type="button"
               className={clsx(css.passwordToggle, 'no-transform')}
-              onClick={repeatPasswordField.toggle}
+              onClick={(e) => {
+                e.stopPropagation();
+                repeatPasswordField.toggle();
+              }}
               tabIndex={-1}
               aria-label={repeatPasswordField.ariaLabel}
             >
@@ -153,11 +151,7 @@ export default function SignUpForm() {
           )}
         </div>
 
-        <button
-          className={clsx(css.submitButton, i18n.language === 'uk')}
-          type="submit"
-          disabled={!isValid || isLoading}
-        >
+        <button className={clsx(css.submitButton)} type="submit" disabled={!isValid || isLoading}>
           {isLoading ? (
             <DotLoader text={t('signing_up', { ns: 'form' })} />
           ) : (

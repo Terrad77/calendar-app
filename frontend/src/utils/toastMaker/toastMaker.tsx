@@ -4,7 +4,7 @@ import Icon from '../../components/Icon';
 
 type ToastStatus = 'success' | 'error';
 
-export default function toastMaker(text: string, status?: ToastStatus): void {
+export default function toastMaker(text: string, status?: ToastStatus): string {
   switch (status) {
     case 'success':
       return toast((t: { id: string }) => (
@@ -18,8 +18,8 @@ export default function toastMaker(text: string, status?: ToastStatus): void {
     case 'error':
       return toast((t: { id: string }) => (
         <div className={css.toastContainer}>
-          <Icon name="calendar-sad" className={css.iconSuccess} />
-          <span className={css.toastSuccess}>{text}</span>
+          <Icon name="calendar-sad" className={css.iconError} />
+          <span className={css.toastError}>{text}</span>
           <button onClick={() => toast.dismiss(t.id)}>Close</button>
         </div>
       ));

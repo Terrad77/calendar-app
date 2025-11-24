@@ -7,20 +7,18 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 
 export default function SignIpPage() {
-  const { t, i18n } = useTranslation(['auth', 'form']);
+  const { t } = useTranslation(['auth', 'form']);
   return (
     <div className={css.sectionContainer}>
       <div className={css.logo}>
         <Logo />
       </div>
       <div className={css.content}>
-        <h2 className={clsx(css.title, i18n.language === 'uk')}>
-          {t('signing_in', { ns: 'form' })}
-        </h2>
+        <h2 className={clsx(css.title)}>{t('signing_in', { ns: 'form' })}</h2>
         <SignInForm />
         <p className={css.notify}>
-          {t('Do not')}{' '}
-          <Link className={clsx(css.navLink, i18n.language === 'uk')} to="/signup">
+          {t('do_not', { ns: 'auth' })}{' '}
+          <Link className={clsx(css.navLink)} to="/signup">
             {t('register_user', { ns: 'auth' })}
           </Link>
         </p>

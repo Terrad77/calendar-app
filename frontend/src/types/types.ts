@@ -1,5 +1,19 @@
 import { Dayjs } from 'dayjs';
 import type { CSS } from '@stitches/react';
+import { ReactNode } from 'react';
+
+export type IconName =
+  | 'chevron-up'
+  | 'chevron-down'
+  | 'calendar'
+  | 'search'
+  | 'question-mark'
+  | 'calendar-sad'
+  | 'eye'
+  | 'eyeOff'
+  | 'sun'
+  | 'moon'
+  | 'x-close';
 
 export const TASK_MARKER_COLORS = [
   'blue',
@@ -12,7 +26,6 @@ export const TASK_MARKER_COLORS = [
 ] as const;
 
 export type ColorType = (typeof TASK_MARKER_COLORS)[number];
-
 export type EventType = 'task' | 'holiday';
 
 export interface CalendarEvent {
@@ -96,4 +109,24 @@ export interface SignUpFormData extends SignInFormData {
 export interface RegisterError {
   message: string;
   statusCode?: number;
+}
+
+export interface ModalProps {
+  children: ReactNode;
+  isOpen: boolean;
+  onClose: () => void;
+  btnClassName?: string;
+  title?: string;
+  size?: 'small' | 'medium' | 'large';
+  showCloseButton?: boolean;
+}
+
+export interface IconProps {
+  name: IconName;
+  size?: CSS['fontSize'];
+  color?: CSS['color'];
+  className?: string;
+  style?: React.CSSProperties;
+  'aria-label'?: string;
+  role?: string;
 }

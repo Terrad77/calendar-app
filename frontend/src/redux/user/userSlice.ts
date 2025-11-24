@@ -1,5 +1,4 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import { fetchUser, login, logout, refreshUserToken, register } from './operations';
+import { createSlice } from '@reduxjs/toolkit';
 
 export interface User {
   id: string;
@@ -32,15 +31,15 @@ const initialState: UserState = {
 };
 
 // --- Helpers ---
-const handlePending = (state: UserState) => {
-  state.isLoading = true;
-  state.error = null;
-};
+// const handlePending = (state: UserState) => {
+//   state.isLoading = true;
+//   state.error = null;
+// };
 
-const handleRejected = (state: UserState, action: any) => {
-  state.isLoading = false;
-  state.error = action.payload || 'An error occurred';
-};
+// const handleRejected = (state: UserState, action: any) => {
+//   state.isLoading = false;
+//   state.error = action.payload || 'An error occurred';
+// };
 
 // --- Slice ---
 const userSlice = createSlice({
@@ -59,94 +58,119 @@ const userSlice = createSlice({
       localStorage.removeItem('refreshToken');
     },
   },
-  // extraReducers: (builder) => {
-  //   builder
-  //     // Register
-  //     .addCase(register.pending, handlePending)
-  //     .addCase(
-  //       register.fulfilled,
-  //       (state, action: PayloadAction<{ token: string; refreshToken: string; user: User }>) => {
-  //         state.isLoading = false;
-  //         state.user = action.payload.user;
-  //         state.token = action.payload.token;
-  //         state.refreshToken = action.payload.refreshToken;
-  //         state.isLoggedIn = true;
-  //       }
-  //     )
-  //     .addCase(register.rejected, handleRejected)
+  extraReducers: (builder) => {
+    builder
+      // Register
+      .addCase('user/register/pending', (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase('user/register/fulfilled', (state, action: any) => {
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.refreshToken = action.payload.refreshToken;
+        state.isLoggedIn = true;
+        localStorage.setItem('accessToken', action.payload.token);
+        localStorage.setItem('refreshToken', action.payload.refreshToken);
+      })
+      .addCase('user/register/rejected', (state, action: any) => {
+        state.isLoading = false;
+        state.error = action.payload || 'Registration failed';
+      })
 
-  //     // Login
-  //     .addCase(login.pending, handlePending)
-  //     .addCase(
-  //       login.fulfilled,
-  //       (state, action: PayloadAction<{ token: string; refreshToken: string; user: User }>) => {
-  //         state.isLoading = false;
-  //         state.user = action.payload.user;
-  //         state.token = action.payload.token;
-  //         state.refreshToken = action.payload.refreshToken;
-  //         state.isLoggedIn = true;
-  //       }
-  //     )
-  //     .addCase(login.rejected, handleRejected)
+      // Login
+      .addCase('user/login/pending', (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase('user/login/fulfilled', (state, action: any) => {
+        console.log('Login fulfilled in reducer:', action.payload);
+        state.isLoading = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.refreshToken = action.payload.refreshToken;
+        state.isLoggedIn = true;
+        localStorage.setItem('accessToken', action.payload.token);
+        localStorage.setItem('refreshToken', action.payload.refreshToken);
+      })
+      .addCase('user/login/rejected', (state, action: any) => {
+        state.isLoading = false;
+        state.error = action.payload || 'Login failed';
+      })
 
-  //     // Refresh Token
-  //     .addCase(refreshUserToken.pending, (state) => {
-  //       state.isLoading = true;
-  //       state.isRefreshing = true;
-  //       state.error = null;
-  //     })
-  //     .addCase(
-  //       refreshUserToken.fulfilled,
-  //       (state, action: PayloadAction<{ token: string; refreshToken: string; user: User }>) => {
-  //         state.isLoading = false;
-  //         state.isRefreshing = false;
-  //         state.user = action.payload.user;
-  //         state.token = action.payload.token;
-  //         state.refreshToken = action.payload.refreshToken;
-  //         state.isLoggedIn = true;
-  //       }
-  //     )
-  //     .addCase(refreshUserToken.rejected, (state, action) => {
-  //       state.isLoading = false;
-  //       state.isRefreshing = false;
-  //       state.user = null;
-  //       state.token = null;
-  //       state.refreshToken = null;
-  //       state.isLoggedIn = false;
-  //       state.error = action.payload as string;
-  //     })
+      // Refresh Token
+      .addCase('user/refreshUserToken/pending', (state) => {
+        state.isLoading = true;
+        state.isRefreshing = true;
+        state.error = null;
+      })
+      .addCase('user/refreshUserToken/fulfilled', (state, action: any) => {
+        state.isLoading = false;
+        state.isRefreshing = false;
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+        state.refreshToken = action.payload.refreshToken;
+        state.isLoggedIn = true;
+        localStorage.setItem('accessToken', action.payload.token);
+        localStorage.setItem('refreshToken', action.payload.refreshToken);
+      })
+      .addCase('user/refreshUserToken/rejected', (state, action: any) => {
+        state.isLoading = false;
+        state.isRefreshing = false;
+        state.user = null;
+        state.token = null;
+        state.refreshToken = null;
+        state.isLoggedIn = false;
+        state.error = action.payload as string;
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      })
 
-  //     // Logout
-  //     .addCase(logout.pending, handlePending)
-  //     .addCase(logout.fulfilled, (state) => {
-  //       state.user = null;
-  //       state.token = null;
-  //       state.refreshToken = null;
-  //       state.isLoggedIn = false;
-  //       state.isRefreshing = false;
-  //       state.isLoading = false;
-  //       state.error = null;
-  //     })
-  //     .addCase(logout.rejected, (state, action) => {
-  //       state.user = null;
-  //       state.token = null;
-  //       state.refreshToken = null;
-  //       state.isLoggedIn = false;
-  //       state.isRefreshing = false;
-  //       state.isLoading = false;
-  //       state.error = action.payload as string;
-  //     })
+      // Logout
+      .addCase('user/logout/pending', (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase('user/logout/fulfilled', (state) => {
+        state.user = null;
+        state.token = null;
+        state.refreshToken = null;
+        state.isLoggedIn = false;
+        state.isRefreshing = false;
+        state.isLoading = false;
+        state.error = null;
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      })
+      .addCase('user/logout/rejected', (state, action: any) => {
+        state.user = null;
+        state.token = null;
+        state.refreshToken = null;
+        state.isLoggedIn = false;
+        state.isRefreshing = false;
+        state.isLoading = false;
+        state.error = action.payload as string;
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      })
 
-  //     // Fetch User
-  //     .addCase(fetchUser.pending, handlePending)
-  //     .addCase(fetchUser.fulfilled, (state, action: PayloadAction<User>) => {
-  //       state.user = action.payload;
-  //       state.isLoading = false;
-  //       state.isRefreshing = false;
-  //       state.isLoggedIn = true;
-  //     })
-  //     .addCase(fetchUser.rejected, handleRejected);
-  // },
+      // Fetch User
+      .addCase('user/fetchUser/pending', (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase('user/fetchUser/fulfilled', (state, action: any) => {
+        state.user = action.payload;
+        state.isLoading = false;
+        state.isRefreshing = false;
+        state.isLoggedIn = true;
+      })
+      .addCase('user/fetchUser/rejected', (state, action: any) => {
+        state.isLoading = false;
+        state.error = action.payload || 'Failed to fetch user';
+      });
+  },
 });
 
 export const { clearError, clearCredentials } = userSlice.actions;

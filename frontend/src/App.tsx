@@ -1,14 +1,16 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import WelcomeSection from './components/WelcomeSection/WelcomeSection';
 import SignUpPage from './pages/SignUpPage/SignUpPage';
 import SignInPage from './pages/SignInPage/SignInPage';
 import HomePage from './pages/HomePage/HomePage'; // main calendar page
-import { authenticationService } from './services/authService';
+// import { authenticationService } from './services/authService';
 import { AIAssistant } from './components/AIAssistant/AIAssistant';
 import { Layout } from './components/Layout/Layout';
 import type { CalendarEvent } from './types/types';
 import './App.css';
+import { useSelector } from 'react-redux';
+import { selectIsLoggedIn } from './redux/user/selectors';
 
 // Protected Route wrapper component
 interface ProtectedRouteProps {
@@ -16,7 +18,7 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const isAuthenticated = authenticationService.isAuthenticated();
+  const isAuthenticated = useSelector(selectIsLoggedIn);
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -25,13 +27,13 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   return <>{children}</>;
 };
 
-// Public Route wrapper - redirects authenticated users to calendar
 interface PublicRouteProps {
   children: React.ReactNode;
 }
 
+// Public Route wrapper - redirects authenticated users to calendar
 const PublicRoute = ({ children }: PublicRouteProps) => {
-  const isAuthenticated = authenticationService.isAuthenticated();
+  const isAuthenticated = useSelector(selectIsLoggedIn);
 
   if (isAuthenticated) {
     return <Navigate to="/calendar" replace />;
@@ -42,17 +44,7 @@ const PublicRoute = ({ children }: PublicRouteProps) => {
 
 function App() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [isAuthenticated, setIsAuthenticated] = useState(authenticationService.isAuthenticated());
-
-  useEffect(() => {
-    const checkAuth = () => {
-      setIsAuthenticated(authenticationService.isAuthenticated());
-    };
-
-    // Check authentication status every 5 seconds
-    const interval = setInterval(checkAuth, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  const isAuthenticated = useSelector(selectIsLoggedIn);
 
   const handleEventCreate = (event: CalendarEvent) => {
     const newEvent: CalendarEvent = {

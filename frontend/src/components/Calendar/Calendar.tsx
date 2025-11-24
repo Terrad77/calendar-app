@@ -83,7 +83,8 @@ const StatusMessage = styled('div', {
 const LOCAL_STORAGE_KEY = 'calendarTasks';
 
 // --- BASE URL, value for Vite building ---
-const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
+// const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
+const BACKEND_API_BASE_URL = 'http://localhost:3001';
 
 export const Calendar = ({
   events: externalEvents,
@@ -162,15 +163,28 @@ export const Calendar = ({
           const year = currentDate.year();
           const month = viewMode === 'month' ? currentDate.month() + 1 : undefined;
 
+          // check URL
+          console.log('BACKEND_API_BASE_URL:', BACKEND_API_BASE_URL);
+
           let url = `${BACKEND_API_BASE_URL}/api/v1/holidays/worldwide?year=${year}`;
           if (month) {
             url += `&month=${month}`;
           }
 
           const response = await fetch(url);
+
+          console.log('Holidays response status:', response.status);
+
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.log('Non-JSON response (first 500 chars):', text.substring(0, 500));
+            throw new Error(`Expected JSON but got: ${contentType}`);
+          }
+
           const data: Holiday[] = await response.json(); // allowed Data will be an array of objects of type Holiday
 
           const uniqueHolidaysMap = new Map<string, Holiday>();

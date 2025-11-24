@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
+import { useNavigate } from 'react-router-dom';
 import css from '../SignInForm/SignInForm.module.css';
 import Icon from '../Icon';
 import clsx from 'clsx';
@@ -18,7 +19,8 @@ import { useTogglePassword } from '../../hooks/useTogglePassword';
 export default function SignInForm() {
   const dispatch = useDispatch<AppDispatch>();
   const isLoading = useSelector(selectIsLoading);
-  const { t, i18n } = useTranslation(['form', 'validation']);
+  const { t } = useTranslation(['form', 'validation']);
+  const navigate = useNavigate();
 
   // Password visibility toggle
   const passwordField = useTogglePassword();
@@ -33,18 +35,33 @@ export default function SignInForm() {
     mode: 'onChange',
   });
 
+  // Form submission handler
   const handleFormSubmit = async (data: SignInFormData) => {
     try {
-      await dispatch(loginUser(data)).unwrap();
+      console.log('Starting login with data:', data);
+      const result = await dispatch(loginUser(data)).unwrap();
+      console.log('Login successful, result:', result);
+
       toast.success(t('login_successful', { ns: 'common' }));
+
+      console.log('Before navigate - current path:', window.location.pathname);
+      navigate('/');
+      console.log('After navigate - this should execute immediately');
     } catch (error: unknown) {
-      // Error handling
-      if (typeof error === 'object' && error !== null && 'message' in error) {
-        const loginError = error as { message: string };
-        console.error('Login failed:', loginError.message);
-        toast.error(loginError.message);
+      console.log('Login error details:', error);
+
+      if (typeof error === 'object' && error !== null) {
+        if ('message' in error) {
+          const loginError = error as { message: string };
+          console.error('Login failed with message:', loginError.message);
+          toast.error(loginError.message);
+        } else if ('payload' in error) {
+          const thunkError = error as { payload: string };
+          console.error('Login failed with payload:', thunkError.payload);
+          toast.error(thunkError.payload);
+        }
       } else {
-        console.error('Unexpected error:', error);
+        console.error('Unexpected error type:', error);
         toast.error(t('login_failed', { ns: 'common' }));
       }
     }
@@ -53,14 +70,11 @@ export default function SignInForm() {
   return (
     <form className={css.form} onSubmit={handleSubmit(handleFormSubmit)}>
       {/* Email input field */}
-      <div className={clsx(css.inputGroup, i18n.language === 'uk')}>
-        <label>{t('email_user', { ns: 'form' })}</label>
+      <div className={clsx(css.inputGroup)}>
+        <label htmlFor="email-input">{t('email_user', { ns: 'form' })}</label>
         <input
-          className={clsx(
-            css.inputGroupInput,
-            errors.email && css.inputError,
-            i18n.language === 'uk'
-          )}
+          id="email-input"
+          className={clsx(css.inputGroupInput, errors.email && css.inputError)}
           type="text"
           placeholder={t('enter_email', { ns: 'form' })}
           autoComplete="email"
@@ -74,19 +88,16 @@ export default function SignInForm() {
       </div>
 
       {/* Password input field with visibility toggle */}
-      <div className={clsx(css.inputGroup, i18n.language === 'uk')}>
-        <label>{t('password_user', { ns: 'form' })}</label>
+      <div className={clsx(css.inputGroup)}>
+        <label htmlFor="password-input">{t('password_user', { ns: 'form' })}</label>
         <div className={css.passwordContainer}>
           <input
+            id="password-input"
             type={passwordField.inputType}
             placeholder={t('enter_password', { ns: 'form' })}
             autoComplete="current-password"
             {...register('password')}
-            className={clsx(
-              css.inputGroupInput,
-              errors.password && css.inputError,
-              i18n.language === 'uk'
-            )}
+            className={clsx(css.inputGroupInput, errors.password && css.inputError)}
           />
           <button
             type="button"
@@ -106,13 +117,7 @@ export default function SignInForm() {
       </div>
 
       {/* Submit button */}
-      <button
-        type="submit"
-        className={clsx(css.submitButton, {
-          [css.submitButtonUk]: i18n.language === 'uk',
-        })}
-        disabled={!isValid || isLoading}
-      >
+      <button type="submit" className={clsx(css.submitButton)} disabled={!isValid || isLoading}>
         {isLoading ? (
           <DotLoader text={t('signing_in', { ns: 'form' })} />
         ) : (

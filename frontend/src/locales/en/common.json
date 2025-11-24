@@ -3,5 +3,18 @@
   "cancel": "Cancel",
   "submit": "Submit",
   "success": "Success",
-  "error": "Error"
+  "error": "Error",
+  "verify_email": "Please verify your email",
+  "check_email": "Check your email to confirm your email address.",
+  "register_successful": "Registration successful!",
+  "registration_failed": "Registration failed",
+  "login_successful": "Login successful!",
+  "login_failed": "Login failed",
+  "auth": "Authentication",
+  "do_not": "Do not",
+  "log_out": "Log out",
+  "do_you_really": "Do you really want to log out?",
+  "logging_out": "Logging out...",
+  "log_exit": "Cancel",
+  "sorry_try_again_later": "Sorry, please try again later"
 }

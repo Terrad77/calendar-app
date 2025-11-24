@@ -13,29 +13,34 @@ const clearAuthHeader = () => {
 };
 
 // Login user
-
 export const loginUser = createAsyncThunk<
   { user: User; token: string; refreshToken: string },
   UserInfo,
   { state: RootState; dispatch: AppDispatch; rejectValue: string }
 >('user/login', async (userInfo, thunkAPI) => {
   try {
+    console.log('Sending login request...');
     const { data } = await instance.post('/api/auth/login', userInfo);
+    console.log('Login response:', data);
+
     setAuthHeader(data.tokens.accessToken);
     return {
       user: data.user,
       token: data.tokens.accessToken,
       refreshToken: data.tokens.refreshToken,
     };
-  } catch (error: unknown) {
-    const msg = (error as AxiosError).response?.data?.message || 'Login failed';
+  } catch (error: any) {
+    // ← используем any для простоты
+    console.log('Login request failed:', error);
+    console.log('Error response:', error.response?.data);
+
+    const msg = error.response?.data?.message || error.response?.data?.error || 'Login failed';
     toastMaker(msg, 'error');
     return thunkAPI.rejectWithValue(msg);
   }
 });
 
 // Register user
-
 export const registerUser = createAsyncThunk<
   { user: User; token: string; refreshToken: string },
   RegisterInfo,

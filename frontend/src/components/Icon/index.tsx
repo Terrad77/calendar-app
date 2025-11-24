@@ -1,5 +1,6 @@
 import { type FC } from 'react';
-import { styled, type CSS } from '@stitches/react';
+import { styled } from '@stitches/react';
+import { IconProps } from '../../types/types';
 
 // -----  import react-icons
 import { TbCalendarSad } from 'react-icons/tb';
@@ -35,9 +36,6 @@ const iconComponents = {
   'x-close': FaTimes,
 };
 
-// define TypeScript for available icon names
-export type IconName = keyof typeof iconComponents;
-
 // styled component for the icon wrapper
 const StyledIcon = styled('span', {
   display: 'inline-flex',
@@ -47,16 +45,6 @@ const StyledIcon = styled('span', {
   fontSize: '1em',
   color: 'currentColor',
 });
-
-interface IconProps {
-  name: IconName;
-  size?: CSS['fontSize'];
-  color?: CSS['color'];
-  className?: string;
-  style?: React.CSSProperties; // Inline styles for the icon
-  'aria-label'?: string; //  Accessibility label for the icon
-  role?: string; // Role attribute for the icon
-}
 
 const Icon: FC<IconProps> = ({ name, size, color, className, style, ...props }) => {
   const IconComponent = iconComponents[name];
