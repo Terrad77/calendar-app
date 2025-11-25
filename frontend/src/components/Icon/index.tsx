@@ -16,6 +16,11 @@ import {
   FaSun,
   FaMoon,
   FaTimes,
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaCheck,
+  FaClock,
 } from 'react-icons/fa';
 
 // Material Design Icons (Md)
@@ -34,6 +39,11 @@ const iconComponents = {
   sun: FaSun,
   moon: FaMoon,
   'x-close': FaTimes,
+  plus: FaPlus,
+  edit: FaEdit,
+  trash: FaTrash,
+  check: FaCheck,
+  clock: FaClock,
 };
 
 // styled component for the icon wrapper

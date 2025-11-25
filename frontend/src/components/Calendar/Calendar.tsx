@@ -163,9 +163,6 @@ export const Calendar = ({
           const year = currentDate.year();
           const month = viewMode === 'month' ? currentDate.month() + 1 : undefined;
 
-          // check URL
-          console.log('BACKEND_API_BASE_URL:', BACKEND_API_BASE_URL);
-
           let url = `${BACKEND_API_BASE_URL}/api/v1/holidays/worldwide?year=${year}`;
           if (month) {
             url += `&month=${month}`;

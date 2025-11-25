@@ -9,10 +9,21 @@ class AIService {
    */
   async chat(message: string, currentEvents: CalendarEvent[] = []): Promise<AIResponse> {
     try {
+      // Получаем токен из localStorage
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
       const response = await fetch(`${API_URL}/api/ai/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({
           message,
@@ -20,6 +31,10 @@ class AIService {
           conversationHistory: this.conversationHistory,
         }),
       });
+
+      if (response.status === 401) {
+        throw new Error('AUTH_REQUIRED');
+      }
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -46,6 +61,20 @@ class AIService {
       return data.response;
     } catch (error) {
       console.error('Error in AI chat:', error);
+
+      if (error instanceof Error && error.message === 'AUTH_REQUIRED') {
+        return {
+          message: 'Для взаємодії з AI асистентом необхідно увійти до системи.',
+          type: 'error',
+          actions: [
+            {
+              type: 'system',
+              label: '🔐 Увійти до системи',
+              data: { action: 'redirect_to_login' },
+            },
+          ],
+        } as AIResponse;
+      }
       throw error;
     }
   }
@@ -55,16 +84,22 @@ class AIService {
    */
   async analyzeSchedule(events: CalendarEvent[], timeRange: string = 'week'): Promise<string> {
     try {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+
       const response = await fetch(`${API_URL}/api/ai/analyze-schedule`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({
           events,
           timeRange,
         }),
       });
+      if (response.status === 401) {
+        throw new Error('AUTH_REQUIRED');
+      }
 
       if (!response.ok) {
         throw new Error(`AI service error: ${response.statusText}`);
@@ -89,10 +124,13 @@ class AIService {
     } = {}
   ): Promise<string> {
     try {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+
       const response = await fetch(`${API_URL}/api/ai/find-time`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
         },
         body: JSON.stringify({
           events,
@@ -100,6 +138,9 @@ class AIService {
           preferences,
         }),
       });
+      if (response.status === 401) {
+        throw new Error('AUTH_REQUIRED');
+      }
 
       if (!response.ok) {
         throw new Error(`AI service error: ${response.statusText}`);
@@ -124,14 +165,18 @@ class AIService {
   }
 
   // Check if AI service is available
-  async healthCheck(): Promise<boolean> {
+  async healthCheck(): Promise<{ status: string; available: boolean; message?: string }> {
     try {
-      const response = await fetch(`${API_URL}/health`);
+      const response = await fetch(`${API_URL}/api/ai/health`);
+      if (!response.ok) {
+        throw new Error(`AI service health check failed: ${response.statusText}`);
+      }
+
       const data = await response.json();
-      return data.status === 'ok';
+      return { status: data.status, available: data.available, message: data.message };
     } catch (error) {
       console.error('AI service health check failed:', error);
-      return false;
+      return { status: 'error', available: false, message: 'AI service unavailable' };
     }
   }
 }

@@ -6,7 +6,6 @@ import { getWorldwideHolidays } from './nagerApi';
 import { CalendarEvent, AIResponse } from './types';
 import { authenticateToken } from './middleware/authMiddleware';
 import authRoutes from './routes/authRoutes';
-import { type JSONSchema } from 'json-schema-typed';
 
 dotenv.config();
 
@@ -55,37 +54,39 @@ const CALENDAR_SYSTEM_PROMPT = `Ти - розумний AI-асістент ка
 
 // --- JSON SCHEMA DEFINITION for Tool Use ---
 // Визначаємо схему JSON, яку ми очікуємо від Claude
-const CALENDAR_ACTION_SCHEMA: JSONSchema = {
-  type: 'object',
+const CALENDAR_ACTION_SCHEMA = {
+  type: 'object' as const,
   properties: {
     action: {
-      type: 'string',
+      type: 'string' as const,
       enum: ['create', 'update', 'delete', 'query', 'analyze'],
       description: 'Тип дії: створення, оновлення, видалення, запит або аналіз.',
     },
     event: {
-      type: 'object',
+      type: 'object' as const,
       description: "Дані про подію. Включається лише для 'create', 'update', 'delete'.",
       properties: {
-        title: { type: 'string' },
-        description: { type: 'string' },
-        startDate: { type: 'string', format: 'date' },
-        endDate: { type: 'string', format: 'date' },
-        startTime: { type: 'string', pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$' },
-        endTime: { type: 'string', pattern: '^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$' },
-        color: { type: 'string', pattern: '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$' },
-        location: { type: 'string' },
-        participants: { type: 'array', items: { type: 'string', format: 'email' } },
+        title: { type: 'string' as const },
+        description: { type: 'string' as const },
+        startDate: { type: 'string' as const },
+        endDate: { type: 'string' as const },
+        startTime: { type: 'string' as const },
+        endTime: { type: 'string' as const },
+        color: { type: 'string' as const },
+        location: { type: 'string' as const },
+        participants: {
+          type: 'array' as const,
+          items: { type: 'string' as const },
+        },
       },
-      required: ['action'],
     },
     message: {
-      type: 'string',
+      type: 'string' as const,
       description: "Дружнє повідомлення користувачу. Обов'язково для всіх дій.",
     },
   },
   required: ['action', 'message'],
-} as JSONSchema;
+};
 
 // Middleware
 app.use(express.json());
@@ -113,6 +114,26 @@ app.get('/health', (req: Request, res: Response) => {
 
 app.get('/', (req, res) => {
   res.status(200).json({ message: 'Backend is running!' });
+});
+
+// AI Health Check (public)
+app.get('/api/ai/health', (req: Request, res: Response) => {
+  // Проверяем доступность Anthropic API
+  const anthropicAvailable = !!process.env.ANTHROPIC_API_KEY;
+  const anthropicKeyLength = process.env.ANTHROPIC_API_KEY?.length || 0;
+
+  res.json({
+    status: anthropicAvailable ? 'ok' : 'error',
+    service: 'AI Assistant',
+    available: anthropicAvailable,
+    anthropic: {
+      configured: anthropicAvailable,
+      keyLength: anthropicKeyLength,
+      keyPrefix: process.env.ANTHROPIC_API_KEY?.substring(0, 10) + '...',
+    },
+    timestamp: new Date().toISOString(),
+    message: anthropicAvailable ? 'AI service is ready' : 'ANTHROPIC_API_KEY not configured',
+  });
 });
 
 // Protected AI endpoints - require authentication

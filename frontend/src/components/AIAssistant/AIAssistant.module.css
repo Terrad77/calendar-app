@@ -29,6 +29,31 @@
 .assistantButton:active {
   transform: scale(0.95);
 }
+.headerInfo {
+  position: relative;
+}
+.quickActionsContainer {
+  display: flex;
+  position: absolute;
+  gap: 10px;
+  top: 50px;
+  left: 90px;
+}
+.quickActionButton {
+  width: 80px;
+  /* height: 50px; */
+  border-radius: var(--space-md);
+  background: var(--color-bg-secondary);
+  border: none;
+  color: var(--color-text-primary);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
 
 .chatWindow {
   position: fixed;
@@ -43,6 +68,24 @@
   flex-direction: column;
   overflow: hidden;
   animation: slideUp 0.3s ease-out;
+}
+.messagesContainer {
+  padding: 0px 4px;
+  overflow-y: auto;
+  background-color: var(--color-bg-primary);
+}
+.messageContent {
+  margin-top: 4px;
+  line-height: 1.4;
+}
+.inputContainer {
+  margin-top: 4px;
+  background-color: var(--color-bg-secondary);
+  width: 100%;
+}
+.chatInput {
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
 }
 
 @keyframes slideUp {
