@@ -43,11 +43,13 @@ export interface BaseCalendarEvent {
   description?: string;
   createdAt?: string;
   updatedAt?: string;
+  colors?: ColorType[];
+  countryCode?: string;
 }
 
 export interface TaskEvent extends BaseCalendarEvent {
   eventType: 'task';
-  colors?: ColorType[];
+  colors: ColorType[];
   completed?: boolean;
   priority?: 'low' | 'medium' | 'high';
 }
@@ -65,12 +67,14 @@ export interface MeetingEvent extends BaseCalendarEvent {
   location?: string;
   participants?: string[];
   color?: string;
+  colors?: ColorType[];
 }
 
 export interface ReminderEvent extends BaseCalendarEvent {
   eventType: 'reminder';
   reminderTime?: string;
   isRecurring?: boolean;
+  colors?: ColorType[];
 }
 
 export type CalendarEvent = TaskEvent | HolidayEvent | MeetingEvent | ReminderEvent;
