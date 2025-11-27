@@ -142,6 +142,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
                 | 'holiday'
                 | 'meeting'
                 | 'reminder',
+              colors: (action.data as any).colors || ['default'],
+              countryCode: (action.data as any).countryCode, // optionally
             } as CalendarEvent;
 
             onEventCreate(newEvent);
@@ -273,7 +275,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
                 : [],
           });
           break;
-
         case 'create_quick_event':
           const quickEvent: CalendarEvent = {
             id: `event-${Date.now()}`,
@@ -281,6 +282,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
             title: 'Нова подія',
             description: 'Швидко створена подія',
             eventType: 'task',
+            colors: ['default'],
           };
           onEventCreate(quickEvent);
           addMessage({

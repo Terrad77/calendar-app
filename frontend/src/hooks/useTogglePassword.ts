@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconName } from '../components/Icon';
+import type { IconName } from '../types/types';
 
 export const useTogglePassword = (initialState = false) => {
   const [isVisible, setIsVisible] = useState(initialState);
