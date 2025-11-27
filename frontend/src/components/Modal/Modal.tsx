@@ -40,14 +40,7 @@ export default function Modal({ children, isOpen, onClose, btnClassName }: Modal
           {isLoading && <DotLoader text="Loading..." />}
           <div className={css.modal} onClick={(e) => e.stopPropagation()}>
             <button className={clsx(css.closeButton, btnClassName)} onClick={onClose}>
-              <Icon
-                name="x-close"
-                className={css.closeIcon}
-                size={{
-                  '@initial': '20px',
-                  '@768': '24px',
-                }}
-              />
+              <Icon name="x-close" className={(css.closeIcon, css.responsiveIcon)} />
             </button>
             {children}
           </div>

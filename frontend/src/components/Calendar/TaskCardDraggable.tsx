@@ -148,7 +148,9 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
       style={style}
       {...listeners}
       {...attributes}
-      eventType={event.eventType}
+      eventType={
+        event.eventType === 'meeting' || event.eventType === 'reminder' ? 'task' : event.eventType
+      }
       isDragging={renderIsDragging}
       customCursor={finalCustomCursor}
       onClick={onCardClick !== undefined ? (e) => onCardClick(e, event) : undefined}

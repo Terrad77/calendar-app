@@ -71,6 +71,9 @@
 .closeButton:hover > .closeIcon {
   stroke: var(--logout-btn);
 }
+.responsiveIcon {
+  font-size: 20px;
+}
 
 /* from 768px */
 @media screen and (min-width: 768px) {
@@ -81,6 +84,9 @@
     top: 12px;
     right: 12px;
     padding: 2px;
+    font-size: 24px;
+  }
+  .responsiveIcon {
     font-size: 24px;
   }
 }
