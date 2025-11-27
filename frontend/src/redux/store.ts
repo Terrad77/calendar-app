@@ -12,7 +12,7 @@ import {
 import storage from 'redux-persist/lib/storage';
 import userReducer from './user/userSlice';
 import taskReducer from './task/taskSlice';
-import { TaskState } from './task/types';
+// import { TaskState } from './task/types';
 
 const userPersistConfig = {
   key: 'user',
@@ -36,3 +36,5 @@ export const store = configureStore({
 });
 
 export const persistor = persistStore(store);
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;

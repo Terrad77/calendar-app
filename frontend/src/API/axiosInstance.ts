@@ -52,7 +52,7 @@ instance.interceptors.response.use(
           refreshToken,
         });
 
-        const { accessToken, refreshToken: newRefreshToken } = response.data.tokens;
+        const { accessToken } = response.data.tokens;
 
         // Update token in store (this will be handled by the refreshUserToken action)
         // For now, just retry the original request with new token

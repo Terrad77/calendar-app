@@ -1,11 +1,10 @@
-// src/components/UserProfile/UserProfileHeader.tsx
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { styled } from '@stitches/react';
 import { logout } from '../../redux/user/operations';
 import { selectUser } from '../../redux/user/selectors';
-import { type AppDispatch } from '../../redux/store';
+import { useAppDispatch } from '../../redux/hooks';
 
 const HeaderContainer = styled('div', {
   position: 'relative',
@@ -125,7 +124,7 @@ export const UserProfileHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useAppDispatch();
   const user = useSelector(selectUser);
 
   useEffect(() => {

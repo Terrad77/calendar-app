@@ -4,20 +4,21 @@ export const getUsers = async () => {
   try {
     const { data } = await instance.get('/api/users');
     return data.result;
-  } catch (error) {
+  } catch (error: unknown) {
+    // Type-safe error handling
+    const err = error as {
+      response?: {
+        data?: { message: string };
+        status: number;
+      };
+    };
+
     const response = {
-      message: error.response.data.message,
-      statusCode: error.response.status,
+      message: err.response?.data?.message || 'Unknown error',
+      statusCode: err.response?.status || 500,
     };
     console.log(response.message);
-  }
-};
 
-export const getDayWaterAmount = async date => {
-  try {
-    const response = await instance.get(`api/water/day/${date}`);
     return response;
-  } catch (error) {
-    console.log(error);
   }
 };
