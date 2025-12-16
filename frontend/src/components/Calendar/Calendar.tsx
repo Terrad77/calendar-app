@@ -17,12 +17,13 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'; // dnd-kit for D&D functionality
 import { arrayMove } from '@dnd-kit/sortable';
-import type { CalendarEvent, ColorType, Holiday } from '../../types/types';
+import type { CalendarEvent, ColorType } from '../../types/types';
 import { TASK_MARKER_COLORS } from '../../types/types';
 import { CalendarDayCell } from './CalendarDayCell';
 import { TaskCardDraggable } from './TaskCardDraggable';
 import { CalendarHeader } from './CalendarHeader';
 import { CalendarGridHeader } from './CalendarGridHeader';
+import { generateUniqueId } from '../../utils/idGenerator';
 
 // Extend dayjs with plugins for date comparison
 dayjs.extend(isSameOrBefore);
@@ -107,13 +108,12 @@ export const Calendar = ({
               if (
                 typeof task === 'object' &&
                 task !== null &&
-                'id' in task &&
                 'date' in task &&
                 'title' in task &&
                 'eventType' in task
               ) {
                 const t = task as {
-                  id: string;
+                  id?: string;
                   date: string;
                   title: string;
                   description?: string;
@@ -122,6 +122,9 @@ export const Calendar = ({
                   countryCode?: string;
                 };
 
+                // Генеруємо новий ID, якщо його немає або він невалідний
+                const safeId = t.id && t.id.trim() !== '' ? t.id : generateUniqueId('task');
+
                 const safeColors: ColorType[] = Array.isArray(t.colors)
                   ? t.colors.filter((color): color is ColorType =>
                       TASK_MARKER_COLORS.includes(color as ColorType)
@@ -129,7 +132,7 @@ export const Calendar = ({
                   : [];
 
                 return {
-                  id: t.id,
+                  id: safeId,
                   date: t.date,
                   title: t.title,
                   description: t.description || '',
@@ -167,7 +170,7 @@ export const Calendar = ({
           if (month) {
             url += `&month=${month}`;
           }
-
+          console.log('Fetching holidays from:', url);
           const response = await fetch(url);
 
           console.log('Holidays response status:', response.status);
@@ -182,18 +185,50 @@ export const Calendar = ({
             throw new Error(`Expected JSON but got: ${contentType}`);
           }
 
-          const data: Holiday[] = await response.json(); // allowed Data will be an array of objects of type Holiday
+          const result = await response.json();
 
-          const uniqueHolidaysMap = new Map<string, Holiday>();
-          data.forEach((holiday) => {
-            uniqueHolidaysMap.set(holiday.id, holiday);
+          // debugging logs
+          console.log('Raw API response:', result);
+          console.log('Response type:', typeof result);
+          console.log('Is array?', Array.isArray(result));
+
+          // Отримуємо масив свят
+          let holidaysData: any[] = [];
+
+          // handling different possible response structures
+          if (Array.isArray(result)) {
+            // Якщо бекенд повертає масив напряму
+            holidaysData = result;
+          } else if (result && typeof result === 'object') {
+            // Якщо бекенд повертає об'єкт з властивістю holidays
+            if (Array.isArray(result.holidays)) {
+              holidaysData = result.holidays;
+            } else if (Array.isArray(result.data)) {
+              holidaysData = result.data;
+            } else {
+              console.warn('Unexpected response format:', result);
+              holidaysData = [];
+            }
+          } else {
+            console.warn('Invalid response:', result);
+            holidaysData = [];
+          }
+
+          console.log(`Parsed ${holidaysData.length} holidays from response`);
+
+          const uniqueHolidaysMap = new Map<string, any>();
+          holidaysData.forEach((holiday) => {
+            if (holiday && holiday.id) {
+              uniqueHolidaysMap.set(holiday.id, holiday);
+            }
           });
+
           const deduplicatedData = Array.from(uniqueHolidaysMap.values());
 
           const mappedHolidays: CalendarEvent[] = deduplicatedData.map((holiday) => ({
-            id: holiday.id, // ID from backend
+            id: generateUniqueId(`holiday`), // generate new unique ID
             date: holiday.date,
-            title: holiday.title,
+            title: holiday.title || holiday.name || 'Holiday',
             eventType: 'holiday',
             countryCode: holiday.countryCode,
           }));

@@ -1,3 +1,88 @@
+/* AI Service Notification */
+.ai-service-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 8px;
+  padding: 12px 16px;
+  max-width: 350px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10000;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.notification-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.notification-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.notification-text {
+  flex-grow: 1;
+  color: #721c24;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.notification-detail {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #856404;
+  opacity: 0.8;
+}
+
+/* Hide notification after 10 seconds */
+.ai-service-notification {
+  animation: fadeOut 0.5s ease-out 10s forwards;
+}
+
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+    visibility: hidden;
+  }
+}
+
+/* Optional: Different status colors */
+.ai-service-notification.warning {
+  background: #fff3cd;
+  border-color: #ffeaa7;
+}
+
+.ai-service-notification.warning .notification-text {
+  color: #856404;
+}
+
+.ai-service-notification.info {
+  background: #d1ecf1;
+  border-color: #bee5eb;
+}
+
+.ai-service-notification.info .notification-text {
+  color: #0c5460;
+}
+
+/* General App Styles */
 .app-container {
   width: 100%;
   max-width: 1200px;

@@ -11,13 +11,10 @@ const TaskMarker = styled('span', {
   flexShrink: 0,
   variants: {
     color: {
-      blue: { backgroundColor: '#0070bc' },
-      green: { backgroundColor: '#62c050' },
-      orange: { backgroundColor: '#fea93f' },
-      purple: { backgroundColor: '#c67ae3' },
-      turquoise: { backgroundColor: '#51ea9d' },
-      yellow: { backgroundColor: '#f2d200' },
       default: { backgroundColor: '#a0a0a0' },
+      red: { backgroundColor: '#f05050' },
+      yellow: { backgroundColor: '#f2d200' },
+      green: { backgroundColor: '#62c050' },
     },
   },
 });
@@ -60,12 +57,10 @@ const TaskCard = styled('div', {
     },
 
     colors: {
-      default: { borderColor: '#6c757d' },
-      blue: { borderColor: '#007bff' },
-      green: { borderColor: '#28a745' },
-      orange: { borderColor: '#fd7e14' },
-      red: { borderColor: '#dc3545' }, // Використовується для рамки, якщо colors="red"
-      yellow: { borderColor: '#ffc107' },
+      default: { borderColor: '#a0a0a0' },
+      red: { borderColor: '#f05050' },
+      yellow: { borderColor: '#f2d200' },
+      green: { borderColor: '#62c050' },
     },
     isDragging: {
       true: {

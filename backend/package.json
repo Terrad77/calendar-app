@@ -12,6 +12,7 @@
     "auto-start": "npm run build && npm start"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@types/passport-google-oauth20": "^2.0.17",
     "axios": "^1.7.2",
     "bcrypt": "^6.0.0",

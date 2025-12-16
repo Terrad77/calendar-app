@@ -1,3 +1,23 @@
+/* AI Assistant Disabled State */
+.ai-assistant-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ai-assistant-disabled-message {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.ai-assistant-disabled-message span {
+  font-size: 20px;
+}
+
+/* AI Assistant Styles */
 .assistantContainer {
   position: fixed;
   bottom: 20px;

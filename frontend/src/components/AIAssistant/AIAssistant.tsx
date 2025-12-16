@@ -2,21 +2,37 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import styles from './AIAssistant.module.css';
 import type {
   CalendarEvent,
-  // ConversationMessage,
-  // AIResponse,
   AIAction,
   ChatMessage,
   AIAssistantProps,
+  MeetingEvent,
+  ColorType,
 } from '../../types/types';
+import { convertToCalendarColor } from '../../types/types';
 import { aiService } from '../../services/aiService';
+import { generateUniqueId } from '../../utils/idGenerator';
+import clsx from 'clsx';
 
 export const AIAssistant: React.FC<AIAssistantProps> = ({
   currentEvents,
   onEventCreate,
   onEventUpdate,
   onEventDelete,
-  className = '',
+  className,
+  isServiceAvailable = true,
 }) => {
+  // check AI service for available
+  if (!isServiceAvailable) {
+    return (
+      <div className={clsx('ai-assistant', 'ai-assistant-disabled', className)}>
+        <div className="ai-assistant-disabled-message">
+          <span>🤖</span>
+          <p>AI асистент тимчасово недоступний</p>
+        </div>
+      </div>
+    );
+  }
+
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -29,17 +45,30 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   // Check AI service availability on component mount
   useEffect(() => {
     const checkAIAvailability = async () => {
+      // Skip if we recently checked or service is marked as unavailable
+      if (!isAIAvailable) return;
+
       try {
         const health = await aiService.healthCheck();
-        setIsAIAvailable(health.status === 'ok');
+        setIsAIAvailable(health.status === 'ok' || health.status === 'available');
+        // If service is overloaded, schedule next check in 30 seconds
+        if (health.status === 'overloaded') {
+          setTimeout(() => {
+            checkAIAvailability();
+          }, 30000);
+        }
       } catch (error) {
         console.error('AI service not available:', error);
         setIsAIAvailable(false);
       }
     };
+    // Debounce health check - only run once when component mounts
+    const timer = setTimeout(() => {
+      checkAIAvailability();
+    }, 1000);
 
-    checkAIAvailability();
-  }, []);
+    return () => clearTimeout(timer);
+  }, []); // Empty dependency array - only run on mount
 
   // Auto-scroll to new messages
   useEffect(() => {
@@ -61,8 +90,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
       // Add welcome message when opening for the first time
       setMessages([
         {
-          id: '1',
-          role: 'assistant',
+          id: generateUniqueId('msg'),
+          role: 'assistant' as const,
           content: isAIAvailable
             ? 'Вітаю! Я ваш AI-помічник для керування календарем. Чим можу допомогти?'
             : 'AI сервіс тимчасово недоступний. Ви можете використовувати швидкі дії для керування подіями.',
@@ -70,12 +99,11 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
           actions: isAIAvailable
             ? [
                 {
-                  type: 'analyze_schedule',
+                  type: 'analyze_schedule' as const,
                   label: '📊 Аналіз розкладу',
                   data: { timeRange: 'week' },
                   confidence: 0.9,
                 },
-                // Убрали suggest_events, так как метода нет
               ]
             : [],
         },
@@ -86,7 +114,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   const addMessage = useCallback((message: Omit<ChatMessage, 'id'>) => {
     const newMessage: ChatMessage = {
       ...message,
-      id: Date.now().toString(),
+      id: generateUniqueId('msg'),
     };
     setMessages((prev) => [...prev, newMessage]);
   }, []);
@@ -94,7 +122,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   const handleAnalyzeSchedule = useCallback(async () => {
     if (currentEvents.length === 0) {
       addMessage({
-        role: 'assistant',
+        role: 'assistant' as const,
         content: 'У вашому календарі поки що немає подій для аналізу.',
         timestamp: new Date().toISOString(),
       });
@@ -102,7 +130,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
     }
 
     addMessage({
-      role: 'assistant',
+      role: 'assistant' as const,
       content: '🔍 Аналізую ваш розклад...',
       timestamp: new Date().toISOString(),
       isLoading: true,
@@ -110,22 +138,53 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 
     try {
       const analysis = await aiService.analyzeSchedule(currentEvents, 'week');
-
       const analysisText = String(analysis);
 
       addMessage({
-        role: 'assistant',
+        role: 'assistant' as const,
         content: analysisText,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
       addMessage({
-        role: 'assistant',
+        role: 'assistant' as const,
         content: '❌ Не вдалося проаналізувати розклад. Будь ласка, спробуйте пізніше.',
         timestamp: new Date().toISOString(),
       });
     }
   }, [currentEvents, addMessage]);
+
+  // Helper function to generate actions from AI response
+  const generateActionsFromAI = (action: string | undefined, eventData: any): AIAction[] => {
+    if (!action || action === 'query' || action === 'analyze') {
+      return [];
+    }
+
+    const actions: AIAction[] = [];
+
+    if (action === 'create' && eventData) {
+      // Convert AI color to calendar color
+      const calendarColor = convertToCalendarColor(eventData.color);
+
+      actions.push({
+        type: 'create_event' as const,
+        label: '✅ Підтвердити створення',
+        data: {
+          title: eventData.title,
+          date: eventData.startDate?.split('T')[0] || new Date().toISOString().split('T')[0],
+          description: eventData.description,
+          startTime: eventData.startTime,
+          endTime: eventData.endTime,
+          location: eventData.location,
+          eventType: 'meeting' as const,
+          colors: [calendarColor],
+        },
+        confidence: 0.9,
+      });
+    }
+
+    return actions;
+  };
 
   const handleAction = useCallback(
     (action: AIAction) => {
@@ -133,28 +192,28 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         case 'create_event':
           if (action.data && 'title' in action.data) {
             const newEvent = {
-              id: `event-${Date.now()}`,
+              id: generateUniqueId('event'),
               date: action.data.date || new Date().toISOString().split('T')[0],
               title: action.data.title || 'Нова подія',
               description: action.data.description,
-              eventType: (action.data.eventType || 'task') as
+              startTime: action.data.startTime,
+              endTime: action.data.endTime,
+              location: action.data.location,
+              eventType: (action.data.eventType || 'meeting') as
                 | 'task'
                 | 'holiday'
                 | 'meeting'
                 | 'reminder',
-              colors: (action.data as any).colors || ['default'],
-              countryCode: (action.data as any).countryCode, // optionally
             } as CalendarEvent;
 
             onEventCreate(newEvent);
             addMessage({
-              role: 'system',
+              role: 'system' as const,
               content: `✅ Подію "${newEvent.title}" створено`,
               timestamp: new Date().toISOString(),
             });
           }
           break;
-
         case 'update_event':
           if (action.data && 'id' in action.data) {
             const updatedEvent = {
@@ -163,24 +222,22 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
             } as CalendarEvent;
             onEventUpdate(updatedEvent);
             addMessage({
-              role: 'system',
+              role: 'system' as const,
               content: `✅ Подію "${updatedEvent.title}" оновлено`,
               timestamp: new Date().toISOString(),
             });
           }
           break;
-
         case 'delete_event':
           if (action.data && 'eventId' in action.data) {
             onEventDelete(action.data.eventId);
             addMessage({
-              role: 'system',
+              role: 'system' as const,
               content: '✅ Подію видалено',
               timestamp: new Date().toISOString(),
             });
           }
           break;
-
         case 'analyze_schedule':
           handleAnalyzeSchedule();
           break;
@@ -200,7 +257,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 
     // Add user message
     addMessage({
-      role: 'user',
+      role: 'user' as const,
       content: userMessage,
       timestamp: new Date().toISOString(),
     });
@@ -210,45 +267,116 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
     try {
       // Add loading message
       addMessage({
-        role: 'assistant',
+        role: 'assistant' as const,
         content: '🤔 Думаю...',
         timestamp: new Date().toISOString(),
         isLoading: true,
       });
 
       // Send to AI service
-      const response = await aiService.chat(userMessage, currentEvents);
+      const aiResponse = await aiService.chat(userMessage, currentEvents);
+
+      console.log('🔍 AI Response:', aiResponse);
+
+      // Extract AI response data
+      const messageContent = aiResponse.message || 'Відповідь AI';
+      const aiAction = aiResponse.action;
+      const aiEventData = aiResponse.event;
+
+      console.log('🔍 AI action:', aiAction);
+      console.log('🔍 AI event data:', aiEventData);
 
       // Remove loading message and add AI response
-      setMessages((prev) =>
-        prev
-          .filter((msg) => !msg.isLoading)
-          .concat({
-            id: Date.now().toString(),
-            role: 'assistant',
-            content: response.message,
+      setMessages((prev) => {
+        const filteredMessages = prev.filter((msg) => !msg.isLoading);
+
+        const newMessage: ChatMessage = {
+          id: generateUniqueId('msg'),
+          role: 'assistant' as const,
+          content: messageContent,
+          timestamp: new Date().toISOString(),
+          actions: generateActionsFromAI(aiAction, aiEventData),
+        };
+
+        // if AI create event add ColorSelector
+        if (aiAction === 'create' && aiEventData) {
+          // add compoonent for color selection
+          const colorMessage: ChatMessage = {
+            id: generateUniqueId('msg'),
+            role: 'assistant' as const,
+            content: '🎨 Чи бажаєте змінити колір події?',
             timestamp: new Date().toISOString(),
-            actions: response.actions,
-          })
-      );
+            // buttons for set color as actions
+            actions: ['default', 'red', 'yellow', 'green'].map((color) => ({
+              type: 'update_event' as const,
+              label: `Колір: ${color}`,
+              data: {
+                colors: [color as ColorType],
+              },
+              confidence: 0.8,
+            })),
+          };
+
+          return [...filteredMessages, newMessage, colorMessage];
+        }
+
+        return [...filteredMessages, newMessage];
+      });
+
+      // Handle AI actions (create/update/delete events)
+      if (aiAction === 'create' && aiEventData && onEventCreate) {
+        // Convert AI color to calendar color
+        const aiColor = (aiEventData as any).color;
+        const calendarColor = convertToCalendarColor(aiColor);
+
+        // Create event from AI data
+        const newEvent: CalendarEvent = {
+          id: generateUniqueId('event'),
+          date: aiEventData.startDate?.split('T')[0] || new Date().toISOString().split('T')[0],
+          title: aiEventData.title || 'Нова подія',
+          description: aiEventData.description || '',
+          startTime: aiEventData.startTime || '09:00',
+          endTime: aiEventData.endTime || '10:00',
+          location: aiEventData.location || '',
+          eventType: 'meeting',
+          colors: [calendarColor],
+        } as MeetingEvent;
+
+        // Create the event
+        onEventCreate(newEvent);
+        console.log('✅ Event created from AI:', newEvent);
+
+        // Add confirmation message with color info
+        const colorMessage = aiEventData.color ? ` з кольором ${calendarColor}` : '';
+
+        addMessage({
+          role: 'system' as const,
+          content: `✅ Подію "${newEvent.title}"${colorMessage} створено у календарі`,
+          timestamp: new Date().toISOString(),
+        });
+      }
     } catch (error: any) {
       // Remove loading message and add error
-      setMessages((prev) =>
-        prev
-          .filter((msg) => !msg.isLoading)
-          .concat({
-            id: Date.now().toString(),
-            role: 'assistant',
-            content: '❌ Вибачте, сталася помилка. Будь ласка, спробуйте ще раз.',
-            timestamp: new Date().toISOString(),
-          })
-      );
+      setMessages((prev) => {
+        const filteredMessages = prev.filter((msg) => !msg.isLoading);
+
+        const errorMessage: ChatMessage = {
+          id: generateUniqueId('msg'),
+          role: 'assistant' as const,
+          content: '❌ Вибачте, сталася помилка. Будь ласка, спробуйте ще раз.',
+          timestamp: new Date().toISOString(),
+        };
+
+        return [...filteredMessages, errorMessage];
+      });
+
       console.error('AI chat error:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, isLoading, isAIAvailable, currentEvents, addMessage]);
+  }, [inputValue, isLoading, isAIAvailable, currentEvents, addMessage, onEventCreate]);
 
+  // handler Quick Actions
   const handleQuickAction = useCallback(
     (action: string) => {
       switch (action) {
@@ -259,14 +387,14 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
           ).length;
 
           addMessage({
-            role: 'assistant',
+            role: 'assistant' as const,
             content: `📅 У вас ${eventsCount} подій у календарі, ${todayEvents} на сьогодні.`,
             timestamp: new Date().toISOString(),
             actions:
               eventsCount > 0
                 ? [
                     {
-                      type: 'analyze_schedule',
+                      type: 'analyze_schedule' as const,
                       label: '📊 Проаналізувати розклад',
                       data: { timeRange: 'week' },
                       confidence: 0.9,
@@ -277,7 +405,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
           break;
         case 'create_quick_event':
           const quickEvent: CalendarEvent = {
-            id: `event-${Date.now()}`,
+            id: generateUniqueId('event'),
             date: new Date().toISOString().split('T')[0],
             title: 'Нова подія',
             description: 'Швидко створена подія',
@@ -286,7 +414,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
           };
           onEventCreate(quickEvent);
           addMessage({
-            role: 'system',
+            role: 'system' as const,
             content: '✅ Швидку подію створено! Ви можете відредагувати її в календарі.',
             timestamp: new Date().toISOString(),
           });
@@ -299,7 +427,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
     [currentEvents, onEventCreate, addMessage]
   );
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  // handler for Enter key down in input
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
@@ -388,7 +517,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
                   <>
                     <div className={styles.messageContent}>
                       {message.content.split('\n').map((line, index) => (
-                        <p key={index}>{line}</p>
+                        <p key={`${message.id}-line-${index}`}>{line}</p>
                       ))}
                     </div>
                     <div className={styles.messageMeta}>
@@ -400,7 +529,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
                       <div className={styles.messageActions}>
                         {message.actions.map((action, index) => (
                           <button
-                            key={index}
+                            key={`${message.id}-action-${index}`}
                             onClick={() => handleAction(action)}
                             className={`${styles.actionButton} ${
                               action.confidence && action.confidence > 0.8
@@ -427,7 +556,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder={
                 isAIAvailable
                   ? 'Запитайте про події, розклад...'

@@ -1,57 +1,58 @@
-import axios from "axios";
-import { BackendHoliday, NagerPublicHolidayResponse } from "./types";
-import { getCache, setCache } from "./cache";
-import dayjs from "dayjs";
+import axios from 'axios';
+import { BackendHoliday, NagerPublicHolidayResponse } from './types';
+import { getCache, setCache } from './cache';
+import dayjs from 'dayjs';
+import { randomUUID } from 'crypto';
 
-const NAGER_API_BASE_URL = "https://date.nager.at/api/v3";
+const NAGER_API_BASE_URL = 'https://date.nager.at/api/v3';
 
 // Time To Live cache
 const CACHE_TTL_HOLIDAYS_SECONDS = 60 * 60 * 24 * 30 * 12 * 1; // 1 year
 
 // List of countries for fetching
 const COUNTRIES_TO_FETCH = [
-  "UA",
-  "US",
-  "GB",
-  "DE",
-  "FR",
-  "CA",
-  "AU",
-  "JP",
-  "CN",
-  "IN",
-  "BR",
-  "MX",
-  "AR",
-  "ZA",
-  "PL",
-  "IT",
-  "ES",
-  "NL",
-  "BE",
-  "SE",
-  "NO",
-  "DK",
-  "FI",
-  "CH",
-  "AT",
-  "IE",
-  "PT",
-  "GR",
-  "RU",
-  "KR",
-  "SG",
-  "MY",
-  "TH",
-  "NZ",
-  "EG",
-  "SA",
-  "AE",
-  "TR",
-  "PK",
-  "BD",
-  "VN",
-  "PH",
+  'UA',
+  'US',
+  'GB',
+  'DE',
+  'FR',
+  'CA',
+  'AU',
+  'JP',
+  'CN',
+  'IN',
+  'BR',
+  'MX',
+  'AR',
+  'ZA',
+  'PL',
+  'IT',
+  'ES',
+  'NL',
+  'BE',
+  'SE',
+  'NO',
+  'DK',
+  'FI',
+  'CH',
+  'AT',
+  'IE',
+  'PT',
+  'GR',
+  'RU',
+  'KR',
+  'SG',
+  'MY',
+  'TH',
+  'NZ',
+  'EG',
+  'SA',
+  'AE',
+  'TR',
+  'PK',
+  'BD',
+  'VN',
+  'PH',
 ];
 
 /**
@@ -81,32 +82,24 @@ async function fetchHolidaysForCountry(
 
     // for chek
     if (!Array.isArray(response.data)) {
-      console.warn(
-        `API returned non-array data for ${countryCode} in ${year}:`,
-        response.data
-      );
+      console.warn(`API returned non-array data for ${countryCode} in ${year}:`, response.data);
       return [];
     }
 
     const mappedHolidays: BackendHoliday[] = response.data.map((holiday) => ({
-      // Створюємо унікальний ID, включаючи countryCode, оскільки свята можуть мати однакові дати/назви в різних країнах.
-      id: `holiday-${holiday.date}-${holiday.countryCode}-${holiday.name
-        .replace(/\s/g, "-")
-        .toLowerCase()}`,
+      // Створюємо унікальний ID для кожного свята
+      id: `holiday-${randomUUID()}`,
       date: holiday.date,
       // Форматуємо назву для кращої читабельності, включаючи код країни.
       title: `${holiday.localName || holiday.name} (${holiday.countryCode})`,
       countryCode: holiday.countryCode,
-      eventType: "holiday",
+      eventType: 'holiday',
     }));
 
     setCache(cacheKey, mappedHolidays, CACHE_TTL_HOLIDAYS_SECONDS);
     return mappedHolidays;
   } catch (error) {
-    console.error(
-      `Error fetching holidays for ${countryCode} in ${year}:`,
-      error
-    );
+    console.error(`Error fetching holidays for ${countryCode} in ${year}:`, error);
 
     return [];
   }
@@ -124,22 +117,16 @@ export async function getWorldwideHolidays(
   year: number,
   month?: number
 ): Promise<BackendHoliday[]> {
-  const cacheKey = `worldwide-holidays-${year}-${month || "all"}`;
+  const cacheKey = `worldwide-holidays-${year}-${month || 'all'}`;
   const cachedData = getCache<BackendHoliday[]>(cacheKey);
 
   if (cachedData) {
-    console.log(
-      `[Cache Hit] Worldwide holidays for ${year} ${
-        month ? `month ${month}` : ""
-      }`
-    );
+    console.log(`[Cache Hit] Worldwide holidays for ${year} ${month ? `month ${month}` : ''}`);
     return cachedData;
   }
 
   console.log(
-    `[Cache Miss] Aggregating worldwide holidays for ${year} ${
-      month ? `month ${month}` : ""
-    }`
+    `[Cache Miss] Aggregating worldwide holidays for ${year} ${month ? `month ${month}` : ''}`
   );
 
   // get holidays for all specified countries
@@ -157,9 +144,7 @@ export async function getWorldwideHolidays(
 
   // Filter by month, if it is specified in the query.
   if (month) {
-    allWorldwideHolidays = allWorldwideHolidays.filter(
-      (h) => dayjs(h.date).month() + 1 === month
-    );
+    allWorldwideHolidays = allWorldwideHolidays.filter((h) => dayjs(h.date).month() + 1 === month);
   }
 
   // Sort holidays for sequential display.

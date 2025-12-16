@@ -21,15 +21,7 @@ export type IconName =
   | 'check'
   | 'clock';
 
-export const TASK_MARKER_COLORS = [
-  'blue',
-  'green',
-  'orange',
-  'purple',
-  'turquoise',
-  'yellow',
-  'default',
-] as const;
+export const TASK_MARKER_COLORS = ['default', 'red', 'yellow', 'green'] as const;
 
 export type ColorType = (typeof TASK_MARKER_COLORS)[number];
 export type EventType = 'task' | 'holiday' | 'meeting' | 'reminder';
@@ -45,6 +37,9 @@ export interface BaseCalendarEvent {
   updatedAt?: string;
   colors?: ColorType[];
   countryCode?: string;
+  startTime?: string; // HH:MM
+  endTime?: string; // HH:MM
+  location?: string;
 }
 
 export interface TaskEvent extends BaseCalendarEvent {
@@ -62,11 +57,10 @@ export interface HolidayEvent extends BaseCalendarEvent {
 
 export interface MeetingEvent extends BaseCalendarEvent {
   eventType: 'meeting';
-  startTime: string;
-  endTime: string;
+  startTime: string; // Обов'язкове для зустрічей
+  endTime?: string;
   location?: string;
   participants?: string[];
-  color?: string;
   colors?: ColorType[];
 }
 
@@ -205,6 +199,7 @@ export interface AIAssistantProps {
   onEventUpdate: (event: CalendarEvent) => void;
   onEventDelete: (eventId: string) => void;
   className?: string;
+  isServiceAvailable?: boolean;
 }
 
 export interface ChatMessage extends ConversationMessage {
@@ -214,16 +209,19 @@ export interface ChatMessage extends ConversationMessage {
 }
 
 export interface AIResponse {
-  message: string;
-  actions?: AIAction[];
-  events?: CalendarEvent[];
-  confidence?: number;
-  type: 'message' | 'event_suggestion' | 'analysis' | 'error' | 'confirmation';
-  metadata?: {
-    processedEvents?: number;
-    suggestedTimes?: string[];
-    conflictsDetected?: boolean;
+  action: 'create' | 'update' | 'delete' | 'query' | 'analyze';
+  event?: {
+    title: string;
+    description?: string;
+    startDate: string; // ISO date
+    endDate: string; // ISO date
+    startTime: string; // HH:MM
+    endTime?: string; // HH:MM
+    location?: string;
+    participants?: string[];
+    color?: string;
   };
+  message: string;
 }
 
 export interface AIAction {
@@ -352,5 +350,164 @@ export const isCalendarEvent = (obj: any): obj is CalendarEvent => {
 };
 
 export const isAIResponse = (obj: any): obj is AIResponse => {
-  return obj && typeof obj.message === 'string' && typeof obj.type === 'string';
+  return obj && typeof obj.message === 'string' && typeof obj.action === 'string';
+};
+
+// Function to convert AI event data to CalendarEvent
+export const convertAIEventToCalendarEvent = (aiEvent: any): CalendarEvent => {
+  // Extract date from startDate (convert AI returns date type ISO to YYYY-MM-DD)
+  const date = aiEvent.startDate
+    ? aiEvent.startDate.split('T')[0]
+    : new Date().toISOString().split('T')[0];
+
+  // Determine event type based on AI data
+  const eventType: EventType = determineEventTypeFromAI(aiEvent);
+
+  // Convert AI color to calendar color
+  const calendarColor = convertToCalendarColor(aiEvent.color);
+
+  // Create base event
+  const baseEvent: BaseCalendarEvent = {
+    id: generateUniqueId('event'),
+    date,
+    title: aiEvent.title || 'Нова подія',
+    eventType,
+    description: aiEvent.description || '',
+    startTime: aiEvent.startTime || '09:00',
+    endTime: aiEvent.endTime || '10:00',
+    location: aiEvent.location || '',
+    colors: [convertToCalendarColor(aiEvent.color)],
+  };
+
+  // Return appropriate event type
+  switch (eventType) {
+    case 'meeting':
+      return {
+        ...baseEvent,
+        eventType: 'meeting',
+        startTime: aiEvent.startTime || '09:00',
+        endTime: aiEvent.endTime || '10:00',
+        participants: aiEvent.participants || [],
+        colors: [calendarColor],
+      } as MeetingEvent;
+
+    case 'task':
+      return {
+        ...baseEvent,
+        eventType: 'task',
+        colors: [calendarColor],
+      } as TaskEvent;
+
+    case 'reminder':
+      return {
+        ...baseEvent,
+        eventType: 'reminder',
+        reminderTime: aiEvent.startTime || '09:00',
+        colors: [calendarColor],
+      } as ReminderEvent;
+
+    default:
+      return {
+        ...baseEvent,
+        eventType: 'meeting',
+        startTime: aiEvent.startTime || '09:00',
+        endTime: aiEvent.endTime || '10:00',
+        colors: [calendarColor],
+      } as MeetingEvent;
+  }
+};
+
+// Helper function to determine event type from AI data
+const determineEventTypeFromAI = (aiEvent: any): EventType => {
+  const title = (aiEvent.title || '').toLowerCase();
+
+  // Check for keywords in title
+  if (
+    title.includes('зустріч') ||
+    title.includes('meeting') ||
+    title.includes('конференція') ||
+    title.includes('конференция')
+  ) {
+    return 'meeting';
+  }
+
+  if (
+    title.includes('задача') ||
+    title.includes('task') ||
+    title.includes('справ') ||
+    title.includes('дело')
+  ) {
+    return 'task';
+  }
+
+  if (
+    title.includes('нагадування') ||
+    title.includes('reminder') ||
+    title.includes('напоминание')
+  ) {
+    return 'reminder';
+  }
+
+  // If AI provides event type
+  if (aiEvent.eventType && ['meeting', 'task', 'reminder', 'holiday'].includes(aiEvent.eventType)) {
+    return aiEvent.eventType as EventType;
+  }
+
+  // Default to meeting for AI-created events (most common)
+  return 'meeting';
+};
+
+// Helper function for generating unique IDs
+export const generateUniqueId = (prefix: string): string => {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
+
+// Function to convert any color to available ColorType
+export const convertToCalendarColor = (color: string | undefined): ColorType => {
+  if (!color) return 'default';
+
+  const colorLower = color.toLowerCase().trim();
+
+  // Якщо колір вже є в TASK_MARKER_COLORS
+  if (TASK_MARKER_COLORS.includes(colorLower as ColorType)) {
+    return colorLower as ColorType;
+  }
+
+  // Конвертація hex або назв кольорів в доступні кольори
+  const colorMap: Record<string, ColorType> = {
+    // HEX кольори → наші кольори
+    '#3b82f6': 'default', // синій → default
+    '#2563eb': 'default',
+    '#1d4ed8': 'default',
+    '#ef4444': 'red', // червоний → red
+    '#dc2626': 'red',
+    '#b91c1c': 'red',
+    '#f59e0b': 'yellow', // жовтий → yellow
+    '#d97706': 'yellow',
+    '#b45309': 'yellow',
+    '#10b981': 'green', // зелений → green
+    '#059669': 'green',
+    '#047857': 'green',
+    '#8b5cf6': 'default', // фіолетовий → default
+    '#7c3aed': 'default',
+    '#6d28d9': 'default',
+
+    // Назви кольорів → кольори календаря
+    blue: 'default',
+    red: 'red',
+    yellow: 'yellow',
+    green: 'green',
+    orange: 'yellow', // оранжевий → yellow
+    purple: 'default', // фіолетовий → default
+    pink: 'default', // рожевий → default
+    cyan: 'default', // блакитний → default
+    gray: 'default', // сірий → default
+  };
+
+  return colorMap[colorLower] || 'default';
+};
+
+// Function to get all available colors for UI
+export const getAvailableColors = (): ColorType[] => {
+  return [...TASK_MARKER_COLORS];
 };

@@ -1,6 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { styled } from '@stitches/react';
-import { type ColorType, TASK_MARKER_COLORS, type CalendarEvent } from '../../types/types';
+import {
+  type ColorType,
+  TASK_MARKER_COLORS,
+  type CalendarEvent,
+  TaskEvent,
+} from '../../types/types';
+import { generateUniqueId } from '../../utils/idGenerator';
 
 const TaskInputFormWrapper = styled('div', {
   marginTop: '2px',
@@ -130,12 +136,14 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
   initialDate,
 }) => {
   const [title, setTitle] = useState(initialTask?.title || '');
+  const [description, setDescription] = useState(initialTask?.description || '');
   const [selectedColors, setSelectedColors] = useState<ColorType[]>(
     initialTask?.colors && initialTask.colors.length > 0 ? initialTask.colors : ['default']
   );
 
   useEffect(() => {
     setTitle(initialTask?.title || '');
+    setDescription(initialTask?.description || '');
     setSelectedColors(
       initialTask?.colors && initialTask.colors.length > 0 ? initialTask.colors : ['default']
     );
@@ -143,15 +151,15 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
 
   const availableColors: ColorType[] = TASK_MARKER_COLORS as unknown as ColorType[];
 
-  // --- logic for button "Save" ---
+  // --- handler for button "Save" ---
+
   const handleSaveClick = useCallback(() => {
     if (title.trim() === '') {
-      // or add feedback to user
       alert('Task title cannot be empty!');
       return;
     }
 
-    const taskId = initialTask?.id || `task-${Date.now()}`; // generate ID for new task
+    const taskId = initialTask?.id || generateUniqueId('task'); // generate ID for new task
     const taskDate = initialTask?.date || initialDate; // get date from exist task or initialDate
 
     if (!taskDate) {
@@ -160,12 +168,17 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       return;
     }
 
-    const taskToSave: CalendarEvent = {
+    const taskToSave: TaskEvent = {
       id: taskId,
       title: title.trim(),
-      colors: selectedColors.length > 0 ? selectedColors : ['default'], // Check color array is not empty
+      description: description.trim(),
       date: taskDate,
       eventType: 'task',
+      colors: selectedColors.length > 0 ? selectedColors : ['default'],
+      completed: initialTask && 'completed' in initialTask ? initialTask.completed : false,
+      priority: initialTask && 'priority' in initialTask ? initialTask.priority : 'medium',
+      createdAt: initialTask?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
 
     onSave(taskToSave);
@@ -218,6 +231,13 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
         onKeyDown={handleKeyDown}
         autoFocus
         aria-label="Task title input"
+      />
+      <TaskInput
+        type="text"
+        placeholder="Task description (optional)"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        aria-label="Task description input"
       />
       <ColorSelectorWrapper>
         {availableColors.map((color) => (
