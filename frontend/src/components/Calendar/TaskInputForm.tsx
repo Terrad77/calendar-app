@@ -103,13 +103,10 @@ const ColorOption = styled('div', {
 
   variants: {
     color: {
-      blue: { backgroundColor: '#0070bc' },
-      green: { backgroundColor: '#62c050' },
-      orange: { backgroundColor: '#fea93f' },
-      purple: { backgroundColor: '#c67ae3' },
-      turquoise: { backgroundColor: '#51ea9d' },
-      yellow: { backgroundColor: '#f2d200' },
       default: { backgroundColor: '#a0a0a0' },
+      red: { backgroundColor: '#f05050' },
+      yellow: { backgroundColor: '#f2d200' },
+      green: { backgroundColor: '#62c050' },
     },
     isSelected: {
       true: {
