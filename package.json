@@ -4,7 +4,10 @@
   "description": "calendar app with Vite + React + TS + Stitches",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"No test specified\""
+    "test": "echo \"No test specified\"",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "dev:backend": "npm run dev --prefix backend",
+    "dev:all": "concurrently -n frontend,backend -c blue,green \"npm run dev:frontend\" \"npm run dev:backend\""
   },
   "repository": {
     "type": "git",
@@ -22,6 +25,7 @@
     "@eslint/eslintrc": "^3.3.1",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
+    "concurrently": "^9.2.1",
     "eslint": "^9.38.0",
     "eslint-plugin-import": "^2.32.0",
     "eslint-plugin-react-hooks": "^7.0.1",

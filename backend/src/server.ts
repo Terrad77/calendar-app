@@ -6,6 +6,7 @@ import { getWorldwideHolidays } from './nagerApi';
 import { CalendarEvent, AIResponse } from './types';
 import { authenticateToken } from './middleware/authMiddleware';
 import authRoutes from './routes/authRoutes';
+import passport from './config/passport';
 
 dotenv.config();
 
@@ -108,6 +109,7 @@ const CALENDAR_ACTION_SCHEMA = {
 
 // Middleware
 app.use(express.json());
+app.use(passport.initialize());
 app.use(
   cors({
     origin: [
@@ -124,6 +126,16 @@ app.use(
 
 // Authentication routes (public)
 app.use('/api/auth', authRoutes);
+
+// Backward compatibility for legacy Google OAuth paths
+app.get('/api/users/google', (req: Request, res: Response) => {
+  res.redirect('/api/auth/google');
+});
+
+app.get('/api/users/google/callback', (req: Request, res: Response) => {
+  const query = new URLSearchParams(req.query as Record<string, string>).toString();
+  res.redirect(query ? `/api/auth/google/callback?${query}` : '/api/auth/google/callback');
+});
 
 // Health check endpoints (public)
 app.get('/health', (req: Request, res: Response) => {
