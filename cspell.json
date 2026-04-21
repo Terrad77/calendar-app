@@ -1,0 +1,6 @@
+{
+  "version": "0.2",
+  "language": "en,uk,ru",
+  "words": ["persistor", "stitches", "shadcn", "backend", "frontend", "Vite"],
+  "ignorePaths": ["node_modules", "dist", "**/*.module.css"]
+}

@@ -120,7 +120,7 @@ const ColorOption = styled('div', {
 interface TaskInputFormProps {
   initialTask?: CalendarEvent | null;
   onSave: (task: CalendarEvent) => void; // callback for saving (add or update)
-  onCancel: () => void; // Колбек для скасування
+  onCancel: () => void; // callback for canceling
   onDelete?: (taskId: string) => void; // callback for delete
   initialDate?: string; // date for new task, if no exist initialTask
 }

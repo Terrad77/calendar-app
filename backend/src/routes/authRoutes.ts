@@ -1,10 +1,14 @@
 import { Router, Request, Response } from 'express';
-import { authService, AuthService } from '../services/authService.js';
-import { authenticateToken, rateLimitAuth } from '../middleware/authMiddleware.js';
-import { RegisterData, UserCredentials } from '../types/auth.types.js';
+import { authService, AuthService } from '../services/authService';
+import { authenticateToken, rateLimitAuth } from '../middleware/authMiddleware';
+import { RegisterData, UserCredentials } from '../types/auth.types';
+import { isGoogleOAuthConfigured } from '../config/passport';
 import passport from 'passport';
 
 const router = Router();
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const authRateLimitAttempts = isDevelopment ? 50 : 5;
+const authRateLimitWindowMs = 15 * 60 * 1000;
 
 /**
  * POST /api/auth/register
@@ -12,7 +16,7 @@ const router = Router();
  */
 router.post(
   '/register',
-  rateLimitAuth(5, 15 * 60 * 1000),
+  rateLimitAuth(authRateLimitAttempts, authRateLimitWindowMs),
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { email, password, name }: RegisterData = req.body;
@@ -70,7 +74,7 @@ router.post(
  */
 router.post(
   '/login',
-  rateLimitAuth(5, 15 * 60 * 1000),
+  rateLimitAuth(authRateLimitAttempts, authRateLimitWindowMs),
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { email, password }: UserCredentials = req.body;
@@ -241,7 +245,18 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
  */
 router.get(
   '/google',
-  // session: false - важно для API без состояния
+  // session: false - important for API without state
+  (req: Request, res: Response, next): void => {
+    if (!isGoogleOAuthConfigured) {
+      res.status(503).json({
+        error: 'Google OAuth is not configured',
+        message:
+          'Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_CALLBACK_URL in backend env.',
+      });
+      return;
+    }
+    next();
+  },
   passport.authenticate('google', { scope: ['profile', 'email'], session: false })
 );
 
@@ -251,6 +266,17 @@ router.get(
  */
 router.get(
   '/google/callback',
+  (req: Request, res: Response, next): void => {
+    if (!isGoogleOAuthConfigured) {
+      res.status(503).json({
+        error: 'Google OAuth is not configured',
+        message:
+          'Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_CALLBACK_URL in backend env.',
+      });
+      return;
+    }
+    next();
+  },
   passport.authenticate('google', {
     failureRedirect: '/login',
     session: false,

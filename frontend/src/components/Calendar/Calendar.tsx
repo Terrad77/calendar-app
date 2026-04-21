@@ -93,6 +93,7 @@ export const Calendar = ({
 }: CalendarProps) => {
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
   const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
+  const [selectedCountry, setSelectedCountry] = useState<string>('ALL');
 
   // --- parsing Tasks from Local Storage ---
   const [internalTasks, setInternalTasks] = useState<CalendarEvent[]>(() => {
@@ -122,7 +123,7 @@ export const Calendar = ({
                   countryCode?: string;
                 };
 
-                // Генеруємо новий ID, якщо його немає або він невалідний
+                // generate new unique ID if id is not valid
                 const safeId = t.id && t.id.trim() !== '' ? t.id : generateUniqueId('task');
 
                 const safeColors: ColorType[] = Array.isArray(t.colors)
@@ -192,7 +193,7 @@ export const Calendar = ({
           console.log('Response type:', typeof result);
           console.log('Is array?', Array.isArray(result));
 
-          // Отримуємо масив свят
+          // get array of holidays
           let holidaysData: any[] = [];
 
           // handling different possible response structures
@@ -271,6 +272,13 @@ export const Calendar = ({
   const [searchInputValue, setSearchInputValue] = useState(''); // immediate update input field
   const [searchQuery, setSearchQuery] = useState(''); // Delayed search
 
+  const visibleHolidays = useMemo(() => {
+    if (selectedCountry === 'ALL') {
+      return publicHolidaysWorldwide;
+    }
+    return publicHolidaysWorldwide.filter((holiday) => holiday.countryCode === selectedCountry);
+  }, [publicHolidaysWorldwide, selectedCountry]);
+
   // debounce-function  for delay Search input 200ms
   const debouncedSetSearchQuery = useMemo(
     () =>
@@ -347,7 +355,7 @@ export const Calendar = ({
     });
 
     // group publicHolidays
-    publicHolidaysWorldwide.forEach((holiday) => {
+    visibleHolidays.forEach((holiday) => {
       const holidayDate = dayjs(holiday.date).format('YYYY-MM-DD');
       if (!result[holidayDate]) {
         result[holidayDate] = { tasks: [], holidays: [] };
@@ -355,14 +363,14 @@ export const Calendar = ({
       result[holidayDate].holidays.push(holiday);
     });
 
-    // sotring Tasks and Holidays
+    // sorting Tasks and Holidays
     Object.keys(result).forEach((date) => {
       result[date].tasks.sort((a, b) => a.id.localeCompare(b.id));
       result[date].holidays.sort((a, b) => a.title.localeCompare(b.title));
     });
 
     return result;
-  }, [tasks, publicHolidaysWorldwide, searchQuery, currentDate, viewMode]);
+  }, [tasks, visibleHolidays, searchQuery, currentDate, viewMode]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -563,8 +571,10 @@ export const Calendar = ({
           currentDate={currentDate}
           viewMode={viewMode}
           isPending={isPending}
+          selectedCountry={selectedCountry}
           onPrev={handlePrev}
           onNext={handleNext}
+          onCountryChange={setSelectedCountry}
           onViewModeChange={handleViewModeChange}
           onSearchChange={handleSearchChange}
           searchInputValue={searchInputValue}

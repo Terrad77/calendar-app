@@ -20,7 +20,7 @@ import { useTogglePassword } from '../../hooks/useTogglePassword';
 
 export default function SignUpForm() {
   const dispatch = useDispatch<AppDispatch>();
-  const [isModalOpen, setIsModalOpen] = useState(true); //(true) for development
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const isLoading = useSelector(selectIsLoading);
   const { t } = useTranslation(['form', 'validation']);
 

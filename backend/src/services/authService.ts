@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { randomBytes } from 'crypto';
+import { sendVerificationEmail } from './mailerService';
 import {
   User,
   UserCredentials,
@@ -41,20 +42,6 @@ export class AuthService {
   private generateVerificationToken(): string {
     // Best Practice: Использование криптографически сильных случайных данных
     return randomBytes(32).toString('hex');
-  }
-
-  /**
-   * @description Placeholder for sending the verification email.
-   * (В продакшене замените на реальный сервис: Nodemailer, SendGrid, etc.)
-   */
-  private async sendVerificationEmail(email: string, token: string): Promise<void> {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const verificationLink = `${frontendUrl}/api/auth/verify-email?token=${token}`;
-
-    console.log(`\n--- Verification Email Sent (Mock) ---`);
-    console.log(`To: ${email}`);
-    console.log(`Link: ${verificationLink}`);
-    console.log(`--------------------------------------\n`);
   }
 
   /**
@@ -126,7 +113,9 @@ export class AuthService {
     users.set(userId, newUser);
 
     // 3. Отправка письма с верификационной ссылкой
-    await this.sendVerificationEmail(lowerEmail, verificationToken);
+    const backendUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3001}`;
+    const verificationLink = `${backendUrl}/api/auth/verify-email?token=${verificationToken}`;
+    await sendVerificationEmail(lowerEmail, verificationLink);
 
     // Generate tokens
     const tokens = this.generateTokens(userId, email);

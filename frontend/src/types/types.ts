@@ -90,8 +90,10 @@ export interface CalendarHeaderProps {
   currentDate: Dayjs;
   viewMode: 'month' | 'week';
   isPending: boolean;
+  selectedCountry: string;
   onPrev: () => void;
   onNext: () => void;
+  onCountryChange: (countryCode: string) => void;
   onViewModeChange: (mode: 'month' | 'week') => void;
   onSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   searchInputValue: string;

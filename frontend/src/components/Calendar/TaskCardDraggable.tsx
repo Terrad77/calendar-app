@@ -5,8 +5,8 @@ import { CSS } from '@dnd-kit/utilities';
 import type { CalendarEvent } from '../../types/types';
 
 const TaskMarker = styled('span', {
-  width: '34px',
-  height: '6px',
+  width: '24px',
+  height: '5px',
   borderRadius: '6px',
   flexShrink: 0,
   variants: {
@@ -20,17 +20,18 @@ const TaskMarker = styled('span', {
 });
 
 const TaskCard = styled('div', {
-  backgroundColor: '#ffffff',
-  borderRadius: '3px',
-  padding: '4px 8px',
-  fontSize: '0.7rem',
+  backgroundColor: 'rgba(255,255,255,0.95)',
+  borderRadius: '10px',
+  padding: '8px 10px',
+  fontSize: '0.74rem',
   fontWeight: '500',
-  color: '#333',
-  marginBottom: '4px',
+  color: '#1f2937',
+  marginBottom: '6px',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-  transition: 'box-shadow 0.2s ease-in-out',
+  border: '1px solid rgba(148,163,184,0.22)',
+  boxShadow: '0 3px 10px rgba(15,23,42,0.06)',
+  transition: 'all 0.2s ease-in-out',
 
   '&:last-child': {
     marginBottom: '0',
@@ -46,13 +47,15 @@ const TaskCard = styled('div', {
     eventType: {
       task: {
         '&:hover': {
-          boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
+          boxShadow: '0 8px 16px rgba(15,23,42,0.12)',
         },
-        backgroundColor: '#f0f8ff',
+        backgroundColor: 'rgba(239,246,255,0.9)',
       },
       holiday: {
-        color: 'red',
-        boxShadow: '0 2px 6px #dc3545',
+        color: '#be123c',
+        backgroundColor: 'rgba(255,241,242,0.92)',
+        borderColor: 'rgba(251,113,133,0.35)',
+        boxShadow: '0 3px 12px rgba(225,29,72,0.14)',
       },
     },
 
@@ -64,8 +67,8 @@ const TaskCard = styled('div', {
     },
     isDragging: {
       true: {
-        opacity: 0.5,
-        boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
+        opacity: 0.7,
+        boxShadow: '0 10px 22px rgba(15,23,42,0.2)',
       },
     },
     customCursor: {
@@ -163,12 +166,16 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
 
       {/* description only for tasks */}
       {event.eventType === 'task' && event.description && (
-        <p style={{ fontSize: '0.65rem', color: '#666', marginTop: '2px' }}>{event.description}</p>
+        <p style={{ fontSize: '0.66rem', color: '#6b7280', marginTop: '4px' }}>
+          {event.description}
+        </p>
       )}
 
       {/*country code only for holidays */}
       {event.eventType === 'holiday' && event.countryCode && (
-        <p style={{ fontSize: '0.65rem', color: 'red', marginTop: '2px' }}>({event.countryCode})</p>
+        <p style={{ fontSize: '0.66rem', color: '#e11d48', marginTop: '4px' }}>
+          ({event.countryCode})
+        </p>
       )}
     </TaskCard>
   );

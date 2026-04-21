@@ -1,14 +1,15 @@
 import { useCallback, useMemo } from 'react';
 import { styled } from '@stitches/react';
 import dayjs, { Dayjs } from 'dayjs';
-import isBetween from 'dayjs/plugin/isBetween';
+import isBetween from 'dayjs/plugin/isBetween'; // plugin for checking if a date is between two dates
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
 import type { CalendarEvent } from '../../types/types';
 import { TaskCardDraggable } from './TaskCardDraggable';
 import { TaskInputForm } from './TaskInputForm';
+import { useLanguage } from '../../hooks/useLanguage';
 
-dayjs.extend(isBetween);
+dayjs.extend(isBetween); // extend dayjs with isBetween plugin
 
 interface CalendarDayCellProps {
   dayInLoop: Dayjs;
@@ -27,23 +28,30 @@ interface CalendarDayCellProps {
 
 const DayCell = styled('div', {
   minHeight: 'var(--calendar-day-cell-min-height, 120px)',
-  padding: '2px 2px',
+  padding: '8px',
   textAlign: 'left',
   position: 'relative',
-  fontSize: '1rem',
-  fontWeight: '700',
+  fontSize: '0.92rem',
+  fontWeight: '600',
   display: 'flex',
   flexDirection: 'column',
   overflow: 'hidden',
+  borderRadius: '14px',
+  border: '1px solid rgba(148,163,184,0.18)',
+  boxShadow: '0 4px 14px rgba(15,23,42,0.05)',
+  transition: 'all 0.2s ease',
+  '&:hover': {
+    boxShadow: '0 8px 20px rgba(15,23,42,0.08)',
+  },
   '& .day-number-and-month': {
     display: 'flex',
     alignItems: 'baseline',
-    gap: '2px',
-    marginBottom: '2px',
+    gap: '4px',
+    marginBottom: '6px',
   },
   '& .task-count': {
-    color: '#97999a',
-    fontSize: '0.75rem',
+    color: '#6b7280',
+    fontSize: '0.72rem',
     marginLeft: '2px',
   },
   '& .tasks-container': {
@@ -55,48 +63,49 @@ const DayCell = styled('div', {
   variants: {
     isOutsideMonth: {
       true: {
-        backgroundColor: '#ebebeb',
-        color: '#97999a',
+        backgroundColor: 'rgba(249,250,251,0.95)',
+        color: '#9ca3af',
         '& .day-number': {
-          color: '#97999a',
+          color: '#9ca3af',
         },
         '& .month-abbr': {
-          color: '#97999a',
+          color: '#9ca3af',
         },
       },
       false: {
-        backgroundColor: '#e3e5e6',
-        color: '#47494a',
+        backgroundColor: 'rgba(255,255,255,0.92)',
+        color: '#374151',
         '& .day-number': {
-          color: '#47494a',
+          color: '#374151',
         },
         '& .month-abbr': {
-          color: '#47494a',
+          color: '#4b5563',
         },
       },
     },
     isToday: {
       true: {
-        backgroundColor: '#e6f7ff',
+        borderColor: 'rgba(59,130,246,0.35)',
+        boxShadow: '0 10px 24px rgba(59,130,246,0.14)',
       },
     },
     isDragOver: {
       true: {
-        outline: '2px solid #007bff',
-        backgroundColor: '#dbe8f5',
+        outline: '2px solid rgba(59,130,246,0.5)',
+        backgroundColor: 'rgba(239,246,255,0.95)',
       },
     },
     isFiller: {
       true: {
-        backgroundColor: '#f9f9f9',
-        color: '#ccc',
-        opacity: 0.6,
+        backgroundColor: 'rgba(249,250,251,0.9)',
+        color: '#d1d5db',
+        opacity: 0.75,
       },
     },
     isPastDate: {
       true: {
-        opacity: 0.5,
-        backgroundColor: '#f0f0f0',
+        opacity: 0.65,
+        backgroundColor: 'rgba(243,244,246,0.92)',
       },
     },
     isInteractive: {
@@ -115,14 +124,14 @@ const DayCell = styled('div', {
 });
 
 const HolidayName = styled('div', {
-  fontSize: '0.85em',
-  fontWeight: 'bold',
-  color: '#dc3545', // Червоний колір для свят
-  marginBottom: '4px',
-  padding: '2px 4px',
-  borderRadius: '3px',
-  backgroundColor: '#f8d7da', // Світло-червоний фон
-  border: '1px solid #f5c6cb',
+  fontSize: '0.74rem',
+  fontWeight: '600',
+  color: '#be123c',
+  marginBottom: '6px',
+  padding: '4px 8px',
+  borderRadius: '999px',
+  backgroundColor: 'rgba(255, 228, 230, 0.85)',
+  border: '1px solid rgba(251, 113, 133, 0.35)',
   textAlign: 'left',
   whiteSpace: 'wrap',
   overflow: 'hidden',
@@ -132,15 +141,15 @@ const HolidayName = styled('div', {
 const DayNumber = styled('span', {
   variants: {
     isCurrentMonth: {
-      true: { color: '#47494a' },
-      false: { color: '#97999a' },
+      true: { color: '#374151' },
+      false: { color: '#9ca3af' },
     },
     isToday: {
       true: {
         color: '#fff',
-        backgroundColor: '#007bff', // for current day
+        backgroundColor: '#2563eb',
         borderRadius: '50%',
-        padding: '2px 6px',
+        padding: '3px 7px',
         fontSize: '0.9em',
         display: 'inline-flex',
         alignItems: 'center',
@@ -163,6 +172,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   setAllTasks,
   isFiller,
 }) => {
+  const { currentLanguage } = useLanguage(); // get current language
   const dayFormatted = dayInLoop.format('YYYY-MM-DD');
   const today = dayjs().startOf('day');
   const isOutsideActualMonth = !dayInLoop.isSame(currentMonth, 'month');
@@ -171,16 +181,21 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
 
   const shouldBeInteractive = !isPastDate;
 
-  // show abbr of month for first & last day of month
+  // show title (abbr of month) for first & last day of month
   const showMonthAbbr = useMemo(() => {
     const isFirstDayOfItsMonth = dayInLoop.date() === 1;
     const isLastDayOfItsMonth = dayInLoop.isSame(dayInLoop.endOf('month'), 'day');
-    return isFirstDayOfItsMonth || isLastDayOfItsMonth;
-  }, [dayInLoop]);
+
+    if (isFirstDayOfItsMonth || isLastDayOfItsMonth) {
+      // format('MMM') automatically takes the current locale of dayjs
+      return dayInLoop.format('MMM');
+    }
+    return null;
+  }, [dayInLoop, currentLanguage]);
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `day-${dayFormatted}`,
-    // prevent target for Drag&Drop if cell is must be not interacive
+    // prevent target for Drag&Drop if cell is must be not interactive
     disabled: !shouldBeInteractive,
   });
 
@@ -235,7 +250,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       setActiveDayForInput(null);
       setEditingTask(null);
     },
-    [editingTask, setAllTasks, setActiveDayForInput, setEditingTask] // Залежності
+    [editingTask, setAllTasks, setActiveDayForInput, setEditingTask]
   );
 
   // Delete function
@@ -265,7 +280,12 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       onClick={handleCellClick}
     >
       <div className="day-number-and-month">
-        {showMonthAbbr && <span className="month-abbr">{dayInLoop.format('MMM')}</span>}
+        {/* show title (abbr of month) if it exists */}
+        {showMonthAbbr && (
+          <span className="month-abbr" style={{ textTransform: 'capitalize' }}>
+            {showMonthAbbr}
+          </span>
+        )}
         <DayNumber isCurrentMonth={!isOutsideActualMonth} isToday={isToday}>
           {dayInLoop.date()}
         </DayNumber>

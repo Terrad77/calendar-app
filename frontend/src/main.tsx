@@ -26,10 +26,11 @@ createRoot(document.getElementById('root')!).render(
               },
             }}
             containerStyle={{
-              position: 'absolute',
-              top: '4px',
-              left: '140px',
-              borderRadius: '8px',
+              position: 'fixed',
+              top: '8px',
+              left: '312px',
+              zIndex: 9999,
+              borderRadius: '6px',
             }}
           />
         </BrowserRouter>
