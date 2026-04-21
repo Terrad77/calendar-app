@@ -6,6 +6,7 @@ import clsx from 'clsx';
 
 export default function GoogleAuthBtn() {
   const { t, i18n } = useTranslation(['auth']); // Specify namespace
+  const apiUrl = import.meta.env.VITE_AI_API_URL || 'http://localhost:3001';
 
   return (
     <div className={css.wrapper}>
@@ -19,7 +20,7 @@ export default function GoogleAuthBtn() {
       <motion.a
         whileTap={{ scale: 0.98 }}
         whileHover={{ scale: 1.02 }}
-        href="https://calendar-app-i6oa.onrender.com/api/users/google"
+        href={`${apiUrl}/api/auth/google`}
         className={clsx(css.googleBtn, {
           [css.googleBtnUk]: i18n.language === 'uk',
         })}
