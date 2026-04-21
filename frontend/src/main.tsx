@@ -17,7 +17,7 @@ createRoot(document.getElementById('root')!).render(
         <BrowserRouter>
           <App />
           <Toaster
-            position="top-left"
+            position="top-center"
             toastOptions={{
               duration: 2000,
               style: {
@@ -28,7 +28,8 @@ createRoot(document.getElementById('root')!).render(
             containerStyle={{
               position: 'fixed',
               top: '8px',
-              left: '312px',
+              left: '50%',
+              transform: 'translateX(-50%)',
               zIndex: 9999,
               borderRadius: '6px',
             }}
