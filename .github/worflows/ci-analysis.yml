@@ -1,0 +1,30 @@
+name: CI Analysis
+
+on:
+  push:
+    branches: ['main', 'master', 'dev']
+  pull_request:
+    branches: ['main', 'master']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4 # Копіює код
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Використовуємо актуальну версію
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install # Встановлення пакетів
+
+      - name: Lint code
+        run: npm run lint # Запуск ESLint
+
+      - name: Build project
+        run: npm run build # Перевірка, що проект збирається без помилок

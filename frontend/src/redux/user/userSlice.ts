@@ -57,6 +57,13 @@ const userSlice = createSlice({
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
     },
+    setTokens: (state, action: { payload: { accessToken: string; refreshToken: string } }) => {
+      state.token = action.payload.accessToken;
+      state.refreshToken = action.payload.refreshToken;
+      state.isLoggedIn = true;
+      localStorage.setItem('accessToken', action.payload.accessToken);
+      localStorage.setItem('refreshToken', action.payload.refreshToken);
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -173,5 +180,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { clearError, clearCredentials } = userSlice.actions;
+export const { clearError, clearCredentials, setTokens } = userSlice.actions;
 export default userSlice.reducer;

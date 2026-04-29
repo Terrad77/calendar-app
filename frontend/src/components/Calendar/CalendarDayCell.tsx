@@ -173,6 +173,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   isFiller,
 }) => {
   const { currentLanguage } = useLanguage(); // get current language
+  const locale = currentLanguage === 'uk' ? 'uk' : 'en';
   const dayFormatted = dayInLoop.format('YYYY-MM-DD');
   const today = dayjs().startOf('day');
   const isOutsideActualMonth = !dayInLoop.isSame(currentMonth, 'month');
@@ -187,11 +188,10 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
     const isLastDayOfItsMonth = dayInLoop.isSame(dayInLoop.endOf('month'), 'day');
 
     if (isFirstDayOfItsMonth || isLastDayOfItsMonth) {
-      // format('MMM') automatically takes the current locale of dayjs
-      return dayInLoop.format('MMM');
+      return dayInLoop.locale(locale).format('MMM');
     }
     return null;
-  }, [dayInLoop, currentLanguage]);
+  }, [dayInLoop, locale]);
 
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `day-${dayFormatted}`,

@@ -1,7 +1,6 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
-import { authService } from '../services/authService';
-import { User } from '../types/auth.types';
+import type { SocialUserData } from '../types/auth.types';
 
 export const isGoogleOAuthConfigured = Boolean(
   process.env.GOOGLE_CLIENT_ID &&
@@ -11,6 +10,7 @@ export const isGoogleOAuthConfigured = Boolean(
 
 // Setting up Google Strategy
 if (isGoogleOAuthConfigured) {
+  console.log('✅ Google OAuth configuration detected. Activating Google Strategy...');
   passport.use(
     new GoogleStrategy(
       {
@@ -22,35 +22,25 @@ if (isGoogleOAuthConfigured) {
       },
       async (accessToken: string, refreshToken: string, profile: any, done: VerifyCallback) => {
         try {
-          // Extract necessary data from Google profile
           const email =
             profile.emails && profile.emails.length > 0 ? profile.emails[0].value : null;
           const name = profile.displayName || profile.name.givenName;
           const googleId = profile.id;
 
           if (!email) {
+            console.error('Google Auth Error: Profile missing email');
             return done(new Error('Google profile missing email'), false);
           }
-          // 1. Call the method that returns { user, tokens }
-          const result = await authService.findOrCreateSocialUser({
+
+          const socialUserData: SocialUserData = {
             email,
             name,
             googleId,
-          });
+          };
 
-          // 2. Destructure the result to get the User object
-          const user = result.user;
-          // 3. (Optional) Tokens can be saved and used for further calls to done
-          // const authTokens = result.tokens;
-
-          if (user) {
-            // Passport sends 'user' to req.user. \
-            // In the /google/callback route we will process it.
-            return done(null, user);
-          } else {
-            return done(new Error('Failed to process user after Google auth'), false);
-          }
+          return done(null, socialUserData);
         } catch (err) {
+          console.error('Google Strategy Error:', err);
           return done(err);
         }
       }

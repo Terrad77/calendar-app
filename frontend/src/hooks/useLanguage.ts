@@ -10,7 +10,7 @@ export const useLanguage = () => {
 
   // synchronization dayjs and language i18next
   useEffect(() => {
-    const lang = i18n.language === 'uk' ? 'uk' : 'en';
+    const lang = i18n.language.startsWith('uk') ? 'uk' : 'en';
     dayjs.locale(lang);
   }, [i18n.language]);
 

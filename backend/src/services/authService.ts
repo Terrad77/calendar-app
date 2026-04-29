@@ -1,52 +1,30 @@
-// backend/src/services/authService.ts
-
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
-import { randomBytes } from 'crypto';
+import { eq } from 'drizzle-orm';
+import jwt from 'jsonwebtoken';
+import { randomBytes, randomUUID } from 'crypto';
 import { sendVerificationEmail } from './mailerService';
 import {
+  AuthTokens,
+  RegisterData,
+  SocialUserData,
+  TokenPayload,
   User,
   UserCredentials,
-  RegisterData,
-  AuthTokens,
-  TokenPayload,
-  SocialUserData,
 } from '../types/auth.types';
-
-// --- TYPES & IN-MEMORY STORAGE ---
-
-// Определяем полный тип пользователя для внутреннего хранилища (с паролем и токенами)
-type UserEntry = User & {
-  password: string;
-  verificationToken?: string;
-  verificationTokenExpiry?: number;
-};
-const users: Map<string, UserEntry> = new Map();
-const refreshTokens: Set<string> = new Set();
+import { getDb } from '../db';
+import { refreshTokens as refreshTokensTable, users as usersTable } from '../schema';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key';
-const ACCESS_TOKEN_EXPIRY = '15m'; // 15 minutes
-const REFRESH_TOKEN_EXPIRY = '7d'; // 7 days
+const ACCESS_TOKEN_EXPIRY = '15m';
+const REFRESH_TOKEN_EXPIRY = '7d';
 const SALT_ROUNDS = 10;
 
-// --- AUTH SERVICE CLASS ---
-
 export class AuthService {
-  // --- PRIVATE/HELPER METHODS ---
-
-  /**
-   * @description Generates a URL-safe verification token.
-   */
   private generateVerificationToken(): string {
-    // Best Practice: Использование криптографически сильных случайных данных
     return randomBytes(32).toString('hex');
   }
 
-  /**
-   * @description Generate JWT tokens
-   */
   private generateTokens(userId: string, email: string): AuthTokens {
     const payload: TokenPayload = {
       userId,
@@ -67,246 +45,247 @@ export class AuthService {
     };
   }
 
-  // --- CORE AUTH METHODS ---
+  private toPublicUser(user: typeof usersTable.$inferSelect): User {
+    const { password: _, ...publicUser } = user;
+    return publicUser as User;
+  }
 
-  /**
-   * Register new user
-   */
+  private async storeRefreshToken(userId: string, token: string): Promise<void> {
+    const database = getDb();
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await database.insert(refreshTokensTable).values({
+      userId,
+      token,
+      expiresAt,
+    });
+  }
+
   async register(data: RegisterData): Promise<{ user: User; tokens: AuthTokens }> {
+    const database = getDb();
     const { email, password, name } = data;
     const lowerEmail = email.toLowerCase();
 
-    // Check if user already exists
-    const existingUser = Array.from(users.values()).find(
-      (u) => u.email.toLowerCase() === lowerEmail
-    );
+    const existingUser = await database
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, lowerEmail))
+      .limit(1);
 
-    if (existingUser) {
+    if (existingUser.length > 0) {
       throw new Error('User with this email already exists');
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-
-    // 1. Создание токена верификации и срока действия
     const verificationToken = this.generateVerificationToken();
-    const verificationTokenExpiry = Date.now() + 24 * 60 * 60 * 1000; // 24 часа
-
-    // Create user
-    const userId = uuidv4();
+    const verificationTokenExpiry = Date.now() + 24 * 60 * 60 * 1000;
+    const userId = randomUUID();
     const now = new Date();
 
-    // 2. Добавление полей токена в объект пользователя
-    const newUser: UserEntry = {
-      id: userId,
-      email: lowerEmail,
-      name,
-      password: hashedPassword,
-      createdAt: now,
-      updatedAt: now,
-      googleId: undefined,
-      isVerified: false,
-      verificationToken: verificationToken,
-      verificationTokenExpiry: verificationTokenExpiry,
-    };
+    const [createdUser] = await database
+      .insert(usersTable)
+      .values({
+        id: userId,
+        email: lowerEmail,
+        name,
+        password: hashedPassword,
+        googleId: null,
+        isVerified: false,
+        verificationToken,
+        verificationTokenExpiry,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .returning();
 
-    users.set(userId, newUser);
+    if (!createdUser) {
+      throw new Error('Failed to create user');
+    }
 
-    // 3. Отправка письма с верификационной ссылкой
     const backendUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3001}`;
     const verificationLink = `${backendUrl}/api/auth/verify-email?token=${verificationToken}`;
     await sendVerificationEmail(lowerEmail, verificationLink);
 
-    // Generate tokens
-    const tokens = this.generateTokens(userId, email);
-    refreshTokens.add(tokens.refreshToken);
-
-    // ✅ ИСПРАВЛЕНО: Используем 'as any' для безопасного исключения опциональных полей
-    const {
-      password: _,
-      verificationToken: __,
-      verificationTokenExpiry: ___,
-      ...userWithoutPassword
-    } = newUser as any;
+    const tokens = this.generateTokens(userId, lowerEmail);
+    await this.storeRefreshToken(userId, tokens.refreshToken);
 
     return {
-      user: userWithoutPassword as User,
+      user: this.toPublicUser(createdUser),
       tokens,
     };
   }
 
-  /**
-   * Login user
-   */
   async login(credentials: UserCredentials): Promise<{ user: User; tokens: AuthTokens }> {
+    const database = getDb();
     const { email, password } = credentials;
 
-    // Find user by email
-    const user = Array.from(users.values()).find(
-      (u) => u.email.toLowerCase() === email.toLowerCase()
-    );
+    const users = await database
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, email.toLowerCase()))
+      .limit(1);
+    const user = users[0];
 
     if (!user) {
       throw new Error('Invalid credentials');
     }
 
-    // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
-
     if (!isPasswordValid) {
       throw new Error('Invalid credentials');
     }
 
-    // Best Practice: Можно добавить проверку верификации
-    /*
-    if (!user.isVerified) {
-        throw new Error('Email not verified. Please check your inbox.');
-    }
-    */
-
-    // Generate tokens
     const tokens = this.generateTokens(user.id, user.email);
-    refreshTokens.add(tokens.refreshToken);
-
-    // Return user without password
-    const { password: _, ...userWithoutPassword } = user;
+    await this.storeRefreshToken(user.id, tokens.refreshToken);
 
     return {
-      user: userWithoutPassword,
+      user: this.toPublicUser(user),
       tokens,
     };
   }
 
-  /**
-   * @description Finds user by email/googleId or creates a new one for social login.
-   * * NOTE: This implementation uses in-memory Map. In production, use database methods.
-   */
   async findOrCreateSocialUser(data: SocialUserData): Promise<{ user: User; tokens: AuthTokens }> {
+    const database = getDb();
     const { email, name, googleId } = data;
     const lowerEmail = email.toLowerCase();
     const now = new Date();
 
-    let userEntry = Array.from(users.values()).find((u) => u.email.toLowerCase() === lowerEmail);
+    const existingUsers = await database
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.email, lowerEmail))
+      .limit(1);
 
-    if (userEntry) {
-      // Found existing user. Link existing account if not linked.
-      if (!userEntry.googleId) {
-        userEntry.googleId = googleId;
-        userEntry.updatedAt = now;
-      }
-    } else {
-      // 2. Create new user
-      const userId = uuidv4();
+    let user = existingUsers[0];
 
-      userEntry = {
-        id: userId,
-        email: lowerEmail,
-        name,
-        password: '', // Social users do not have a local password hash
-        googleId,
-        createdAt: now,
+    if (user) {
+      const updates: Partial<typeof usersTable.$inferInsert> = {
         updatedAt: now,
-        isVerified: true, // Auto-verified by Google
-        verificationToken: undefined,
-        verificationTokenExpiry: undefined,
       };
 
-      users.set(userId, userEntry);
+      if (!user.googleId) {
+        updates.googleId = googleId;
+      }
+
+      const [updatedUser] = await database
+        .update(usersTable)
+        .set(updates)
+        .where(eq(usersTable.id, user.id))
+        .returning();
+
+      if (updatedUser) {
+        user = updatedUser;
+      }
+    } else {
+      const [createdUser] = await database
+        .insert(usersTable)
+        .values({
+          id: randomUUID(),
+          email: lowerEmail,
+          name,
+          password: '',
+          googleId,
+          isVerified: true,
+          verificationToken: null,
+          verificationTokenExpiry: null,
+          createdAt: now,
+          updatedAt: now,
+        })
+        .returning();
+
+      if (!createdUser) {
+        throw new Error('Failed to create social user');
+      }
+
+      user = createdUser;
     }
 
-    // 3. Generate tokens
-    const tokens = this.generateTokens(userEntry.id, userEntry.email);
-    refreshTokens.add(tokens.refreshToken);
-
-    // ✅ ИСПРАВЛЕНО: Используем 'as any' для безопасного исключения опциональных полей
-    const {
-      password: _,
-      verificationToken: __,
-      verificationTokenExpiry: ___,
-      ...userWithoutPassword
-    } = userEntry as any;
+    const tokens = this.generateTokens(user.id, user.email);
+    await this.storeRefreshToken(user.id, tokens.refreshToken);
 
     return {
-      user: userWithoutPassword as User,
+      user: this.toPublicUser(user),
       tokens,
     };
   }
 
-  /**
-   * @description Verifies user's email using the token provided in the link.
-   */
   async verifyEmail(token: string): Promise<User> {
-    // 1. Поиск пользователя по токену
-    const userEntry = Array.from(users.values()).find((u) => u.verificationToken === token);
+    const database = getDb();
 
-    if (!userEntry) {
+    const users = await database
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.verificationToken, token))
+      .limit(1);
+    const user = users[0];
+
+    if (!user) {
       throw new Error('Invalid verification token');
     }
 
-    // 2. Проверка срока действия
-    if (userEntry.verificationTokenExpiry && userEntry.verificationTokenExpiry < Date.now()) {
-      userEntry.verificationToken = undefined;
-      userEntry.verificationTokenExpiry = undefined;
+    if (user.verificationTokenExpiry && user.verificationTokenExpiry < Date.now()) {
+      await database
+        .update(usersTable)
+        .set({
+          verificationToken: null,
+          verificationTokenExpiry: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(usersTable.id, user.id));
 
       throw new Error('Verification token has expired');
     }
 
-    // 3. Успешная верификация
-    userEntry.isVerified = true;
-    userEntry.verificationToken = undefined;
-    userEntry.verificationTokenExpiry = undefined;
-    userEntry.updatedAt = new Date();
+    const [verifiedUser] = await database
+      .update(usersTable)
+      .set({
+        isVerified: true,
+        verificationToken: null,
+        verificationTokenExpiry: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(usersTable.id, user.id))
+      .returning();
 
-    // ✅ ИСПРАВЛЕНО: Используем 'as any' для безопасного исключения опциональных полей
-    const {
-      password: _,
-      verificationToken: __,
-      verificationTokenExpiry: ___,
-      ...userWithoutPassword
-    } = userEntry as any;
+    if (!verifiedUser) {
+      throw new Error('Failed to verify user');
+    }
 
-    return userWithoutPassword as User;
+    return this.toPublicUser(verifiedUser);
   }
 
-  // --- STANDARD TOKEN/USER METHODS ---
-
-  /**
-   * Refresh access token
-   */
   async refreshAccessToken(refreshToken: string): Promise<AuthTokens> {
-    // Verify refresh token exists
-    if (!refreshTokens.has(refreshToken)) {
+    const database = getDb();
+
+    const storedTokens = await database
+      .select()
+      .from(refreshTokensTable)
+      .where(eq(refreshTokensTable.token, refreshToken))
+      .limit(1);
+
+    if (storedTokens.length === 0) {
       throw new Error('Invalid refresh token');
     }
 
     try {
-      // Verify token
       const payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as TokenPayload;
-
-      // Generate new tokens
       const tokens = this.generateTokens(payload.userId, payload.email);
 
-      // Remove old refresh token and add new one
-      refreshTokens.delete(refreshToken);
-      refreshTokens.add(tokens.refreshToken);
+      await database.delete(refreshTokensTable).where(eq(refreshTokensTable.token, refreshToken));
+      await this.storeRefreshToken(payload.userId, tokens.refreshToken);
 
       return tokens;
     } catch (error) {
-      refreshTokens.delete(refreshToken);
+      await database.delete(refreshTokensTable).where(eq(refreshTokensTable.token, refreshToken));
       throw new Error('Invalid or expired refresh token');
     }
   }
 
-  /**
-   * Logout user
-   */
   async logout(refreshToken: string): Promise<void> {
-    refreshTokens.delete(refreshToken);
+    const database = getDb();
+    await database.delete(refreshTokensTable).where(eq(refreshTokensTable.token, refreshToken));
   }
 
-  /**
-   * Verify access token
-   */
   verifyAccessToken(token: string): TokenPayload {
     try {
       return jwt.verify(token, JWT_SECRET) as TokenPayload;
@@ -315,33 +294,28 @@ export class AuthService {
     }
   }
 
-  /**
-   * Get user by ID
-   */
   async getUserById(userId: string): Promise<User | null> {
-    const user = users.get(userId);
+    const database = getDb();
+
+    const users = await database
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .limit(1);
+    const user = users[0];
 
     if (!user) {
       return null;
     }
 
-    const { password: _, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return this.toPublicUser(user);
   }
 
-  // --- VALIDATION METHODS ---
-
-  /**
-   * Validate email format
-   */
   static isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   }
 
-  /**
-   * Validate password strength
-   */
   static isValidPassword(password: string): {
     valid: boolean;
     message?: string;

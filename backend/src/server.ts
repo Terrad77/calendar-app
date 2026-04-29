@@ -1,14 +1,15 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Request, Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import { getWorldwideHolidays } from './nagerApi';
 import { CalendarEvent, AIResponse } from './types';
 import { authenticateToken } from './middleware/authMiddleware';
 import authRoutes from './routes/authRoutes';
+import eventsRoutes from './routes/eventsRoutes';
 import passport from './config/passport';
-
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -126,6 +127,9 @@ app.use(
 
 // Authentication routes (public)
 app.use('/api/auth', authRoutes);
+
+// Calendar event routes (protected)
+app.use('/api/events', eventsRoutes);
 
 // Backward compatibility for legacy Google OAuth paths
 app.get('/api/users/google', (req: Request, res: Response) => {

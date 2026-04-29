@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import WelcomeSection from './components/WelcomeSection/WelcomeSection';
 import SignUpPage from './pages/SignUpPage/SignUpPage';
 import SignInPage from './pages/SignInPage/SignInPage';
+import AuthSuccessPage from './pages/AuthSuccessPage/AuthSuccessPage';
 import HomePage from './pages/HomePage/HomePage'; // main calendar page
 // import { authenticationService } from './services/authService';
 import { AIAssistant } from './components/AIAssistant/AIAssistant';
@@ -11,6 +12,12 @@ import type { CalendarEvent } from './types/types';
 import { useSelector } from 'react-redux';
 import { selectIsLoggedIn } from './redux/user/selectors';
 import { aiService } from './services/aiService';
+import {
+  createCalendarEvent,
+  deleteCalendarEvent,
+  getCalendarEvents,
+  updateCalendarEvent,
+} from './API/apiOperations';
 import './App.css';
 
 // Protected Route wrapper component
@@ -53,6 +60,61 @@ function App() {
 
   const [aiError, setAiError] = useState<string | null>(null);
   const isAuthenticated = useSelector(selectIsLoggedIn);
+
+  const eventsEqual = (left: CalendarEvent, right: CalendarEvent) => {
+    const leftAny = left as any;
+    const rightAny = right as any;
+
+    return (
+      left.id === right.id &&
+      left.date === right.date &&
+      left.title === right.title &&
+      left.eventType === right.eventType &&
+      left.description === right.description &&
+      left.startTime === right.startTime &&
+      left.endTime === right.endTime &&
+      left.location === right.location &&
+      left.countryCode === right.countryCode &&
+      JSON.stringify(left.colors || []) === JSON.stringify(right.colors || []) &&
+      JSON.stringify(leftAny.participants || []) === JSON.stringify(rightAny.participants || []) &&
+      JSON.stringify(leftAny.reminderTime ?? null) ===
+        JSON.stringify(rightAny.reminderTime ?? null) &&
+      JSON.stringify(leftAny.isRecurring ?? null) ===
+        JSON.stringify(rightAny.isRecurring ?? null) &&
+      JSON.stringify(leftAny.completed ?? null) === JSON.stringify(rightAny.completed ?? null) &&
+      JSON.stringify(leftAny.priority ?? null) === JSON.stringify(rightAny.priority ?? null)
+    );
+  };
+
+  const syncEventChanges = async (previousEvents: CalendarEvent[], nextEvents: CalendarEvent[]) => {
+    const previousById = new Map(previousEvents.map((event) => [event.id, event]));
+    const nextById = new Map(nextEvents.map((event) => [event.id, event]));
+
+    const createdEvents = nextEvents.filter((event) => !previousById.has(event.id));
+    const deletedEvents = previousEvents.filter((event) => !nextById.has(event.id));
+    const updatedEvents = nextEvents.filter((event) => {
+      const previousEvent = previousById.get(event.id);
+      return previousEvent ? !eventsEqual(previousEvent, event) : false;
+    });
+
+    try {
+      await Promise.all([
+        ...createdEvents.map((event) => createCalendarEvent(event)),
+        ...updatedEvents.map((event) => updateCalendarEvent(event)),
+        ...deletedEvents.map((event) => deleteCalendarEvent(event.id)),
+      ]);
+    } catch (error) {
+      console.error('Failed to sync calendar events with backend:', error);
+    }
+  };
+
+  const applyEventsUpdate = (updater: React.SetStateAction<CalendarEvent[]>) => {
+    setEvents((previousEvents) => {
+      const nextEvents = typeof updater === 'function' ? updater(previousEvents) : updater;
+      void syncEventChanges(previousEvents, nextEvents);
+      return nextEvents;
+    });
+  };
 
   // AI Service health check
   useEffect(() => {
@@ -101,24 +163,38 @@ function App() {
     }
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    const loadEvents = async () => {
+      if (!isAuthenticated) {
+        setEvents([]);
+        return;
+      }
+
+      try {
+        const loadedEvents = await getCalendarEvents();
+        setEvents(loadedEvents);
+      } catch (error) {
+        console.error('Failed to load calendar events:', error);
+      }
+    };
+
+    void loadEvents();
+  }, [isAuthenticated]);
+
   // Handlers for AI Assistant events
   const handleEventCreate = (event: CalendarEvent) => {
-    const newEvent: CalendarEvent = {
-      ...event,
-      id: `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    };
-    setEvents((prev) => [...prev, newEvent]);
+    applyEventsUpdate((prev) => [...prev, event]);
   };
 
   const handleEventUpdate = (updatedEvent: CalendarEvent) => {
-    setEvents((prev) =>
+    applyEventsUpdate((prev) =>
       prev.map((event) => (event.id === updatedEvent.id ? { ...event, ...updatedEvent } : event))
     );
   };
 
   // Handler for deleting an event
   const handleEventDelete = (eventId: string) => {
-    setEvents((prev) => prev.filter((event) => event.id !== eventId));
+    applyEventsUpdate((prev) => prev.filter((event) => event.id !== eventId));
   };
 
   // Notification component for AI service status
@@ -182,13 +258,15 @@ function App() {
           }
         />
 
+        <Route path="/auth/success" element={<AuthSuccessPage />} />
+
         {/* Main calendar route - protected */}
         <Route
           path="/calendar"
           element={
             <ProtectedRoute>
               <Layout>
-                <HomePage events={events} setEvents={setEvents} />
+                <HomePage events={events} setEvents={applyEventsUpdate} />
               </Layout>
             </ProtectedRoute>
           }

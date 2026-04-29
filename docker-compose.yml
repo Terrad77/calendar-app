@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  # Сервіс бази даних для CalendAIr
+  db:
+    image: postgres:15-alpine
+    container_name: calendair-db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: calendair
+    ports:
+      - '5432:5432'
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+#Використання volume гарантує, що дані не зникнуть при перезавантаженні контейнера
+volumes:
+  db_data:

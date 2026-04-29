@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { authService, AuthService } from '../services/authService';
 import { authenticateToken, rateLimitAuth } from '../middleware/authMiddleware';
-import { RegisterData, UserCredentials } from '../types/auth.types';
+import { RegisterData, SocialUserData, UserCredentials } from '../types/auth.types';
 import { isGoogleOAuthConfigured } from '../config/passport';
 import passport from 'passport';
 
@@ -219,7 +219,7 @@ router.get('/verify', authenticateToken, (req: Request, res: Response): void => 
  * Verifies the user's email using a token from the link sent via email.
  */
 router.get('/verify-email', async (req: Request, res: Response): Promise<void> => {
-  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   try {
     const token = req.query.token as string;
 
@@ -230,11 +230,9 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
 
     const verifiedUser = await authService.verifyEmail(token);
 
-    // Best Practice: Перенаправить на страницу успеха на фронтенде
     res.redirect(`${frontendUrl}/verification-success?user_id=${verifiedUser.id}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Verification failed';
-    // Перенаправить на страницу ошибки на фронтенде с причиной
     res.redirect(`${frontendUrl}/verification-failed?reason=${encodeURIComponent(message)}`);
   }
 });
@@ -245,7 +243,6 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
  */
 router.get(
   '/google',
-  // session: false - important for API without state
   (req: Request, res: Response, next): void => {
     if (!isGoogleOAuthConfigured) {
       res.status(503).json({
@@ -282,26 +279,23 @@ router.get(
     session: false,
   }),
   async (req: Request, res: Response): Promise<void> => {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     try {
-      // req.user содержит данные, полученные от Google и обработанные Passport
-      const userProfile = req.user as any;
+      const userProfile = req.user as SocialUserData | undefined;
 
-      const { user, tokens } = await authService.findOrCreateSocialUser({
-        // Passport.js часто помещает данные в req.user.emails
-        email: userProfile.emails[0].value,
-        name: userProfile.displayName,
-        googleId: userProfile.id,
-      });
+      if (!userProfile) {
+        res.redirect(`${frontendUrl}/signin?error=auth_failed`);
+        return;
+      }
 
-      // Перенаправление на клиент с токенами в параметрах URL
+      const { tokens } = await authService.findOrCreateSocialUser(userProfile);
+
       res.redirect(
         `${frontendUrl}/auth/success?accessToken=${tokens.accessToken}&refreshToken=${tokens.refreshToken}`
       );
     } catch (error) {
       console.error('Google Auth Callback Error:', error);
-      // В случае ошибки перенаправляем на страницу ошибки на фронтенде
-      res.redirect(`${frontendUrl}/login?error=auth_failed`);
+      res.redirect(`${frontendUrl}/signin?error=auth_failed`);
     }
   }
 );
