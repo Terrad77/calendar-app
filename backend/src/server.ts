@@ -176,106 +176,102 @@ app.get('/api/ai/health', (req: Request, res: Response) => {
  * POST /api/ai/chat
  * Chat with AI assistant (requires authentication)
  */
-app.post(
-  '/api/ai/chat',
-  //authenticateToken,
-  async (req: Request, res: Response): Promise<void> => {
-    console.log('=== AI Chat Request ===');
-    console.log('Headers:', req.headers);
-    console.log('Body:', JSON.stringify(req.body, null, 2));
+app.post('/api/ai/chat', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  console.log('=== AI Chat Request ===');
+  console.log('Headers:', req.headers);
+  console.log('Body:', JSON.stringify(req.body, null, 2));
+
+  try {
+    const { message, events, conversationHistory } = req.body;
+    const authHeader = req.headers.authorization;
+
+    console.log('Auth header present:', !!authHeader);
+    console.log('Message:', message);
+    console.log('Events count:', events?.length || 0);
+
+    // Authenticated user ID
+    const userId = req.user!.userId;
+
+    if (!message || typeof message !== 'string') {
+      res.status(400).json({ error: 'Valid message is required' });
+      return;
+    }
+
+    // Add user context to the message
+    let context = `Поточна дата: ${new Date().toISOString()}\nUser ID: ${userId}\n`;
+
+    if (events && Array.isArray(events) && events.length > 0) {
+      context += `Current calendar events:\n${JSON.stringify(events, null, 2)}\n\n`;
+    }
+
+    if (
+      conversationHistory &&
+      Array.isArray(conversationHistory) &&
+      conversationHistory.length > 0
+    ) {
+      context += 'Історія бесіди:\n';
+      conversationHistory.forEach((msg: any) => {
+        context += `${msg.role || 'user'}: ${msg.content || msg.message || ''}\n`;
+      });
+      context += '\n';
+    }
+
+    const fullPrompt = `${CALENDAR_SYSTEM_PROMPT}\n\n${context}Користувач: ${message}\n\nВідповідь (у JSON форматі якщо потрібна дія, інакше звичайний текст):`;
+
+    console.log('Sending to Gemini:', {
+      messageLength: message.length,
+      eventsCount: events?.length || 0,
+    });
+
+    const result = await model.generateContent(fullPrompt);
+    const response = await result.response;
+    const text = response.text();
+
+    console.log('Gemini raw response:', text);
+
+    // Try to parse AI response
+    let aiResponse: AIResponse;
 
     try {
-      const { message, events, conversationHistory } = req.body;
-      const authHeader = req.headers.authorization;
+      // Find JSON in the response (handle potential non-JSON text before/after)
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
 
-      console.log('Auth header present:', !!authHeader);
-      console.log('Message:', message);
-      console.log('Events count:', events?.length || 0);
-
-      // Temporary user ID until authentication is enabled
-      const userId = req.user?.userId || 'temp-user';
-
-      if (!message || typeof message !== 'string') {
-        res.status(400).json({ error: 'Valid message is required' });
-        return;
-      }
-
-      // Add user context to the message
-      let context = `Поточна дата: ${new Date().toISOString()}\nUser ID: ${userId}\n`;
-
-      if (events && Array.isArray(events) && events.length > 0) {
-        context += `Current calendar events:\n${JSON.stringify(events, null, 2)}\n\n`;
-      }
-
-      if (
-        conversationHistory &&
-        Array.isArray(conversationHistory) &&
-        conversationHistory.length > 0
-      ) {
-        context += 'Історія бесіди:\n';
-        conversationHistory.forEach((msg: any) => {
-          context += `${msg.role || 'user'}: ${msg.content || msg.message || ''}\n`;
-        });
-        context += '\n';
-      }
-
-      const fullPrompt = `${CALENDAR_SYSTEM_PROMPT}\n\n${context}Користувач: ${message}\n\nВідповідь (у JSON форматі якщо потрібна дія, інакше звичайний текст):`;
-
-      console.log('Sending to Gemini:', {
-        messageLength: message.length,
-        eventsCount: events?.length || 0,
-      });
-
-      const result = await model.generateContent(fullPrompt);
-      const response = await result.response;
-      const text = response.text();
-
-      console.log('Gemini raw response:', text);
-
-      // Try to parse AI response
-      let aiResponse: AIResponse;
-
-      try {
-        // Find JSON in the response (handle potential non-JSON text before/after)
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-
-        if (jsonMatch) {
-          const parsed = JSON.parse(jsonMatch[0]) as AIResponse;
-          // Validate required fields
-          if (!parsed.action || !parsed.message) {
-            throw new Error('Invalid response format: missing required fields');
-          }
-          aiResponse = parsed;
-        } else {
-          // If no JSON found, treat as query response
-          aiResponse = {
-            action: 'query',
-            message: text.trim(),
-          };
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]) as AIResponse;
+        // Validate required fields
+        if (!parsed.action || !parsed.message) {
+          throw new Error('Invalid response format: missing required fields');
         }
-      } catch (error) {
-        console.warn('Failed to parse JSON from Gemini response:', error);
+        aiResponse = parsed;
+      } else {
+        // If no JSON found, treat as query response
         aiResponse = {
           action: 'query',
           message: text.trim(),
         };
       }
-
-      res.json({
-        response: aiResponse,
-        conversationId: Date.now().toString(),
-        userId: userId,
-        timestamp: new Date().toISOString(),
-      });
     } catch (error) {
-      console.error('Error communicating with Gemini:', error);
-      res.status(500).json({
-        error: 'Internal server error Failed to process AI request',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      });
+      console.warn('Failed to parse JSON from Gemini response:', error);
+      aiResponse = {
+        action: 'query',
+        message: text.trim(),
+      };
     }
+
+    res.json({
+      response: aiResponse,
+      conversationId: Date.now().toString(),
+      userId: userId,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error communicating with Gemini:', error);
+    res.status(500).json({
+      error: 'Internal server error Failed to process AI request',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
-);
+});
 
 /**
  * POST /api/ai/analyze-schedule
@@ -283,12 +279,12 @@ app.post(
  */
 app.post(
   '/api/ai/analyze-schedule',
-  // authenticateToken,
+  authenticateToken,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { events, timeRange } = req.body;
-      // Temporary user ID until authentication is enabled
-      const userId = req.user?.userId || 'temp-user';
+      // Authenticated user ID
+      const userId = req.user!.userId;
 
       if (!events || !Array.isArray(events)) {
         res.status(400).json({ error: 'Valid events array is required' });
@@ -335,12 +331,12 @@ app.post(
  */
 app.post(
   '/api/ai/find-time',
-  // authenticateToken,
+  authenticateToken,
   async (req: Request, res: Response): Promise<void> => {
     try {
       const { events, duration, preferences } = req.body;
-      // Temporary user ID until authentication is enabled
-      const userId = req.user?.userId || 'temp-user';
+      // Authenticated user ID
+      const userId = req.user!.userId;
 
       if (!duration || typeof duration !== 'number') {
         res.status(400).json({ error: 'Valid duration in minutes is required' });
@@ -437,7 +433,7 @@ app.use((error: Error, req: Request, res: Response, next: Function) => {
 // Start server
 const server = app.listen(PORT, () => {
   console.log(`🚀 Backend server running on http://localhost:${PORT}`);
-  console.log(`🔒 Authentication disabled (commented out)`);
+  console.log(`🔒 Authentication enabled (Active)`);
   console.log(`🤖 AI Calendar Assistant ready`);
   console.log(
     `📅 Holidays endpoint: /api/v1/holidays/worldwide?year=<YEAR>&month=<OPTIONAL_MONTH>`

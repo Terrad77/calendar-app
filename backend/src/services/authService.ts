@@ -145,68 +145,76 @@ export class AuthService {
   }
 
   async findOrCreateSocialUser(data: SocialUserData): Promise<{ user: User; tokens: AuthTokens }> {
-    const database = getDb();
-    const { email, name, googleId } = data;
-    const lowerEmail = email.toLowerCase();
-    const now = new Date();
+    try {
+      const database = getDb();
+      const { email, name, googleId } = data;
+      const lowerEmail = email.toLowerCase();
+      const now = new Date();
 
-    const existingUsers = await database
-      .select()
-      .from(usersTable)
-      .where(eq(usersTable.email, lowerEmail))
-      .limit(1);
+      // Check if user exists by email
+      const existingUsers = await database
+        .select()
+        .from(usersTable)
+        .where(eq(usersTable.email, lowerEmail))
+        .limit(1);
 
-    let user = existingUsers[0];
+      let user = existingUsers.length > 0 ? existingUsers[0] : null;
 
-    if (user) {
-      const updates: Partial<typeof usersTable.$inferInsert> = {
-        updatedAt: now,
-      };
-
-      if (!user.googleId) {
-        updates.googleId = googleId;
-      }
-
-      const [updatedUser] = await database
-        .update(usersTable)
-        .set(updates)
-        .where(eq(usersTable.id, user.id))
-        .returning();
-
-      if (updatedUser) {
-        user = updatedUser;
-      }
-    } else {
-      const [createdUser] = await database
-        .insert(usersTable)
-        .values({
-          id: randomUUID(),
-          email: lowerEmail,
-          name,
-          password: '',
-          googleId,
-          isVerified: true,
-          verificationToken: null,
-          verificationTokenExpiry: null,
-          createdAt: now,
+      if (user) {
+        // Update existing user with googleId if missing
+        const updates: Partial<typeof usersTable.$inferInsert> = {
           updatedAt: now,
-        })
-        .returning();
+        };
 
-      if (!createdUser) {
-        throw new Error('Failed to create social user');
+        if (!user.googleId) {
+          updates.googleId = googleId;
+        }
+
+        const [updatedUser] = await database
+          .update(usersTable)
+          .set(updates)
+          .where(eq(usersTable.id, user.id))
+          .returning();
+
+        if (updatedUser) {
+          user = updatedUser;
+        }
+      } else {
+        // Create new user if not exists
+        const [createdUser] = await database
+          .insert(usersTable)
+          .values({
+            id: randomUUID(),
+            email: lowerEmail,
+            name,
+            password: '', // Social users don't have a local password
+            googleId,
+            isVerified: true, // Social emails are pre-verified
+            verificationToken: null,
+            verificationTokenExpiry: null,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .returning();
+
+        if (!createdUser) {
+          throw new Error('Failed to create social user');
+        }
+
+        user = createdUser;
       }
 
-      user = createdUser;
+      const tokens = this.generateTokens(user.id, user.email);
+      await this.storeRefreshToken(user.id, tokens.refreshToken);
+
+      return {
+        user: this.toPublicUser(user),
+        tokens,
+      };
+    } catch (error) {
+      console.error('Database error in findOrCreateSocialUser:', error);
+      throw error;
     }
-
-    const tokens = this.generateTokens(user.id, user.email);
-    await this.storeRefreshToken(user.id, tokens.refreshToken);
-
-    return {
-      user: this.toPublicUser(user),
-      tokens,
-    };
   }
 
   async verifyEmail(token: string): Promise<User> {
