@@ -1,8 +1,23 @@
 import { useLanguage } from '../../hooks/useLanguage';
 import css from './LanguageSwitcher.module.css';
+import { useSelector } from 'react-redux';
+import { selectIsLoggedIn } from '../../redux/user/selectors';
+import { useAppDispatch } from '../../redux/hooks';
+import { saveLanguageAndCountry } from '../../redux/user/operations';
 
 export const LanguageSwitcher = () => {
   const { changeLanguage, currentLanguage, languages } = useLanguage();
+  const isLoggedIn = useSelector(selectIsLoggedIn);
+  const dispatch = useAppDispatch();
+
+  const handleLanguageChange = (languageCode: string) => {
+    changeLanguage(languageCode);
+
+    // If user is logged in, save to profile
+    if (isLoggedIn) {
+      dispatch(saveLanguageAndCountry({ language: languageCode }));
+    }
+  };
 
   return (
     <div className={css.languageButtonContainer}>
@@ -10,7 +25,7 @@ export const LanguageSwitcher = () => {
         <button
           key={language.code}
           className={`${css.languageButton} ${currentLanguage === language.code ? css.active : ''}`}
-          onClick={() => changeLanguage(language.code)}
+          onClick={() => handleLanguageChange(language.code)}
           title={language.name}
           type="button"
         >

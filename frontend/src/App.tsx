@@ -6,7 +6,7 @@ import SignInPage from './pages/SignInPage/SignInPage';
 import AuthSuccessPage from './pages/AuthSuccessPage/AuthSuccessPage';
 import HomePage from './pages/HomePage/HomePage'; // main calendar page
 // import { authenticationService } from './services/authService';
-import { AIAssistant } from './components/AIAssistant/AIAssistant';
+import { AIAssistantDrawer } from './components/AIAssistant/AIAssistantDrawer';
 import { Layout } from './components/Layout/Layout';
 import type { CalendarEvent } from './types/types';
 import { useSelector } from 'react-redux';
@@ -19,6 +19,8 @@ import {
   updateCalendarEvent,
 } from './API/apiOperations';
 import './App.css';
+
+const syncInFlightOperations = new Set<string>();
 
 // Protected Route wrapper component
 interface ProtectedRouteProps {
@@ -97,11 +99,35 @@ function App() {
       return previousEvent ? !eventsEqual(previousEvent, event) : false;
     });
 
+    const uniqueOperation = (
+      operation: 'create' | 'update' | 'delete',
+      eventId: string,
+      handler: () => Promise<unknown>
+    ) => {
+      const key = `${operation}:${eventId}`;
+
+      if (syncInFlightOperations.has(key)) {
+        return Promise.resolve();
+      }
+
+      syncInFlightOperations.add(key);
+
+      return handler().finally(() => {
+        syncInFlightOperations.delete(key);
+      });
+    };
+
     try {
       await Promise.all([
-        ...createdEvents.map((event) => createCalendarEvent(event)),
-        ...updatedEvents.map((event) => updateCalendarEvent(event)),
-        ...deletedEvents.map((event) => deleteCalendarEvent(event.id)),
+        ...createdEvents.map((event) =>
+          uniqueOperation('create', event.id, () => createCalendarEvent(event))
+        ),
+        ...updatedEvents.map((event) =>
+          uniqueOperation('update', event.id, () => updateCalendarEvent(event))
+        ),
+        ...deletedEvents.map((event) =>
+          uniqueOperation('delete', event.id, () => deleteCalendarEvent(event.id))
+        ),
       ]);
     } catch (error) {
       console.error('Failed to sync calendar events with backend:', error);
@@ -281,14 +307,14 @@ function App() {
         />
       </Routes>
 
-      {/* AI Assistant - only show when user is authenticated */}
-      {isAuthenticated && aiServiceStatus?.available && (
-        <AIAssistant
+      {/* AI Assistant - show for authenticated users and let the drawer handle availability */}
+      {isAuthenticated && (
+        <AIAssistantDrawer
           currentEvents={events}
           onEventCreate={handleEventCreate}
           onEventUpdate={handleEventUpdate}
           onEventDelete={handleEventDelete}
-          isServiceAvailable={aiServiceStatus.available}
+          isServiceAvailable={aiServiceStatus?.available ?? false}
         />
       )}
     </div>

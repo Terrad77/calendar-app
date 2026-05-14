@@ -4,10 +4,10 @@ import dayjs, { Dayjs } from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween'; // plugin for checking if a date is between two dates
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
-import type { CalendarEvent } from '../../types/types';
-import { TaskCardDraggable } from './TaskCardDraggable';
-import { TaskInputForm } from './TaskInputForm';
-import { useLanguage } from '../../hooks/useLanguage';
+import type { CalendarEvent } from '../../../types/types';
+import { TaskCardDraggable } from '../TaskCardDraggableComponent/TaskCardDraggableComponent';
+import { TaskInputForm } from '../TaskInputFormComponent/TaskInputFormComponent';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 dayjs.extend(isBetween); // extend dayjs with isBetween plugin
 

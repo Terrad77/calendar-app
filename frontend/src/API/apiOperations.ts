@@ -163,3 +163,24 @@ export const getUsers = async () => {
     return response;
   }
 };
+
+// Profile Management
+export const updateProfile = async (data: { name?: string; theme?: string }) => {
+  const response = await instance.put('/api/auth/profile', data);
+  return response.data;
+};
+
+export const changePassword = async (oldPassword: string, newPassword: string) => {
+  const response = await instance.post('/api/auth/change-password', {
+    oldPassword,
+    newPassword,
+  });
+  return response.data;
+};
+
+export const deleteAccount = async (password: string) => {
+  const response = await instance.delete('/api/auth/account', {
+    data: { password },
+  });
+  return response.data;
+};

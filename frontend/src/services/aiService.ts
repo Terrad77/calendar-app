@@ -1,4 +1,5 @@
 import type { CalendarEvent, AIResponse, ConversationMessage } from '../types/types';
+import { authenticationService } from './authService';
 
 const API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:3001';
 
@@ -7,6 +8,40 @@ class AIService {
   private retryAttempts = 0;
   private maxRetries = 3;
   private isCheckingHealth = false;
+
+  // Try to read token from various storage locations (auth service, localStorage, redux-persist)
+  private getStoredToken(): string | null {
+    try {
+      const fromAuthService = authenticationService.getAccessToken();
+      if (fromAuthService) return fromAuthService;
+
+      const accessToken =
+        localStorage.getItem('accessToken') ||
+        localStorage.getItem('token') ||
+        localStorage.getItem('authToken');
+      if (accessToken && accessToken !== 'null') return accessToken;
+
+      const persist = localStorage.getItem('persist:user');
+      if (persist) {
+        try {
+          const parsed = JSON.parse(persist);
+          // redux-persist stores reducer state as JSON strings under keys
+          const stateStr = parsed.user || parsed.auth || parsed;
+          if (typeof stateStr === 'string') {
+            const inner = JSON.parse(stateStr);
+            return inner.accessToken || inner.token || inner.authToken || null;
+          }
+          return (parsed.accessToken as string) || (parsed.token as string) || null;
+        } catch (e) {
+          // ignore parse errors
+        }
+      }
+    } catch (err) {
+      // ignore
+    }
+
+    return null;
+  }
 
   /**
    * Helper function for retrying failed requests with exponential backoff
@@ -55,7 +90,7 @@ class AIService {
     }
 
     try {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const token = this.getStoredToken();
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
       };
@@ -145,7 +180,7 @@ class AIService {
     }
 
     try {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const token = this.getStoredToken();
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
       };

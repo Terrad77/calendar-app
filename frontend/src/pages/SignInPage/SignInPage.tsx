@@ -1,24 +1,26 @@
 import { Link } from 'react-router-dom';
 import Logo from '../../components/Logo/Logo';
 import SignInForm from '../../components/SignInForm/SignInForm';
-import css from '../SignInPage/SignInPage.module.css';
 import { useTranslation } from 'react-i18next';
 
-import clsx from 'clsx';
-
-export default function SignIpPage() {
+export default function SignInPage() {
   const { t } = useTranslation(['auth', 'form']);
   return (
-    <div className={css.sectionContainer}>
-      <div className={css.logo}>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mb-8 sm:mb-12">
         <Logo />
       </div>
-      <div className={css.content}>
-        <h2 className={clsx(css.title)}>{t('signing_in', { ns: 'form' })}</h2>
+      <div className="w-full max-w-sm">
+        <h2 className="text-center text-2xl font-semibold text-neutral-950 sm:text-3xl mb-8 sm:mb-10">
+          {t('signing_in', { ns: 'form' })}
+        </h2>
         <SignInForm />
-        <p className={css.notify}>
+        <p className="mt-6 text-center text-sm text-neutral-600 sm:text-base">
           {t('do_not', { ns: 'auth' })}{' '}
-          <Link className={clsx(css.navLink)} to="/signup">
+          <Link
+            className="font-semibold text-neutral-950 transition-colors hover:text-neutral-700"
+            to="/signup"
+          >
             {t('register_user', { ns: 'auth' })}
           </Link>
         </p>

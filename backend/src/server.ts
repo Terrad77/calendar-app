@@ -73,18 +73,18 @@ const CALENDAR_SYSTEM_PROMPT = `Ти - розумний AI-асістент ка
 ВАЖЛИВО: Завжди відповідай в JSON форматі для дій з подіями!`;
 
 // --- JSON SCHEMA DEFINITION for Tool Use ---
-// Визначаємо схему JSON, яку ми очікуємо від AI
+// Defines the JSON schema expected from the AI
 const CALENDAR_ACTION_SCHEMA = {
   type: 'object' as const,
   properties: {
     action: {
       type: 'string' as const,
       enum: ['create', 'update', 'delete', 'query', 'analyze'],
-      description: 'Тип дії: створення, оновлення, видалення, запит або аналіз.',
+      description: 'Action type: create, update, delete, query or analyze.',
     },
     event: {
       type: 'object' as const,
-      description: "Дані про подію. Включається лише для 'create', 'update', 'delete'.",
+      description: "Event data. Included only for 'create', 'update', 'delete'.",
       properties: {
         title: { type: 'string' as const },
         description: { type: 'string' as const },
@@ -102,14 +102,14 @@ const CALENDAR_ACTION_SCHEMA = {
     },
     message: {
       type: 'string' as const,
-      description: "Дружнє повідомлення користувачу. Обов'язково для всіх дій.",
+      description: 'Friendly message to the user. Required for all actions.',
     },
   },
   required: ['action', 'message'],
 };
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '50kb' })); // Limit payload size to 50kb for security
 app.use(passport.initialize());
 app.use(
   cors({
@@ -118,6 +118,7 @@ app.use(
       'https://calendar-app-git-main-terrad77s-projects.vercel.app',
       'https://calendar-app-7oetemppd-terrad77s-projects.vercel.app',
       'http://localhost:5173',
+      'http://localhost:5174',
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
@@ -192,13 +193,13 @@ app.post('/api/ai/chat', authenticateToken, async (req: Request, res: Response):
     // Authenticated user ID
     const userId = req.user!.userId;
 
-    if (!message || typeof message !== 'string') {
-      res.status(400).json({ error: 'Valid message is required' });
+    if (!message || typeof message !== 'string' || message.length > 2000) {
+      res.status(400).json({ error: 'Valid message (max 2000 chars) is required' });
       return;
     }
 
     // Add user context to the message
-    let context = `Поточна дата: ${new Date().toISOString()}\nUser ID: ${userId}\n`;
+    let context = `Current date: ${new Date().toISOString()}\nUser ID: ${userId}\n`;
 
     if (events && Array.isArray(events) && events.length > 0) {
       context += `Current calendar events:\n${JSON.stringify(events, null, 2)}\n\n`;
@@ -209,14 +210,14 @@ app.post('/api/ai/chat', authenticateToken, async (req: Request, res: Response):
       Array.isArray(conversationHistory) &&
       conversationHistory.length > 0
     ) {
-      context += 'Історія бесіди:\n';
+      context += 'Conversation history:\n';
       conversationHistory.forEach((msg: any) => {
         context += `${msg.role || 'user'}: ${msg.content || msg.message || ''}\n`;
       });
       context += '\n';
     }
 
-    const fullPrompt = `${CALENDAR_SYSTEM_PROMPT}\n\n${context}Користувач: ${message}\n\nВідповідь (у JSON форматі якщо потрібна дія, інакше звичайний текст):`;
+    const fullPrompt = `${CALENDAR_SYSTEM_PROMPT}\n\n${context}User: ${message}\n\nResponse (in JSON format if action is needed, otherwise plain text):`;
 
     console.log('Sending to Gemini:', {
       messageLength: message.length,
@@ -286,24 +287,24 @@ app.post(
       // Authenticated user ID
       const userId = req.user!.userId;
 
-      if (!events || !Array.isArray(events)) {
-        res.status(400).json({ error: 'Valid events array is required' });
+      if (!events || !Array.isArray(events) || events.length > 100) {
+        res.status(400).json({ error: 'Valid events array (max 100 items) is required' });
         return;
       }
 
-      const prompt = `User ID: ${userId}\nПроаналізуй наступний розклад за період ${
-        timeRange || 'тиждень'
-      } та надай рекомендації:
+      const prompt = `User ID: ${userId}\nAnalyze the following schedule for the period ${
+        timeRange || 'week'
+      } and provide recommendations:
       
-Події: ${JSON.stringify(events, null, 2)}
+Events: ${JSON.stringify(events, null, 2)}
 
-Надай:
-1. Загальну завантаженість
-2. Можливі конфлікти
-3. Вільні проміжки для важливих зустрічей
-4. Пропозиції по оптимізації
+Provide:
+1. General workload
+2. Possible conflicts
+3. Free slots for important meetings
+4. Optimization suggestions
 
-Відповідь на українській чи англійській мові, в залежності від мови запиту.`;
+Respond in Ukrainian or English, depending on the request language.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;
@@ -338,17 +339,17 @@ app.post(
       // Authenticated user ID
       const userId = req.user!.userId;
 
-      if (!duration || typeof duration !== 'number') {
-        res.status(400).json({ error: 'Valid duration in minutes is required' });
+      if (!duration || typeof duration !== 'number' || duration <= 0 || duration > 1440) {
+        res.status(400).json({ error: 'Valid duration in minutes (1-1440) is required' });
         return;
       }
 
-      const prompt = `User ID: ${userId}\nЗнайди оптимальний час для зустрічі тривалістю ${duration} хвилин.
+      const prompt = `User ID: ${userId}\nFind the optimal time for a meeting with duration of ${duration} minutes.
 
-Існуючі події: ${JSON.stringify(events || [], null, 2)}
-Пріоритети: ${JSON.stringify(preferences || {}, null, 2)}
+Existing events: ${JSON.stringify(events || [], null, 2)}
+Preferences: ${JSON.stringify(preferences || {}, null, 2)}
 
-Запропонуй 3-5 найкращих варіантів часу з поясненням, чому вони підходять.`;
+Suggest 3-5 best time slots with explanations of why they are suitable.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;

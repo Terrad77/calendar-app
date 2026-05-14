@@ -1,78 +1,81 @@
 .sectionContainer {
   display: flex;
   flex-direction: column;
-  padding: 8px 16px;
-  background-color: var(--color-bg-secondary);
-  border-radius: 10px;
-  width: 100%;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 1rem;
+  background-color: rgb(250, 250, 250);
 }
+
 .logo {
-  margin-bottom: 20px;
+  margin-bottom: 2rem;
 }
+
+.content {
+  width: 100%;
+}
+
 .title {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 10px;
-  color: var(--color-text-primary);
+  color: rgb(23, 23, 23);
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
 
 .notify {
-  color: var(--color-text-placeholder);
-  font-size: 14px;
-  line-height: 18px;
-  letter-spacing: -1%;
+  color: rgb(82, 82, 82);
+  font-size: 0.875rem;
   text-align: center;
-  margin-top: 16px;
+  margin-top: 1rem;
 }
 
 .navLink {
-  color: var(--color-accent);
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 18px;
-  letter-spacing: -1%;
-  text-transform: capitalize;
+  color: rgb(23, 23, 23);
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 .navLink:hover {
-  color: var(--color-accent-hover);
+  color: rgb(82, 82, 82);
 }
 
-/* from 768px */
-@media screen and (min-width: 768px) {
+/* Tablet and above */
+@media (min-width: 640px) {
   .sectionContainer {
-    display: flex;
-    flex-direction: column;
-    padding: 20px 40px;
-    max-width: 704px;
+    padding: 2rem;
   }
+
   .content {
+    max-width: 448px;
     margin: 0 auto;
   }
+
   .logo {
-    margin-bottom: 100px;
+    margin-bottom: 3rem;
   }
+
   .title {
-    font-size: 24px;
+    margin-bottom: 2rem;
   }
+
   .notify {
-    font-size: 16px;
-  }
-  .navLink {
-    font-size: 16px;
+    margin-top: 1.5rem;
+    font-size: 0.9375rem;
   }
 }
-/* from 1440px */
-@media screen and (min-width: 1440px) {
+
+/* Large desktop */
+@media (min-width: 1024px) {
   .sectionContainer {
-    padding: 40px 60px;
-    max-width: 672px;
+    padding: 2.5rem;
   }
+
+  .content {
+    max-width: 448px;
+  }
+
   .logo {
-    margin-bottom: 74px;
-  }
-  .title {
-    font-size: 32px;
+    margin-bottom: 4rem;
   }
 }

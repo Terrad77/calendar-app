@@ -1,5 +1,4 @@
 import { useState, useEffect, useTransition, useCallback, useMemo } from 'react';
-import { styled } from '@stitches/react';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
@@ -17,83 +16,47 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'; // dnd-kit for D&D functionality
 import { arrayMove } from '@dnd-kit/sortable';
-import type { CalendarEvent, ColorType } from '../../types/types';
-import { TASK_MARKER_COLORS } from '../../types/types';
-import { CalendarDayCell } from './CalendarDayCell';
-import { TaskCardDraggable } from './TaskCardDraggable';
-import { CalendarHeader } from './CalendarHeader';
-import { CalendarGridHeader } from './CalendarGridHeader';
-import { generateUniqueId } from '../../utils/idGenerator';
+import type { CalendarEvent, ColorType } from '../../../types/types';
+import { TASK_MARKER_COLORS } from '../../../types/types';
+import { CalendarDayCell } from '../CalendarDayCellComponent/CalendarDayCellComponent';
+import { TaskCardDraggable } from '../TaskCardDraggableComponent/TaskCardDraggableComponent';
+import { CalendarHeader } from '../CalendarHeaderComponent/CalendarHeaderComponent';
+import { CalendarGridHeader } from '../CalendarGridHeaderComponent/CalendarGridHeaderComponent';
+import { generateUniqueId } from '../../../utils/idGenerator';
+import { useSelector } from 'react-redux';
+import { useAppDispatch } from '../../../redux/hooks';
+import { saveLanguageAndCountry } from '../../../redux/user/operations';
+import { selectUser } from '../../../redux/user/selectors';
 
 // Extend dayjs with plugins for date comparison
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
-interface CalendarProps {
+// Tailwind styling moved to JSX
+type CalendarProps = {
   events?: CalendarEvent[];
   setEvents?: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
-}
+};
 
-const Wrapper = styled('div', {
-  display: 'flex',
-  flexDirection: 'column',
-  width: '100%',
-  maxWidth: '1400px',
-  margin: '20px',
-  backgroundColor: '#fff',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-  overflow: 'hidden',
-});
-
-const CalendarGrid = styled('div', {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(7, minmax(150px, 1fr))',
-  gap: '4px',
-  backgroundColor: '#edeff1',
-  minHeight: `calc((var(--calendar-day-cell-min-height, 120px) * 6) + (4px * 5))`,
-  '@media (max-width: 768px)': {
-    minHeight: `auto`,
-  },
-});
-
-const StatusMessage = styled('div', {
-  padding: '8px 16px',
-  backgroundColor: '#fffbebe6',
-  color: '#856404',
-  border: '1px solid #ffeeba',
-  borderRadius: '4px',
-  margin: '12px',
-  textAlign: 'center',
-  variants: {
-    type: {
-      error: {
-        backgroundColor: '#f8d7da',
-        color: '#721c24',
-        border: '1px solid #f5c6cb',
-      },
-      loading: {
-        backgroundColor: '#d1ecf1',
-        color: '#0c5460',
-        border: '1px solid #bee5eb',
-      },
-    },
-  },
-});
-
+// Tailwind styling moved to JSX
 // --- KEY for LOCAL STORAGE ---
 const LOCAL_STORAGE_KEY = 'calendarTasks';
 
-// --- BASE URL, value for Vite building ---
-// const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
+// --- BASE URL for backend ---
 const BACKEND_API_BASE_URL = 'http://localhost:3001';
 
 export const Calendar = ({
   events: externalEvents,
   setEvents: externalSetEvents,
 }: CalendarProps) => {
+  const dispatch = useAppDispatch();
+  const user = useSelector(selectUser);
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
   const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
-  const [selectedCountry, setSelectedCountry] = useState<string>('ALL');
+  const [selectedCountry, setSelectedCountry] = useState<string>(() => {
+    const savedCountry = localStorage.getItem('preferredCountry');
+    return savedCountry || 'ALL';
+  });
 
   // --- parsing Tasks from Local Storage ---
   const [internalTasks, setInternalTasks] = useState<CalendarEvent[]>(() => {
@@ -271,6 +234,25 @@ export const Calendar = ({
 
   const [searchInputValue, setSearchInputValue] = useState(''); // immediate update input field
   const [searchQuery, setSearchQuery] = useState(''); // Delayed search
+
+  useEffect(() => {
+    const savedCountry = user?.preferredCountry || localStorage.getItem('preferredCountry');
+    if (savedCountry && savedCountry !== selectedCountry) {
+      setSelectedCountry(savedCountry);
+    }
+  }, [user?.preferredCountry, selectedCountry]);
+
+  const handleCountryChange = useCallback(
+    (countryCode: string) => {
+      setSelectedCountry(countryCode);
+      localStorage.setItem('preferredCountry', countryCode);
+
+      if (user) {
+        dispatch(saveLanguageAndCountry({ preferredCountry: countryCode }));
+      }
+    },
+    [dispatch, user]
+  );
 
   const visibleHolidays = useMemo(() => {
     if (selectedCountry === 'ALL') {
@@ -560,7 +542,7 @@ export const Calendar = ({
   ]);
 
   return (
-    <Wrapper>
+    <div className="flex flex-col w-full gap-4 p-4 sm:p-6 lg:p-6 bg-white rounded-lg border border-neutral-200 shadow-sm">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -574,18 +556,28 @@ export const Calendar = ({
           selectedCountry={selectedCountry}
           onPrev={handlePrev}
           onNext={handleNext}
-          onCountryChange={setSelectedCountry}
+          onCountryChange={handleCountryChange}
           onViewModeChange={handleViewModeChange}
           onSearchChange={handleSearchChange}
           searchInputValue={searchInputValue}
           onSearchClick={handleSearchIconClick}
         />
 
-        {isPending && <StatusMessage type="loading">Loading worldwide holidays...</StatusMessage>}
-        {holidayError && <StatusMessage type="error">{holidayError}</StatusMessage>}
+        {isPending && (
+          <div className="px-4 py-3 bg-blue-50 border border-blue-200 rounded-md text-center text-sm text-blue-800">
+            Loading worldwide holidays...
+          </div>
+        )}
+        {holidayError && (
+          <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-md text-center text-sm text-red-800">
+            {holidayError}
+          </div>
+        )}
         <CalendarGridHeader />
 
-        <CalendarGrid>{renderedDays}</CalendarGrid>
+        <div className="grid grid-cols-7 gap-px bg-neutral-200 rounded-lg overflow-hidden">
+          {renderedDays}
+        </div>
 
         <DragOverlay>
           {activeDragItem && (
@@ -593,7 +585,7 @@ export const Calendar = ({
           )}
         </DragOverlay>
       </DndContext>
-    </Wrapper>
+    </div>
   );
 };
 

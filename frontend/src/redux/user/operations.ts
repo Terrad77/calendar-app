@@ -190,3 +190,78 @@ export const updateAvatar = createAsyncThunk<
 });
 
 export { setAuthHeader, clearAuthHeader };
+
+// ---------------------------
+// Change password
+// ---------------------------
+export const changePassword = createAsyncThunk<
+  void,
+  { oldPassword: string; newPassword: string },
+  { state: RootState; dispatch: AppDispatch; rejectValue: string }
+>('user/changePassword', async (passwords, thunkAPI) => {
+  try {
+    await instance.post('/api/auth/change-password', {
+      oldPassword: passwords.oldPassword,
+      newPassword: passwords.newPassword,
+    });
+    toastMaker('Password changed successfully!', 'success');
+  } catch (error: unknown) {
+    const msg =
+      (error as AxiosError).response?.data?.message ||
+      (error as AxiosError).message ||
+      'Failed to change password';
+    toastMaker(msg, 'error');
+    return thunkAPI.rejectWithValue(msg);
+  }
+});
+
+// ---------------------------
+// Delete account
+// ---------------------------
+export const deleteAccount = createAsyncThunk<
+  void,
+  string,
+  { state: RootState; dispatch: AppDispatch; rejectValue: string }
+>('user/deleteAccount', async (password, thunkAPI) => {
+  try {
+    await instance.delete('/api/auth/account', {
+      data: { password },
+    });
+    clearAuthHeader();
+    toastMaker('Account deleted successfully', 'success');
+  } catch (error: unknown) {
+    const msg =
+      (error as AxiosError).response?.data?.message ||
+      (error as AxiosError).message ||
+      'Failed to delete account';
+    toastMaker(msg, 'error');
+    return thunkAPI.rejectWithValue(msg);
+  }
+});
+
+// ---------------------------
+// Save language and country preferences
+// ---------------------------
+export const saveLanguageAndCountry = createAsyncThunk<
+  User,
+  { language?: string; preferredCountry?: string },
+  { state: RootState; dispatch: AppDispatch; rejectValue: string }
+>('user/saveLanguageAndCountry', async (preferences, thunkAPI) => {
+  try {
+    const { data } = await instance.put('/api/auth/profile', preferences);
+    // Also update localStorage for immediate effect
+    if (preferences.language) {
+      localStorage.setItem('language', preferences.language);
+    }
+    if (preferences.preferredCountry) {
+      localStorage.setItem('preferredCountry', preferences.preferredCountry);
+    }
+    return data.user;
+  } catch (error: unknown) {
+    const msg =
+      (error as AxiosError).response?.data?.message ||
+      (error as AxiosError).message ||
+      'Failed to save preferences';
+    return thunkAPI.rejectWithValue(msg);
+  }
+});

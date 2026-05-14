@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { store } from '../redux/store';
 import { clearCredentials } from '../redux/user/userSlice';
+import { authenticationService } from '../services/authService';
 
 // Используйте import.meta.env вместо process.env для Vite
 const API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:3001';
@@ -16,9 +17,13 @@ const instance = axios.create({
 instance.interceptors.request.use(
   (config) => {
     const state = store.getState();
-    const token = state.user.token;
+    const token =
+      state.user.token ||
+      authenticationService.getAccessToken() ||
+      localStorage.getItem('accessToken') ||
+      localStorage.getItem('token');
 
-    if (token) {
+    if (token && token !== 'null') {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -41,7 +46,10 @@ instance.interceptors.response.use(
 
       try {
         const state = store.getState();
-        const refreshToken = state.user.refreshToken;
+        const refreshToken =
+          state.user.refreshToken ||
+          localStorage.getItem('refreshToken') ||
+          localStorage.getItem('token');
 
         if (!refreshToken) {
           throw new Error('No refresh token available');

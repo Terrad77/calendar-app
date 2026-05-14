@@ -16,5 +16,21 @@
   "do_you_really": "Do you really want to log out?",
   "logging_out": "Logging out...",
   "log_exit": "Cancel",
-  "sorry_try_again_later": "Sorry, please try again later"
+  "sorry_try_again_later": "Sorry, please try again later",
+  "change_password": "Change Password",
+  "current_password": "Current Password",
+  "enter_current_password": "Enter your current password",
+  "new_password": "New Password",
+  "enter_new_password": "Enter your new password",
+  "confirm_password": "Confirm Password",
+  "confirm_new_password": "Confirm your new password",
+  "passwords_do_not_match": "Passwords do not match",
+  "change": "Change",
+  "changing": "Changing...",
+  "password": "Password",
+  "enter_password": "Enter your password",
+  "delete_account": "Delete Account",
+  "delete_account_warning": "This action is permanent and cannot be undone. All your data will be deleted.",
+  "confirm_delete": "I understand and want to delete my account",
+  "deleting": "Deleting..."
 }

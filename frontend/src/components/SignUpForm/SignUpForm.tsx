@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import css from './SignUpForm.module.css';
-import Icon from '../Icon';
-import clsx from 'clsx';
 import { useDispatch, useSelector } from 'react-redux';
 import { registerUser } from '../../redux/user/operations';
 import GoogleAuthBtn from '../GoogleAuthBtn/GoogleAuthBtn';
@@ -17,6 +14,7 @@ import { SignUpFormData, RegisterError } from '../../types/types';
 import toast from 'react-hot-toast';
 import { AppDispatch } from '../../redux/types';
 import { useTogglePassword } from '../../hooks/useTogglePassword';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function SignUpForm() {
   const dispatch = useDispatch<AppDispatch>();
@@ -73,37 +71,49 @@ export default function SignUpForm() {
           <SignUpModal />
         </Modal>
       )}
-      <form className={css.form} onSubmit={handleSubmit(handleFormSubmit)}>
-        <div className={clsx(css.inputGroup)}>
+      <form className="flex flex-col gap-6 sm:gap-7" onSubmit={handleSubmit(handleFormSubmit)}>
+        <div className="flex flex-col gap-2">
           {/* Email field */}
-          <label htmlFor="email">{t('email_user', { ns: 'form' })}</label>
+          <label htmlFor="email" className="text-sm font-medium text-neutral-950 sm:text-base">
+            {t('email_user', { ns: 'form' })}
+          </label>
           <input
             type="text"
             placeholder={t('enter_email', { ns: 'form' })}
             autoComplete="off"
-            className={clsx(css.inputGroupInput, errors.email && css.inputError)}
+            className={`w-full rounded-lg border px-4 py-3 text-sm transition-all focus:outline-none sm:text-base ${
+              errors.email
+                ? 'border-red-500 focus:ring-2 focus:ring-red-500'
+                : 'border-neutral-300 bg-white focus:ring-2 focus:ring-neutral-950'
+            }`}
             {...register('email')}
           />
           {errors.email && (
-            <p className={css.error}>
+            <p className="text-xs text-red-600 sm:text-sm">
               {t(errors.email.message || 'email_required', { ns: 'validation' })}
             </p>
           )}
         </div>
-        <div className={clsx(css.inputGroup)}>
+        <div className="flex flex-col gap-2">
           {/* Password field */}
-          <label htmlFor="password">{t('password_user', { ns: 'form' })}</label>
-          <div className={css.passwordContainer}>
+          <label htmlFor="password" className="text-sm font-medium text-neutral-950 sm:text-base">
+            {t('password_user', { ns: 'form' })}
+          </label>
+          <div className="relative flex items-center">
             <input
               type={passwordField.inputType}
               placeholder={t('enter_password', { ns: 'form' })}
               autoComplete="new-password"
-              className={clsx(css.inputGroupInput, errors.password && css.inputError)}
+              className={`w-full rounded-lg border px-4 py-3 pr-12 text-sm transition-all focus:outline-none sm:text-base ${
+                errors.password
+                  ? 'border-red-500 focus:ring-2 focus:ring-red-500'
+                  : 'border-neutral-300 bg-white focus:ring-2 focus:ring-neutral-950'
+              }`}
               {...register('password')}
             />
             <button
               type="button"
-              className={clsx(css.passwordToggle, 'no-transform')}
+              className="absolute right-4 p-1 text-neutral-400 transition-colors hover:text-neutral-600"
               onClick={(e) => {
                 e.stopPropagation();
                 passwordField.toggle();
@@ -111,29 +121,42 @@ export default function SignUpForm() {
               tabIndex={-1}
               aria-label={passwordField.ariaLabel}
             >
-              <Icon className={css.icon} name={passwordField.iconName} />
+              {passwordField.inputType === 'password' ? (
+                <Eye className="h-5 w-5" />
+              ) : (
+                <EyeOff className="h-5 w-5" />
+              )}
             </button>
           </div>
           {errors.password && (
-            <p className={css.error}>
+            <p className="text-xs text-red-600 sm:text-sm">
               {t(errors.password.message || 'password_required', { ns: 'validation' })}
             </p>
           )}
         </div>
-        <div className={clsx(css.inputGroup)}>
+        <div className="flex flex-col gap-2">
           {/* Repeat Password field */}
-          <label htmlFor="repeatPassword">{t('repeat_password', { ns: 'form' })}</label>
-          <div className={css.passwordContainer}>
+          <label
+            htmlFor="repeatPassword"
+            className="text-sm font-medium text-neutral-950 sm:text-base"
+          >
+            {t('repeat_password', { ns: 'form' })}
+          </label>
+          <div className="relative flex items-center">
             <input
               type={repeatPasswordField.inputType}
               placeholder={t('repeat_password_placeholder', { ns: 'form' })}
               autoComplete="password-confirmation"
               {...register('repeatPassword')}
-              className={clsx(css.inputGroupInput, errors.repeatPassword && css.inputError)}
+              className={`w-full rounded-lg border px-4 py-3 pr-12 text-sm transition-all focus:outline-none sm:text-base ${
+                errors.repeatPassword
+                  ? 'border-red-500 focus:ring-2 focus:ring-red-500'
+                  : 'border-neutral-300 bg-white focus:ring-2 focus:ring-neutral-950'
+              }`}
             />
             <button
               type="button"
-              className={clsx(css.passwordToggle, 'no-transform')}
+              className="absolute right-4 p-1 text-neutral-400 transition-colors hover:text-neutral-600"
               onClick={(e) => {
                 e.stopPropagation();
                 repeatPasswordField.toggle();
@@ -141,21 +164,29 @@ export default function SignUpForm() {
               tabIndex={-1}
               aria-label={repeatPasswordField.ariaLabel}
             >
-              <Icon className={css.icon} name={repeatPasswordField.iconName} />
+              {repeatPasswordField.inputType === 'password' ? (
+                <Eye className="h-5 w-5" />
+              ) : (
+                <EyeOff className="h-5 w-5" />
+              )}
             </button>
           </div>
           {errors.repeatPassword && (
-            <p className={css.error}>
+            <p className="text-xs text-red-600 sm:text-sm">
               {t(errors.repeatPassword.message || 'passwords_must_match', { ns: 'validation' })}
             </p>
           )}
         </div>
 
-        <button className={clsx(css.submitButton)} type="submit" disabled={!isValid || isLoading}>
+        <button
+          className="flex w-full items-center justify-center rounded-lg bg-neutral-950 px-4 py-3 text-center font-semibold text-white transition-all hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 sm:mt-2"
+          type="submit"
+          disabled={!isValid || isLoading}
+        >
           {isLoading ? (
             <DotLoader text={t('signing_up', { ns: 'form' })} />
           ) : (
-            t('register_user', { ns: 'form' })
+            t('register_user', { ns: 'auth' })
           )}
         </button>
         <GoogleAuthBtn />

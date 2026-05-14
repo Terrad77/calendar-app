@@ -19,13 +19,23 @@ export const useLanguage = () => {
     i18n
       .changeLanguage(lng)
       .then(() => {
+        // Save language to localStorage
+        localStorage.setItem('language', lng);
         toast.success(`Language changed to ${lng === 'en' ? 'English' : 'Українська'}`);
       })
       .catch((error) => {
         toast.error('Error changing language', error);
       });
   };
-  //
+
+  // Load saved language on mount
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('language');
+    if (savedLanguage && savedLanguage !== i18n.language) {
+      i18n.changeLanguage(savedLanguage);
+    }
+  }, []);
+
   const currentLanguage = i18n.language;
 
   return {

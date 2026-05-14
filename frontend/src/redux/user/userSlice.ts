@@ -6,6 +6,8 @@ export interface User {
   email: string;
   avatarURL?: string;
   theme?: string;
+  language?: string;
+  preferredCountry?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -172,10 +174,68 @@ const userSlice = createSlice({
         state.isLoading = false;
         state.isRefreshing = false;
         state.isLoggedIn = true;
+
+        // Save user preferences to localStorage
+        if (action.payload.language) {
+          localStorage.setItem('language', action.payload.language);
+        }
+        if (action.payload.preferredCountry) {
+          localStorage.setItem('preferredCountry', action.payload.preferredCountry);
+        }
       })
       .addCase('user/fetchUser/rejected', (state, action: any) => {
         state.isLoading = false;
         state.error = action.payload || 'Failed to fetch user';
+      })
+
+      // Change Password
+      .addCase('user/changePassword/pending', (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase('user/changePassword/fulfilled', (state) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase('user/changePassword/rejected', (state, action: any) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Delete Account
+      .addCase('user/deleteAccount/pending', (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase('user/deleteAccount/fulfilled', (state) => {
+        state.user = null;
+        state.token = null;
+        state.refreshToken = null;
+        state.isLoggedIn = false;
+        state.isLoading = false;
+        state.error = null;
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      })
+      .addCase('user/deleteAccount/rejected', (state, action: any) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Save Language and Country
+      .addCase('user/saveLanguageAndCountry/pending', (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase('user/saveLanguageAndCountry/fulfilled', (state, action: any) => {
+        state.isLoading = false;
+        if (state.user) {
+          state.user = action.payload;
+        }
+      })
+      .addCase('user/saveLanguageAndCountry/rejected', (state, action: any) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
       });
   },
 });

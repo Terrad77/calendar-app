@@ -5,8 +5,8 @@ import {
   TASK_MARKER_COLORS,
   type CalendarEvent,
   TaskEvent,
-} from '../../types/types';
-import { generateUniqueId } from '../../utils/idGenerator';
+} from '../../../types/types';
+import { generateUniqueId } from '../../../utils/idGenerator';
 
 const TaskInputFormWrapper = styled('div', {
   marginTop: '2px',

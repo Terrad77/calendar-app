@@ -12,6 +12,7 @@ import { convertToCalendarColor } from '../../types/types';
 import { aiService } from '../../services/aiService';
 import { generateUniqueId } from '../../utils/idGenerator';
 import clsx from 'clsx';
+import { Sparkles, X } from 'lucide-react';
 
 export const AIAssistant: React.FC<AIAssistantProps> = ({
   currentEvents,
@@ -453,8 +454,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         aria-label="Open AI Assistant"
         data-badge={currentEvents.length > 0 ? currentEvents.length : undefined}
       >
-        <span className={styles.botIcon}>{isAIAvailable ? '🤖' : '⚠️'}</span>
-        AI
+        <Sparkles className={styles.botIcon} />
         {!isAIAvailable && (
           <span className={styles.offlineIndicator} title="AI service offline"></span>
         )}
@@ -466,7 +466,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
           {/* Header */}
           <div className={styles.chatHeader}>
             <div className={styles.headerInfo}>
-              <h3>AI Assistant</h3>
+              <Sparkles className={styles.botIcon} />
+              <h3 className="ml-2">AI Assistant</h3>
               <span
                 className={`${styles.status} ${isAIAvailable ? styles.online : styles.offline}`}
               >
@@ -474,7 +475,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
               </span>
             </div>
             <button onClick={toggleChat} className={styles.closeButton} aria-label="Close chat">
-              ✕
+              <X />
             </button>
           </div>
 

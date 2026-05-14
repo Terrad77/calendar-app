@@ -1,0 +1,117 @@
+.taskInputFormWrapper {
+  margin-top: 2px;
+  padding: 2px;
+  background-color: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  right: 4px;
+  z-index: 10;
+}
+
+.taskInput {
+  width: calc(100% - 8px);
+  padding: 4px;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  font-size: 0.85rem;
+}
+
+.taskInput:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.taskInputButtons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.taskInputButton {
+  padding: 4px 8px;
+  border-radius: 3px;
+  border: 1px solid #d0d0d0;
+  background-color: #e3e5e6;
+  cursor: pointer;
+  font-size: 0.8rem;
+  box-shadow: 0 1px 0 #ced0d1;
+  transition:
+    background-color 0.2s,
+    color 0.2s,
+    border-color 0.2s;
+}
+
+.taskInputButton:hover {
+  background-color: #c7cbcf;
+  border-color: #c7cbcf;
+}
+
+.taskInputButton.primary {
+  background-color: #007bff;
+  color: #fff;
+  border-color: #007bff;
+}
+
+.taskInputButton.primary:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.taskInputButton.danger {
+  background-color: #dc3545;
+  color: #fff;
+  border-color: #dc3545;
+}
+
+.taskInputButton.danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+.colorSelectorWrapper {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+.colorOption {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.colorOption:hover {
+  border-color: #ccc;
+}
+
+.colorOption.colorDefault {
+  background-color: #a0a0a0;
+}
+
+.colorOption.colorRed {
+  background-color: #f05050;
+}
+
+.colorOption.colorYellow {
+  background-color: #f2d200;
+}
+
+.colorOption.colorGreen {
+  background-color: #62c050;
+}
+
+.colorOption.isSelected {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.5);
+}

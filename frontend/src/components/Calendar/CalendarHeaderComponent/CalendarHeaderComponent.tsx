@@ -2,9 +2,9 @@ import { styled } from '@stitches/react';
 import { useTranslation } from 'react-i18next';
 import 'dayjs/locale/uk';
 import 'dayjs/locale/en';
-import { type CalendarHeaderProps } from '../../types/types';
-import Icon from '../Icon';
-import SearchInput from './SearchInput';
+import { type CalendarHeaderProps } from '../../../types/types';
+import Icon from '../../Icon';
+import SearchInput from '../SearchInputComponent/SearchInputComponent';
 import { useMemo } from 'react';
 
 const HeaderWrapper = styled('div', {

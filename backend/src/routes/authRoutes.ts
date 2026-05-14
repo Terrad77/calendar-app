@@ -299,4 +299,131 @@ router.get(
     }
   }
 );
+
+/**
+ * PUT /api/auth/profile
+ * Update user profile
+ */
+router.put('/profile', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        error: 'Authentication required',
+        message: 'User not authenticated',
+      });
+      return;
+    }
+
+    const { name, theme } = req.body;
+
+    if (!name && !theme) {
+      res.status(400).json({
+        error: 'Validation error',
+        message: 'At least one field (name or theme) is required',
+      });
+      return;
+    }
+
+    const updatedUser = await authService.updateProfile(req.user.userId, { name, theme });
+
+    res.status(200).json({
+      message: 'Profile updated successfully',
+      user: updatedUser,
+    });
+  } catch (error) {
+    res.status(400).json({
+      error: 'Failed to update profile',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * POST /api/auth/change-password
+ * Change user password
+ */
+router.post(
+  '/change-password',
+  authenticateToken,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      if (!req.user) {
+        res.status(401).json({
+          error: 'Authentication required',
+          message: 'User not authenticated',
+        });
+        return;
+      }
+
+      const { oldPassword, newPassword } = req.body;
+
+      if (!oldPassword || !newPassword) {
+        res.status(400).json({
+          error: 'Validation error',
+          message: 'Old password and new password are required',
+        });
+        return;
+      }
+
+      if (oldPassword === newPassword) {
+        res.status(400).json({
+          error: 'Validation error',
+          message: 'New password must be different from current password',
+        });
+        return;
+      }
+
+      await authService.changePassword(req.user.userId, oldPassword, newPassword);
+
+      res.status(200).json({
+        message: 'Password changed successfully',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to change password';
+      res.status(400).json({
+        error: 'Password change failed',
+        message,
+      });
+    }
+  }
+);
+
+/**
+ * DELETE /api/auth/account
+ * Delete user account
+ */
+router.delete('/account', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        error: 'Authentication required',
+        message: 'User not authenticated',
+      });
+      return;
+    }
+
+    const { password } = req.body;
+
+    if (!password) {
+      res.status(400).json({
+        error: 'Validation error',
+        message: 'Password is required to delete account',
+      });
+      return;
+    }
+
+    await authService.deleteAccount(req.user.userId, password);
+
+    res.status(200).json({
+      message: 'Account deleted successfully',
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to delete account';
+    res.status(400).json({
+      error: 'Account deletion failed',
+      message,
+    });
+  }
+});
+
 export default router;
