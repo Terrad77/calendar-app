@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
-/// <reference path="./global.d.ts" />
+
+import './global';
 
 interface ImportMetaEnv {
   readonly VITE_AI_API_URL: string;

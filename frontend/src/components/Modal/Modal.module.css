@@ -1,13 +1,16 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px) saturate(180%);
-  -webkit-backdrop-filter: blur(10px) saturate(180%);
+  background:
+    radial-gradient(circle at top, rgba(15, 23, 42, 0.08), transparent 40%),
+    rgba(248, 250, 252, 0.72);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
   display: flex; /* добавляем flex для центрирования */
   align-items: center;
   justify-content: center;
   z-index: 1000; /* убедитесь что z-index достаточный */
+  padding: 1.25rem;
 }
 
 .modal {
@@ -16,60 +19,65 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 46px 10px 10px;
-  /* max-height: 90vh;
-  width: 90%; */
-  color: var(--color-text-primary);
-  box-shadow: 0 4px 50px 0 var(--shadow);
-
-  border-radius: 18px;
-
-  box-shadow: inset 0 2px 6px var(--color-accent-hover);
-  /* Neon effect */
-  border: 2px solid var(--color-accent);
-  background:
-    linear-gradient(var(--color-bg-card), var(--color-bg-card)) padding-box,
-    linear-gradient(
-      135deg,
-      var(--color-accent-hover),
-      rgba(74, 86, 226, 0.3),
-      var(--color-accent-hover)
-    );
+  width: min(100%, 560px);
+  padding: 3.25rem 1.25rem 1.25rem;
+  color: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow:
+    0 24px 80px rgba(15, 23, 42, 0.18),
+    0 4px 18px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(18px);
 }
 
 .closeButton {
-  /* for centering the icon indside */
   display: flex;
   align-items: center;
   justify-content: center;
 
-  color: var(--color-text-primary);
+  color: #0f172a;
 
   z-index: 1;
 
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 12px;
+  right: 12px;
 
-  background: transparent;
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 9999px;
   cursor: pointer;
 
-  padding: 2px;
+  padding: 0;
   font-size: 18px; /* closeIcon size */
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
 
 .closeIcon {
   padding: 4px;
 }
 
-.closeButton:focus {
-  outline: none;
+.closeButton:hover {
+  transform: scale(1.03);
+  background: rgba(15, 23, 42, 0.07);
+  border-color: rgba(148, 163, 184, 0.42);
+}
+
+.closeButton:focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.24);
+  outline-offset: 2px;
 }
 
 .closeButton:hover > .closeIcon {
-  stroke: var(--logout-btn);
+  stroke: #0f172a;
 }
 .responsiveIcon {
   font-size: 20px;
@@ -78,12 +86,14 @@
 /* from 768px */
 @media screen and (min-width: 768px) {
   .modal {
-    padding: 64px 20px 20px;
+    width: min(100%, 580px);
+    padding: 3.75rem 1.5rem 1.5rem;
   }
   .closeButton {
-    top: 12px;
-    right: 12px;
-    padding: 2px;
+    width: 44px;
+    height: 44px;
+    top: 14px;
+    right: 14px;
     font-size: 24px;
   }
   .responsiveIcon {

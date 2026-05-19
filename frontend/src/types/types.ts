@@ -51,7 +51,7 @@ export interface TaskEvent extends BaseCalendarEvent {
 
 export interface HolidayEvent extends BaseCalendarEvent {
   eventType: 'holiday';
-  countryCode: string;
+  countryCode?: string;
   isPublic?: boolean;
 }
 
@@ -131,7 +131,7 @@ export interface Holiday {
   id: string;
   date: string;
   title: string;
-  countryCode: string;
+  countryCode?: string;
   eventType: 'holiday';
 }
 
@@ -215,6 +215,7 @@ export interface AIResponse {
   event?: {
     title: string;
     description?: string;
+    eventType?: 'task' | 'meeting' | 'reminder';
     startDate: string; // ISO date
     endDate: string; // ISO date
     startTime: string; // HH:MM
@@ -341,22 +342,35 @@ export interface Theme {
 }
 
 // Export common type guards
-export const isCalendarEvent = (obj: any): obj is CalendarEvent => {
+export const isCalendarEvent = (obj: unknown): obj is CalendarEvent => {
+  if (typeof obj !== 'object' || obj === null) {
+    return false;
+  }
+
+  const candidate = obj as Record<string, unknown>;
   return (
-    obj &&
-    typeof obj.id === 'string' &&
-    typeof obj.date === 'string' &&
-    typeof obj.title === 'string' &&
-    typeof obj.eventType === 'string'
+    typeof candidate.id === 'string' &&
+    typeof candidate.date === 'string' &&
+    typeof candidate.title === 'string' &&
+    typeof candidate.eventType === 'string'
   );
 };
 
-export const isAIResponse = (obj: any): obj is AIResponse => {
-  return obj && typeof obj.message === 'string' && typeof obj.action === 'string';
+export const isAIResponse = (obj: unknown): obj is AIResponse => {
+  if (typeof obj !== 'object' || obj === null) {
+    return false;
+  }
+
+  const candidate = obj as Record<string, unknown>;
+  return typeof candidate.message === 'string' && typeof candidate.action === 'string';
+};
+
+type AIEventInput = Partial<NonNullable<AIResponse['event']>> & {
+  eventType?: string;
 };
 
 // Function to convert AI event data to CalendarEvent
-export const convertAIEventToCalendarEvent = (aiEvent: any): CalendarEvent => {
+export const convertAIEventToCalendarEvent = (aiEvent: AIEventInput): CalendarEvent => {
   // Extract date from startDate (convert AI returns date type ISO to YYYY-MM-DD)
   const date = aiEvent.startDate
     ? aiEvent.startDate.split('T')[0]
@@ -420,7 +434,7 @@ export const convertAIEventToCalendarEvent = (aiEvent: any): CalendarEvent => {
 };
 
 // Helper function to determine event type from AI data
-const determineEventTypeFromAI = (aiEvent: any): EventType => {
+const determineEventTypeFromAI = (aiEvent: AIEventInput): EventType => {
   const title = (aiEvent.title || '').toLowerCase();
 
   // Check for keywords in title

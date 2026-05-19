@@ -1,0 +1,107 @@
+.toolbarCard,
+.notificationCard {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+}
+
+.toolbarCard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.sectionLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.sectionTitle {
+  margin-top: 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: #0f172a;
+}
+
+.toggleRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.05);
+  padding: 0.7rem 0.9rem;
+  color: #334155;
+}
+
+.toggleRow input {
+  accent-color: #0f172a;
+}
+
+.notificationList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notificationCard {
+  display: flex;
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.notificationDot {
+  width: 0.75rem;
+  height: 0.75rem;
+  margin-top: 0.4rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.35);
+}
+
+.notificationDot[data-unread='true'] {
+  background: linear-gradient(180deg, #0f172a 0%, #334155 100%);
+  box-shadow: 0 0 0 5px rgba(15, 23, 42, 0.08);
+}
+
+.notificationBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.notificationHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.notificationTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.notificationDetail {
+  color: #64748b;
+}
+
+.group {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.06);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #334155;
+  white-space: nowrap;
+}

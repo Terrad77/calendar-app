@@ -1,0 +1,115 @@
+.dayCell {
+  min-height: var(--calendar-day-cell-min-height, 120px);
+  padding: 8px;
+  text-align: left;
+  position: relative;
+  font-size: 0.92rem;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  transition: all 0.2s ease;
+}
+
+.dayCell:hover {
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+}
+
+.dayCell .dayNumberAndMonth {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 6px;
+}
+
+.dayCell .taskCount {
+  color: #6b7280;
+  font-size: 0.72rem;
+}
+
+.dayCell .tasksContainer {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-right: 2px;
+  overflow-x: hidden;
+}
+
+.dayCell.isOutsideMonth {
+  background-color: rgba(249, 250, 251, 0.95);
+  color: #9ca3af;
+}
+
+.dayCell.isOutsideMonth .dayNumber,
+.dayCell.isOutsideMonth .monthAbbr {
+  color: #9ca3af;
+}
+
+.dayCell:not(.isOutsideMonth) {
+  background-color: rgba(255, 255, 255, 0.92);
+  color: #374151;
+}
+
+.dayCell:not(.isOutsideMonth) .dayNumber {
+  color: #374151;
+}
+
+.dayCell:not(.isOutsideMonth) .monthAbbr {
+  color: #4b5563;
+}
+
+.dayCell.isToday {
+  border-color: rgba(59, 130, 246, 0.35);
+  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.14);
+}
+
+.dayCell.isDragOver {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
+  background-color: rgba(239, 246, 255, 0.95);
+}
+
+.dayCell.isFiller {
+  background-color: rgba(249, 250, 251, 0.9);
+  color: #d1d5db;
+  opacity: 0.75;
+}
+
+.dayCell.isPastDate {
+  opacity: 0.65;
+  background-color: rgba(243, 244, 246, 0.92);
+}
+
+.dayCell:not(.isInteractive) {
+  cursor: default;
+  pointer-events: none;
+}
+
+.holidayName {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #be123c;
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background-color: rgba(255, 228, 230, 0.85);
+  border: 1px solid rgba(251, 113, 133, 0.35);
+  text-align: left;
+  white-space: wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dayNumber {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dayNumber.isToday {
+  color: #fff;
+  background-color: #2563eb;
+  border-radius: 50%;
+  padding: 3px 7px;
+  font-size: 0.9em;
+}

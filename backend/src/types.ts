@@ -15,7 +15,7 @@ export interface BackendHoliday {
   date: string;
   title: string;
   countryCode: string;
-  eventType: "holiday";
+  eventType: 'holiday';
 }
 
 // Інтерфейс CalendarEvent для даних, які приходять з ФРОНТЕНДУ на БЕКЕНД
@@ -33,14 +33,25 @@ export interface CalendarEvent {
 }
 // Інтерфейс відповіді від AI асистента
 export interface AIResponse {
-  action: "create" | "update" | "delete" | "query" | "analyze";
-  event?: CalendarEvent;
+  action: 'create' | 'update' | 'delete' | 'query' | 'analyze';
+  event?: {
+    title: string;
+    description?: string;
+    eventType?: 'task' | 'meeting' | 'reminder';
+    startDate: string;
+    endDate?: string;
+    startTime?: string;
+    endTime?: string;
+    location?: string;
+    participants?: string[];
+    color?: string;
+  };
   message: string;
   events?: CalendarEvent[];
 }
 // Інтерфейс для повідомлень в історії розмови з AI
 export interface ConversationMessage {
-  role: "user" | "assistant";
+  role: 'user' | 'assistant';
   content: string;
 }
 // Інтерфейс для запиту на аналіз розкладу

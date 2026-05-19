@@ -17,9 +17,12 @@ export default defineConfig(({ mode }) => {
       },
     },
 
+    logLevel: 'info', // Set to 'info' to see the server URL and startup messages
     server: {
+      host: 'localhost', // Explicitly set host to localhost for development
       port: 5173,
       strictPort: true,
+      clearScreen: false, // Prevent terminal clearing on restart
 
       proxy: {
         // Proxy API calls to backend — avoids CORS in development
@@ -47,21 +50,5 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-
-    // Suppress noisy source map warnings from browser extensions (React DevTools)
-    logLevel: 'warn',
   };
 });
-
-// import { defineConfig } from 'vite';
-// import react from '@vitejs/plugin-react';
-
-// // https://vite.dev/config/
-// export default defineConfig({
-//   plugins: [react()],
-//   define: {
-//     'import.meta.env.VITE_BACKEND_API_BASE_URL': JSON.stringify(
-//       process.env.VITE_BACKEND_API_BASE_URL
-//     ),
-//   },
-// });

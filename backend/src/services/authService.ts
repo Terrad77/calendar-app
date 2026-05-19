@@ -319,6 +319,114 @@ export class AuthService {
     return this.toPublicUser(user);
   }
 
+  async updateProfile(
+    userId: string,
+    data: { name?: string; theme?: string; language?: string; preferredCountry?: string }
+  ): Promise<User> {
+    const database = getDb();
+    const updates: Partial<typeof usersTable.$inferInsert> = {
+      updatedAt: new Date(),
+    };
+
+    if (data.name) {
+      updates.name = data.name;
+    }
+    if (data.theme) {
+      updates.theme = data.theme;
+    }
+    if (data.language) {
+      updates.language = data.language;
+    }
+    if (data.preferredCountry) {
+      updates.preferredCountry = data.preferredCountry;
+    }
+
+    const [updatedUser] = await database
+      .update(usersTable)
+      .set(updates)
+      .where(eq(usersTable.id, userId))
+      .returning();
+
+    if (!updatedUser) {
+      throw new Error('User not found');
+    }
+
+    return this.toPublicUser(updatedUser);
+  }
+
+  async changePassword(userId: string, oldPassword: string, newPassword: string): Promise<void> {
+    const database = getDb();
+
+    // Get user
+    const users = await database
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .limit(1);
+    const user = users[0];
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Check if user has a local password (not social login only)
+    if (!user.password) {
+      throw new Error('Cannot change password for social login accounts');
+    }
+
+    // Verify old password
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordValid) {
+      throw new Error('Current password is incorrect');
+    }
+
+    // Validate new password
+    const passwordValidation = AuthService.isValidPassword(newPassword);
+    if (!passwordValidation.valid) {
+      throw new Error(passwordValidation.message || 'Invalid password');
+    }
+
+    // Hash and update new password
+    const hashedPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await database
+      .update(usersTable)
+      .set({
+        password: hashedPassword,
+        updatedAt: new Date(),
+      })
+      .where(eq(usersTable.id, userId));
+  }
+
+  async deleteAccount(userId: string, password: string): Promise<void> {
+    const database = getDb();
+
+    // Get user
+    const users = await database
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, userId))
+      .limit(1);
+    const user = users[0];
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // If user has a password, verify it
+    if (user.password) {
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        throw new Error('Password is incorrect');
+      }
+    }
+
+    // Delete all refresh tokens
+    await database.delete(refreshTokensTable).where(eq(refreshTokensTable.userId, userId));
+
+    // Delete user
+    await database.delete(usersTable).where(eq(usersTable.id, userId));
+  }
+
   static isValidEmail(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);

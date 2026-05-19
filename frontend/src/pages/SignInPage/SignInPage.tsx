@@ -1,28 +1,39 @@
 import { Link } from 'react-router-dom';
-import Logo from '../../components/Logo/Logo';
+import { AuthPageShell } from '../../components/AuthPageShell/AuthPageShell';
 import SignInForm from '../../components/SignInForm/SignInForm';
-import css from '../SignInPage/SignInPage.module.css';
 import { useTranslation } from 'react-i18next';
+import styles from './SignInPage.module.css';
 
-import clsx from 'clsx';
-
-export default function SignIpPage() {
+export default function SignInPage() {
   const { t } = useTranslation(['auth', 'form']);
   return (
-    <div className={css.sectionContainer}>
-      <div className={css.logo}>
-        <Logo />
+    <AuthPageShell
+      eyebrow={t('welcome_back', { ns: 'auth' })}
+      title={t('signing_in', { ns: 'form' })}
+      description={t('signin_description', { ns: 'auth' })}
+      ctaLabel={t('do_not', { ns: 'auth' })}
+      ctaHref="/signup"
+      ctaNote={t('register_user', { ns: 'auth' })}
+      bullets={[
+        t('signin_bullet_1', { ns: 'auth' }),
+        t('signin_bullet_2', { ns: 'auth' }),
+        t('signin_bullet_3', { ns: 'auth' }),
+      ]}
+    >
+      <div className={styles.panelHeader}>
+        <p className={styles.panelEyebrow}>{t('secure_access', { ns: 'auth' })}</p>
+        <h2 className={styles.title}>{t('signing_in', { ns: 'form' })}</h2>
+        <p className={styles.subtitle}>{t('signin_subtitle', { ns: 'auth' })}</p>
       </div>
-      <div className={css.content}>
-        <h2 className={clsx(css.title)}>{t('signing_in', { ns: 'form' })}</h2>
-        <SignInForm />
-        <p className={css.notify}>
-          {t('do_not', { ns: 'auth' })}{' '}
-          <Link className={clsx(css.navLink)} to="/signup">
-            {t('register_user', { ns: 'auth' })}
-          </Link>
-        </p>
-      </div>
-    </div>
+
+      <SignInForm />
+
+      <p className={styles.notify}>
+        {t('do_not', { ns: 'auth' })}{' '}
+        <Link className={styles.navLink} to="/signup">
+          {t('register_user', { ns: 'auth' })}
+        </Link>
+      </p>
+    </AuthPageShell>
   );
 }

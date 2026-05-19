@@ -1,7 +1,8 @@
 import type { AsyncThunkConfig } from '@reduxjs/toolkit';
+import type { AppDispatch, RootState } from './storeTypes';
 
 export interface ThunkConfig<RejectValue = unknown> extends AsyncThunkConfig {
-  state: any;
-  dispatch: any;
+  state: RootState;
+  dispatch: AppDispatch;
   rejectValue: RejectValue;
 }

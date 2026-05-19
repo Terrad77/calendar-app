@@ -8,6 +8,9 @@ export interface User {
   isVerified: boolean;
   verificationToken?: string;
   verificationTokenExpiry?: number;
+  theme?: string;
+  language?: string;
+  preferredCountry?: string;
 }
 export interface SocialUserData {
   email: string;

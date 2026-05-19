@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background-color: aquamarine;
+  background-color: transparent;
 }
 
 @media screen and (min-width: 768px) {

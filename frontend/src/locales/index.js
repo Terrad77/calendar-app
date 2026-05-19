@@ -7,12 +7,17 @@ import enForm from './en/form.json';
 import enValidation from './en/validation.json';
 import enCommon from './en/common.json';
 import enCalendar from './en/calendar.json';
+import enNavigation from './en/navigation.json';
 
 import ukAuth from './uk/auth.json';
 import ukForm from './uk/form.json';
 import ukValidation from './uk/validation.json';
 import ukCommon from './uk/common.json';
 import ukCalendar from './uk/calendar.json';
+import ukNavigation from './uk/navigation.json';
+
+// Get saved language from localStorage or use default
+const savedLanguage = localStorage.getItem('language') || 'en';
 
 i18n.use(initReactI18next).init({
   resources: {
@@ -22,6 +27,7 @@ i18n.use(initReactI18next).init({
       validation: enValidation,
       common: enCommon,
       calendar: enCalendar,
+      navigation: enNavigation,
     },
     uk: {
       auth: ukAuth,
@@ -29,11 +35,12 @@ i18n.use(initReactI18next).init({
       validation: ukValidation,
       common: ukCommon,
       calendar: ukCalendar,
+      navigation: ukNavigation,
     },
   },
-  lng: 'en', // default language
+  lng: savedLanguage, // Use saved language or default to 'en'
   fallbackLng: 'en',
-  ns: ['auth', 'form', 'validation', 'common', 'calendar'],
+  ns: ['auth', 'form', 'validation', 'common', 'calendar', 'navigation'],
   defaultNS: 'common',
   interpolation: {
     escapeValue: false, // React already safes from XSS

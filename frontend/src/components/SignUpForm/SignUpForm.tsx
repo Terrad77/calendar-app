@@ -1,9 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import css from './SignUpForm.module.css';
-import Icon from '../Icon';
-import clsx from 'clsx';
 import { useDispatch, useSelector } from 'react-redux';
 import { registerUser } from '../../redux/user/operations';
 import GoogleAuthBtn from '../GoogleAuthBtn/GoogleAuthBtn';
@@ -17,6 +14,8 @@ import { SignUpFormData, RegisterError } from '../../types/types';
 import toast from 'react-hot-toast';
 import { AppDispatch } from '../../redux/types';
 import { useTogglePassword } from '../../hooks/useTogglePassword';
+import { Eye, EyeOff } from 'lucide-react';
+import styles from './SignUpForm.module.css';
 
 export default function SignUpForm() {
   const dispatch = useDispatch<AppDispatch>();
@@ -73,37 +72,36 @@ export default function SignUpForm() {
           <SignUpModal />
         </Modal>
       )}
-      <form className={css.form} onSubmit={handleSubmit(handleFormSubmit)}>
-        <div className={clsx(css.inputGroup)}>
-          {/* Email field */}
+      <form className={styles.form} onSubmit={handleSubmit(handleFormSubmit)}>
+        <div className={styles.inputGroup}>
           <label htmlFor="email">{t('email_user', { ns: 'form' })}</label>
           <input
             type="text"
             placeholder={t('enter_email', { ns: 'form' })}
             autoComplete="off"
-            className={clsx(css.inputGroupInput, errors.email && css.inputError)}
+            className={`${styles.inputGroupInput} ${errors.email ? styles.inputError : ''}`}
             {...register('email')}
           />
           {errors.email && (
-            <p className={css.error}>
+            <p className={styles.error}>
               {t(errors.email.message || 'email_required', { ns: 'validation' })}
             </p>
           )}
         </div>
-        <div className={clsx(css.inputGroup)}>
-          {/* Password field */}
+
+        <div className={styles.inputGroup}>
           <label htmlFor="password">{t('password_user', { ns: 'form' })}</label>
-          <div className={css.passwordContainer}>
+          <div className={styles.passwordContainer}>
             <input
               type={passwordField.inputType}
               placeholder={t('enter_password', { ns: 'form' })}
               autoComplete="new-password"
-              className={clsx(css.inputGroupInput, errors.password && css.inputError)}
+              className={`${styles.inputGroupInput} ${errors.password ? styles.inputError : ''}`}
               {...register('password')}
             />
             <button
               type="button"
-              className={clsx(css.passwordToggle, 'no-transform')}
+              className={styles.passwordToggle}
               onClick={(e) => {
                 e.stopPropagation();
                 passwordField.toggle();
@@ -111,29 +109,33 @@ export default function SignUpForm() {
               tabIndex={-1}
               aria-label={passwordField.ariaLabel}
             >
-              <Icon className={css.icon} name={passwordField.iconName} />
+              {passwordField.inputType === 'password' ? (
+                <Eye className={styles.icon} />
+              ) : (
+                <EyeOff className={styles.icon} />
+              )}
             </button>
           </div>
           {errors.password && (
-            <p className={css.error}>
+            <p className={styles.error}>
               {t(errors.password.message || 'password_required', { ns: 'validation' })}
             </p>
           )}
         </div>
-        <div className={clsx(css.inputGroup)}>
-          {/* Repeat Password field */}
+
+        <div className={styles.inputGroup}>
           <label htmlFor="repeatPassword">{t('repeat_password', { ns: 'form' })}</label>
-          <div className={css.passwordContainer}>
+          <div className={styles.passwordContainer}>
             <input
               type={repeatPasswordField.inputType}
               placeholder={t('repeat_password_placeholder', { ns: 'form' })}
               autoComplete="password-confirmation"
+              className={`${styles.inputGroupInput} ${errors.repeatPassword ? styles.inputError : ''}`}
               {...register('repeatPassword')}
-              className={clsx(css.inputGroupInput, errors.repeatPassword && css.inputError)}
             />
             <button
               type="button"
-              className={clsx(css.passwordToggle, 'no-transform')}
+              className={styles.passwordToggle}
               onClick={(e) => {
                 e.stopPropagation();
                 repeatPasswordField.toggle();
@@ -141,24 +143,30 @@ export default function SignUpForm() {
               tabIndex={-1}
               aria-label={repeatPasswordField.ariaLabel}
             >
-              <Icon className={css.icon} name={repeatPasswordField.iconName} />
+              {repeatPasswordField.inputType === 'password' ? (
+                <Eye className={styles.icon} />
+              ) : (
+                <EyeOff className={styles.icon} />
+              )}
             </button>
           </div>
           {errors.repeatPassword && (
-            <p className={css.error}>
+            <p className={styles.error}>
               {t(errors.repeatPassword.message || 'passwords_must_match', { ns: 'validation' })}
             </p>
           )}
         </div>
 
-        <button className={clsx(css.submitButton)} type="submit" disabled={!isValid || isLoading}>
+        <button className={styles.submitButton} type="submit" disabled={!isValid || isLoading}>
           {isLoading ? (
             <DotLoader text={t('signing_up', { ns: 'form' })} />
           ) : (
-            t('register_user', { ns: 'form' })
+            t('register_user', { ns: 'auth' })
           )}
         </button>
-        <GoogleAuthBtn />
+        <div className={styles.googleAuthWrapper}>
+          <GoogleAuthBtn />
+        </div>
       </form>
     </>
   );

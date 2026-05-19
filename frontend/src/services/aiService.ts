@@ -1,4 +1,5 @@
 import type { CalendarEvent, AIResponse, ConversationMessage } from '../types/types';
+import { authenticationService } from './authService';
 
 const API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:3001';
 
@@ -7,6 +8,40 @@ class AIService {
   private retryAttempts = 0;
   private maxRetries = 3;
   private isCheckingHealth = false;
+
+  // Try to read token from various storage locations (auth service, localStorage, redux-persist)
+  private getStoredToken(): string | null {
+    try {
+      const fromAuthService = authenticationService.getAccessToken();
+      if (fromAuthService) return fromAuthService;
+
+      const accessToken =
+        localStorage.getItem('accessToken') ||
+        localStorage.getItem('token') ||
+        localStorage.getItem('authToken');
+      if (accessToken && accessToken !== 'null') return accessToken;
+
+      const persist = localStorage.getItem('persist:user');
+      if (persist) {
+        try {
+          const parsed = JSON.parse(persist);
+          // redux-persist stores reducer state as JSON strings under keys
+          const stateStr = parsed.user || parsed.auth || parsed;
+          if (typeof stateStr === 'string') {
+            const inner = JSON.parse(stateStr);
+            return inner.accessToken || inner.token || inner.authToken || null;
+          }
+          return (parsed.accessToken as string) || (parsed.token as string) || null;
+        } catch (_e) {
+          // ignore parse errors
+        }
+      }
+    } catch (_err) {
+      // ignore
+    }
+
+    return null;
+  }
 
   /**
    * Helper function for retrying failed requests with exponential backoff
@@ -22,9 +57,6 @@ class AIService {
       // If we get a 503, retry with exponential backoff
       if (response.status === 503 && retryCount < this.maxRetries) {
         const delay = Math.pow(2, retryCount) * 1000; // 2^retryCount seconds
-        console.log(
-          `Retrying request in ${delay}ms (attempt ${retryCount + 1}/${this.maxRetries})`
-        );
 
         await new Promise((resolve) => setTimeout(resolve, delay));
         return this.fetchWithRetry(url, options, retryCount + 1);
@@ -35,7 +67,6 @@ class AIService {
       // For network errors, also retry
       if (retryCount < this.maxRetries) {
         const delay = Math.pow(2, retryCount) * 1000;
-        console.log(`Network error, retrying in ${delay}ms`);
 
         await new Promise((resolve) => setTimeout(resolve, delay));
         return this.fetchWithRetry(url, options, retryCount + 1);
@@ -55,7 +86,7 @@ class AIService {
     }
 
     try {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const token = this.getStoredToken();
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
       };
@@ -77,8 +108,6 @@ class AIService {
 
       // Reset retry attempts on successful response
       this.retryAttempts = 0;
-
-      console.log('AI chat response status:', response.status);
 
       if (response.status === 401) {
         throw new Error('AUTH_REQUIRED');
@@ -145,7 +174,7 @@ class AIService {
     }
 
     try {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('token');
+      const token = this.getStoredToken();
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
       };
@@ -165,8 +194,6 @@ class AIService {
 
       // Reset retry attempts on successful response
       this.retryAttempts = 0;
-
-      console.log('AI analyze schedule response status:', response.status);
 
       if (response.status === 503) {
         this.retryAttempts++;
@@ -211,8 +238,6 @@ class AIService {
     this.isCheckingHealth = true;
 
     try {
-      console.log('Checking AI service health at:', `${API_URL}/api/ai/health`);
-
       // Use a timeout for health check
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -227,8 +252,6 @@ class AIService {
 
       clearTimeout(timeoutId);
 
-      console.log('Health check response status:', response.status);
-
       if (!response.ok) {
         throw new Error(
           `AI service health check failed: ${response.status} ${response.statusText}`
@@ -236,7 +259,6 @@ class AIService {
       }
 
       const data = await response.json();
-      console.log('Health check data:', data);
 
       this.isCheckingHealth = false;
       return {

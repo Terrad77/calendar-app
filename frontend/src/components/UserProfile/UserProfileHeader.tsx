@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { styled } from '@stitches/react';
-import { logout } from '../../redux/user/operations';
+import { logOut } from '../../redux/user/operations';
 import { selectUser } from '../../redux/user/selectors';
 import { useAppDispatch } from '../../redux/hooks';
+import ChangePasswordModal from '../ChangePasswordModal/ChangePasswordModal';
+import DeleteAccountModal from '../DeleteAccountModal/DeleteAccountModal';
 
 const HeaderContainer = styled('div', {
   position: 'relative',
@@ -120,8 +122,23 @@ const Divider = styled('div', {
   margin: '8px 0',
 });
 
+const ModalOverlay = styled('div', {
+  position: 'fixed',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  background: 'rgba(0, 0, 0, 0.5)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 2000,
+});
+
 export const UserProfileHeader = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -144,7 +161,7 @@ export const UserProfileHeader = () => {
   }, [isOpen]);
 
   const handleLogout = async () => {
-    await dispatch(logout());
+    await dispatch(logOut());
     navigate('/');
   };
 
@@ -161,54 +178,90 @@ export const UserProfileHeader = () => {
     .slice(0, 2);
 
   return (
-    <HeaderContainer ref={dropdownRef}>
-      <UserButton onClick={() => setIsOpen(!isOpen)}>
-        <Avatar>{initials}</Avatar>
-        <UserInfo>
-          <UserName>{user.name}</UserName>
-          <UserEmail>{user.email}</UserEmail>
-        </UserInfo>
-        <span style={{ fontSize: '12px', color: '#6b7280' }}>{isOpen ? '▲' : '▼'}</span>
-      </UserButton>
+    <>
+      <HeaderContainer ref={dropdownRef}>
+        <UserButton onClick={() => setIsOpen(!isOpen)}>
+          <Avatar>{initials}</Avatar>
+          <UserInfo>
+            <UserName>{user.name}</UserName>
+            <UserEmail>{user.email}</UserEmail>
+          </UserInfo>
+          <span style={{ fontSize: '12px', color: '#6b7280' }}>{isOpen ? '▲' : '▼'}</span>
+        </UserButton>
 
-      {isOpen && (
-        <Dropdown>
-          <DropdownItem onClick={() => setIsOpen(false)}>
-            <span>👤</span>
-            <div>
-              <div style={{ fontWeight: 600 }}>{user.name}</div>
-              <div style={{ fontSize: '12px', color: '#6b7280' }}>{user.email}</div>
-            </div>
-          </DropdownItem>
+        {isOpen && (
+          <Dropdown>
+            <DropdownItem onClick={() => setIsOpen(false)}>
+              <span>👤</span>
+              <div>
+                <div style={{ fontWeight: 600 }}>{user.name}</div>
+                <div style={{ fontSize: '12px', color: '#6b7280' }}>{user.email}</div>
+              </div>
+            </DropdownItem>
 
-          <Divider />
+            <Divider />
 
-          <DropdownItem
-            onClick={() => {
-              /* Add settings handler */
-            }}
-          >
-            <span>⚙️</span>
-            <span>Settings</span>
-          </DropdownItem>
+            <DropdownItem
+              onClick={() => {
+                setIsChangePasswordOpen(true);
+                setIsOpen(false);
+              }}
+            >
+              <span>🔐</span>
+              <span>Change Password</span>
+            </DropdownItem>
 
-          <DropdownItem
-            onClick={() => {
-              /* Add help handler */
-            }}
-          >
-            <span>❓</span>
-            <span>Help & Support</span>
-          </DropdownItem>
+            <DropdownItem
+              onClick={() => {
+                /* Add help handler */
+              }}
+            >
+              <span>❓</span>
+              <span>Help & Support</span>
+            </DropdownItem>
 
-          <Divider />
+            <Divider />
 
-          <DropdownItem variant="danger" onClick={handleLogout}>
-            <span>🚪</span>
-            <span>Logout</span>
-          </DropdownItem>
-        </Dropdown>
+            <DropdownItem variant="danger" onClick={handleLogout}>
+              <span>🚪</span>
+              <span>Logout</span>
+            </DropdownItem>
+
+            <DropdownItem
+              variant="danger"
+              onClick={() => {
+                setIsDeleteAccountOpen(true);
+                setIsOpen(false);
+              }}
+            >
+              <span>🗑️</span>
+              <span>Delete Account</span>
+            </DropdownItem>
+          </Dropdown>
+        )}
+      </HeaderContainer>
+
+      {isChangePasswordOpen && (
+        <ModalOverlay onClick={() => setIsChangePasswordOpen(false)}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <ChangePasswordModal
+              isOpen={isChangePasswordOpen}
+              onClose={() => setIsChangePasswordOpen(false)}
+            />
+          </div>
+        </ModalOverlay>
       )}
-    </HeaderContainer>
+
+      {isDeleteAccountOpen && (
+        <ModalOverlay onClick={() => setIsDeleteAccountOpen(false)}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <DeleteAccountModal
+              isOpen={isDeleteAccountOpen}
+              onClose={() => setIsDeleteAccountOpen(false)}
+            />
+          </div>
+        </ModalOverlay>
+      )}
+    </>
   );
 };

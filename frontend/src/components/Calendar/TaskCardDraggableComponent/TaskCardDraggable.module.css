@@ -1,0 +1,96 @@
+.taskMarker {
+  width: 24px;
+  height: 5px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.taskMarker.colorDefault {
+  background-color: #a0a0a0;
+}
+
+.taskMarker.colorRed {
+  background-color: #f05050;
+}
+
+.taskMarker.colorYellow {
+  background-color: #f2d200;
+}
+
+.taskMarker.colorGreen {
+  background-color: #62c050;
+}
+
+.taskCard {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: #1f2937;
+  margin-bottom: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+  transition: all 0.2s ease-in-out;
+}
+
+.taskCard:last-child {
+  margin-bottom: 0;
+}
+
+.taskCard .taskTitle {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: wrap;
+}
+
+.taskCard.eventTypeTask {
+  background-color: rgba(239, 246, 255, 0.9);
+}
+
+.taskCard.eventTypeTask:hover {
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+}
+
+.taskCard.eventTypeHoliday {
+  color: #be123c;
+  background-color: rgba(255, 241, 242, 0.92);
+  border-color: rgba(251, 113, 133, 0.35);
+  box-shadow: 0 3px 12px rgba(225, 29, 72, 0.14);
+}
+
+.taskCard.colorDefault {
+  border-color: #a0a0a0;
+}
+
+.taskCard.colorRed {
+  border-color: #f05050;
+}
+
+.taskCard.colorYellow {
+  border-color: #f2d200;
+}
+
+.taskCard.colorGreen {
+  border-color: #62c050;
+}
+
+.taskCard.isDragging {
+  opacity: 0.7;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.2);
+}
+
+.taskCard.cursorPointer {
+  cursor: pointer;
+}
+
+.taskCard.cursorDefault {
+  cursor: default;
+}
+
+.taskCard.cursorGrabbing {
+  cursor: grabbing;
+}

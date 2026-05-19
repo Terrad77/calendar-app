@@ -2,12 +2,12 @@ import React, { useMemo } from 'react';
 import { styled } from '@stitches/react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { CalendarEvent } from '../../types/types';
+import type { CalendarEvent } from '../../../types/types';
 
 const TaskMarker = styled('span', {
-  width: '24px',
-  height: '5px',
-  borderRadius: '6px',
+  width: '12px',
+  height: '3px',
+  borderRadius: '4px',
   flexShrink: 0,
   variants: {
     color: {
@@ -21,12 +21,12 @@ const TaskMarker = styled('span', {
 
 const TaskCard = styled('div', {
   backgroundColor: 'rgba(255,255,255,0.95)',
-  borderRadius: '10px',
-  padding: '8px 10px',
-  fontSize: '0.74rem',
+  borderRadius: '8px',
+  padding: '6px 8px',
+  fontSize: '0.7rem',
   fontWeight: '500',
   color: '#1f2937',
-  marginBottom: '6px',
+  marginBottom: '4px',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   border: '1px solid rgba(148,163,184,0.22)',
@@ -41,7 +41,7 @@ const TaskCard = styled('div', {
     flexGrow: 1,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    whiteSpace: 'wrap',
+    whiteSpace: 'nowrap',
   },
   variants: {
     eventType: {
@@ -97,6 +97,7 @@ interface TaskCardDraggableProps {
   onCardClick?: (e: React.MouseEvent, event: CalendarEvent) => void;
   isDragging?: boolean;
   customCursor?: 'pointer' | 'default' | 'grabbing';
+  compact?: boolean;
 }
 
 export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
@@ -104,6 +105,7 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
   onCardClick,
   customCursor: propCustomCursor,
   isDragging: propIsDragging,
+  compact,
 }) => {
   const {
     attributes,
@@ -152,6 +154,7 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
       isDragging={renderIsDragging}
       customCursor={finalCustomCursor}
       onClick={onCardClick !== undefined ? (e) => onCardClick(e, event) : undefined}
+      data-compact={compact ? 'true' : 'false'}
     >
       {event.eventType === 'task' ? (
         <div style={{ display: 'flex', gap: '4px' }}>
@@ -164,10 +167,20 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
 
       <span className="task-title">{event.title}</span>
 
-      {/* description only for tasks */}
-      {event.eventType === 'task' && event.description && (
-        <p style={{ fontSize: '0.66rem', color: '#6b7280', marginTop: '4px' }}>
-          {event.description}
+      {/* description preview (single line) only for tasks when not in compact mode */}
+      {event.eventType === 'task' && !compact && event.description && (
+        <p
+          style={{
+            fontSize: '0.66rem',
+            color: '#6b7280',
+            marginTop: '4px',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            marginBottom: 0,
+          }}
+        >
+          {String(event.description).split('\n')[0]}
         </p>
       )}
 

@@ -5,8 +5,12 @@ import SignUpPage from './pages/SignUpPage/SignUpPage';
 import SignInPage from './pages/SignInPage/SignInPage';
 import AuthSuccessPage from './pages/AuthSuccessPage/AuthSuccessPage';
 import HomePage from './pages/HomePage/HomePage'; // main calendar page
+import AnalyticsPage from './pages/AnalyticsPage/AnalyticsPage';
+import ContactsPage from './pages/ContactsPage/ContactsPage';
+import NotificationsPage from './pages/NotificationsPage/NotificationsPage';
+import SettingsPage from './pages/SettingsPage/SettingsPage';
 // import { authenticationService } from './services/authService';
-import { AIAssistant } from './components/AIAssistant/AIAssistant';
+import { AIAssistantDrawer } from './components/AIAssistant/AIAssistantDrawer';
 import { Layout } from './components/Layout/Layout';
 import type { CalendarEvent } from './types/types';
 import { useSelector } from 'react-redux';
@@ -19,6 +23,8 @@ import {
   updateCalendarEvent,
 } from './API/apiOperations';
 import './App.css';
+
+const syncInFlightOperations = new Set<string>();
 
 // Protected Route wrapper component
 interface ProtectedRouteProps {
@@ -62,8 +68,20 @@ function App() {
   const isAuthenticated = useSelector(selectIsLoggedIn);
 
   const eventsEqual = (left: CalendarEvent, right: CalendarEvent) => {
-    const leftAny = left as any;
-    const rightAny = right as any;
+    const leftParticipants = 'participants' in left ? left.participants : undefined;
+    const rightParticipants = 'participants' in right ? right.participants : undefined;
+
+    const leftReminderTime = 'reminderTime' in left ? left.reminderTime : null;
+    const rightReminderTime = 'reminderTime' in right ? right.reminderTime : null;
+
+    const leftIsRecurring = 'isRecurring' in left ? left.isRecurring : null;
+    const rightIsRecurring = 'isRecurring' in right ? right.isRecurring : null;
+
+    const leftCompleted = 'completed' in left ? left.completed : null;
+    const rightCompleted = 'completed' in right ? right.completed : null;
+
+    const leftPriority = 'priority' in left ? left.priority : null;
+    const rightPriority = 'priority' in right ? right.priority : null;
 
     return (
       left.id === right.id &&
@@ -76,13 +94,11 @@ function App() {
       left.location === right.location &&
       left.countryCode === right.countryCode &&
       JSON.stringify(left.colors || []) === JSON.stringify(right.colors || []) &&
-      JSON.stringify(leftAny.participants || []) === JSON.stringify(rightAny.participants || []) &&
-      JSON.stringify(leftAny.reminderTime ?? null) ===
-        JSON.stringify(rightAny.reminderTime ?? null) &&
-      JSON.stringify(leftAny.isRecurring ?? null) ===
-        JSON.stringify(rightAny.isRecurring ?? null) &&
-      JSON.stringify(leftAny.completed ?? null) === JSON.stringify(rightAny.completed ?? null) &&
-      JSON.stringify(leftAny.priority ?? null) === JSON.stringify(rightAny.priority ?? null)
+      JSON.stringify(leftParticipants || []) === JSON.stringify(rightParticipants || []) &&
+      JSON.stringify(leftReminderTime) === JSON.stringify(rightReminderTime) &&
+      JSON.stringify(leftIsRecurring) === JSON.stringify(rightIsRecurring) &&
+      JSON.stringify(leftCompleted) === JSON.stringify(rightCompleted) &&
+      JSON.stringify(leftPriority) === JSON.stringify(rightPriority)
     );
   };
 
@@ -97,11 +113,35 @@ function App() {
       return previousEvent ? !eventsEqual(previousEvent, event) : false;
     });
 
+    const uniqueOperation = (
+      operation: 'create' | 'update' | 'delete',
+      eventId: string,
+      handler: () => Promise<unknown>
+    ) => {
+      const key = `${operation}:${eventId}`;
+
+      if (syncInFlightOperations.has(key)) {
+        return Promise.resolve();
+      }
+
+      syncInFlightOperations.add(key);
+
+      return handler().finally(() => {
+        syncInFlightOperations.delete(key);
+      });
+    };
+
     try {
       await Promise.all([
-        ...createdEvents.map((event) => createCalendarEvent(event)),
-        ...updatedEvents.map((event) => updateCalendarEvent(event)),
-        ...deletedEvents.map((event) => deleteCalendarEvent(event.id)),
+        ...createdEvents.map((event) =>
+          uniqueOperation('create', event.id, () => createCalendarEvent(event))
+        ),
+        ...updatedEvents.map((event) =>
+          uniqueOperation('update', event.id, () => updateCalendarEvent(event))
+        ),
+        ...deletedEvents.map((event) =>
+          uniqueOperation('delete', event.id, () => deleteCalendarEvent(event.id))
+        ),
       ]);
     } catch (error) {
       console.error('Failed to sync calendar events with backend:', error);
@@ -120,9 +160,7 @@ function App() {
   useEffect(() => {
     const checkAIService = async () => {
       try {
-        console.log('Checking AI service health...');
         const health = await aiService.healthCheck();
-        console.log('AI Service Health:', health);
         setAiServiceStatus(health);
 
         if (!health.available) {
@@ -272,6 +310,50 @@ function App() {
           }
         />
 
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <AnalyticsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/contacts"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ContactsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <NotificationsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <SettingsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
         {/* Fallback route - redirect to appropriate page */}
         <Route
           path="*"
@@ -281,14 +363,14 @@ function App() {
         />
       </Routes>
 
-      {/* AI Assistant - only show when user is authenticated */}
-      {isAuthenticated && aiServiceStatus?.available && (
-        <AIAssistant
+      {/* AI Assistant - show for authenticated users and let the drawer handle availability */}
+      {isAuthenticated && (
+        <AIAssistantDrawer
           currentEvents={events}
           onEventCreate={handleEventCreate}
           onEventUpdate={handleEventUpdate}
           onEventDelete={handleEventDelete}
-          isServiceAvailable={aiServiceStatus.available}
+          isServiceAvailable={aiServiceStatus?.available ?? false}
         />
       )}
     </div>

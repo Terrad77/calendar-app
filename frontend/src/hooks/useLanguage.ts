@@ -6,7 +6,7 @@ import 'dayjs/locale/uk';
 import 'dayjs/locale/en';
 
 export const useLanguage = () => {
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation('common');
 
   // synchronization dayjs and language i18next
   useEffect(() => {
@@ -19,13 +19,23 @@ export const useLanguage = () => {
     i18n
       .changeLanguage(lng)
       .then(() => {
-        toast.success(`Language changed to ${lng === 'en' ? 'English' : 'Українська'}`);
+        // Save language to localStorage
+        localStorage.setItem('language', lng);
+        toast.success(lng === 'en' ? t('language_changed_en') : t('language_changed_uk'));
       })
-      .catch((error) => {
-        toast.error('Error changing language', error);
+      .catch(() => {
+        toast.error(t('error_changing_language'));
       });
   };
-  //
+
+  // Load saved language on mount
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('language');
+    if (savedLanguage && savedLanguage !== i18n.language) {
+      i18n.changeLanguage(savedLanguage);
+    }
+  }, [i18n]);
+
   const currentLanguage = i18n.language;
 
   return {

@@ -1,30 +1,39 @@
 import { NavLink } from 'react-router-dom';
-import Logo from '../../components/Logo/Logo';
+import { AuthPageShell } from '../../components/AuthPageShell/AuthPageShell';
 import SignUpForm from '../../components/SignUpForm/SignUpForm';
-import css from '../SignUpPage/SignUpPage.module.css';
 import { useTranslation } from 'react-i18next';
-import clsx from 'clsx';
+import styles from './SignUpPage.module.css';
 
 export default function SignUpPage() {
-  // Specify namespaces for translations
-  const { t, i18n } = useTranslation(['auth', 'form']);
+  const { t } = useTranslation(['auth', 'form']);
   return (
-    <div className={css.sectionContainer}>
-      <div className={css.logo}>
-        <Logo />
+    <AuthPageShell
+      eyebrow={t('signup_eyebrow', { ns: 'auth' })}
+      title={t('register_user', { ns: 'form' })}
+      description={t('signup_description', { ns: 'auth' })}
+      ctaLabel={t('already_have', { ns: 'auth' })}
+      ctaHref="/signin"
+      ctaNote={t('login_user', { ns: 'auth' })}
+      bullets={[
+        t('signup_bullet_1', { ns: 'auth' }),
+        t('signup_bullet_2', { ns: 'auth' }),
+        t('signup_bullet_3', { ns: 'auth' }),
+      ]}
+    >
+      <div className={styles.panelHeader}>
+        <p className={styles.panelEyebrow}>{t('create_account', { ns: 'auth' })}</p>
+        <h2 className={styles.title}>{t('register_user', { ns: 'form' })}</h2>
+        <p className={styles.subtitle}>{t('signup_subtitle', { ns: 'auth' })}</p>
       </div>
-      <div className={css.content}>
-        <h2 className={clsx(css.title, i18n.language === 'uk')}>
-          {t('register_user', { ns: 'form' })}
-        </h2>
-        <SignUpForm />
-        <p className={clsx(css.notify, i18n.language === 'uk')}>
-          {t('already_have', { ns: 'auth' })}{' '}
-          <NavLink className={clsx(css.navLink, i18n.language === 'uk')} to="/signin">
-            {t('login_user', { ns: 'auth' })}
-          </NavLink>
-        </p>
-      </div>
-    </div>
+
+      <SignUpForm />
+
+      <p className={styles.notify}>
+        {t('already_have', { ns: 'auth' })}{' '}
+        <NavLink className={styles.navLink} to="/signin">
+          {t('login_user', { ns: 'auth' })}
+        </NavLink>
+      </p>
+    </AuthPageShell>
   );
 }

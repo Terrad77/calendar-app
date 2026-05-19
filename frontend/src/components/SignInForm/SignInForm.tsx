@@ -1,10 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useNavigate } from 'react-router-dom';
-import css from '../SignInForm/SignInForm.module.css';
-import Icon from '../Icon';
-import clsx from 'clsx';
-import { loginUser } from '../../redux/user/operations';
+import { logIn } from '../../redux/user/operations';
 import { useDispatch, useSelector } from 'react-redux';
 import GoogleAuthBtn from '../GoogleAuthBtn/GoogleAuthBtn';
 import { selectIsLoading } from '../../redux/user/selectors';
@@ -15,6 +12,8 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { AppDispatch } from '../../redux/types';
 import { useTogglePassword } from '../../hooks/useTogglePassword';
+import { Eye, EyeOff } from 'lucide-react';
+import styles from './SignInForm.module.css';
 
 export default function SignInForm() {
   const dispatch = useDispatch<AppDispatch>();
@@ -38,18 +37,11 @@ export default function SignInForm() {
   // Form submission handler
   const handleFormSubmit = async (data: SignInFormData) => {
     try {
-      console.log('Starting login with data:', data);
-      const result = await dispatch(loginUser(data)).unwrap();
-      console.log('Login successful, result:', result);
+      await dispatch(logIn(data)).unwrap();
 
       toast.success(t('login_successful', { ns: 'common' }));
-
-      console.log('Before navigate - current path:', window.location.pathname);
       navigate('/');
-      console.log('After navigate - this should execute immediately');
     } catch (error: unknown) {
-      console.log('Login error details:', error);
-
       if (typeof error === 'object' && error !== null) {
         if ('message' in error) {
           const loginError = error as { message: string };
@@ -68,56 +60,57 @@ export default function SignInForm() {
   };
 
   return (
-    <form className={css.form} onSubmit={handleSubmit(handleFormSubmit)}>
-      {/* Email input field */}
-      <div className={clsx(css.inputGroup)}>
+    <form className={styles.form} onSubmit={handleSubmit(handleFormSubmit)}>
+      <div className={styles.inputGroup}>
         <label htmlFor="email-input">{t('email_user', { ns: 'form' })}</label>
         <input
           id="email-input"
-          className={clsx(css.inputGroupInput, errors.email && css.inputError)}
+          className={`${styles.inputGroupInput} ${errors.email ? styles.inputError : ''}`}
           type="text"
           placeholder={t('enter_email', { ns: 'form' })}
           autoComplete="email"
           {...register('email')}
         />
         {errors.email && (
-          <p className={css.error}>
+          <p className={styles.error}>
             {t(errors.email.message || 'email_required', { ns: 'validation' })}
           </p>
         )}
       </div>
 
-      {/* Password input field with visibility toggle */}
-      <div className={clsx(css.inputGroup)}>
+      <div className={styles.inputGroup}>
         <label htmlFor="password-input">{t('password_user', { ns: 'form' })}</label>
-        <div className={css.passwordContainer}>
+        <div className={styles.passwordContainer}>
           <input
             id="password-input"
             type={passwordField.inputType}
             placeholder={t('enter_password', { ns: 'form' })}
             autoComplete="current-password"
             {...register('password')}
-            className={clsx(css.inputGroupInput, errors.password && css.inputError)}
+            className={`${styles.inputGroupInput} ${errors.password ? styles.inputError : ''}`}
           />
           <button
             type="button"
-            className={clsx(css.passwordToggle, 'no-transform')}
+            className={styles.passwordToggle}
             onClick={passwordField.toggle}
             tabIndex={-1}
             aria-label={passwordField.ariaLabel}
           >
-            <Icon className={css.icon} name={passwordField.iconName} />
+            {passwordField.inputType === 'password' ? (
+              <Eye className={styles.icon} />
+            ) : (
+              <EyeOff className={styles.icon} />
+            )}
           </button>
         </div>
         {errors.password && (
-          <p className={css.error}>
+          <p className={styles.error}>
             {t(errors.password.message || 'password_required', { ns: 'validation' })}
           </p>
         )}
       </div>
 
-      {/* Submit button */}
-      <button type="submit" className={clsx(css.submitButton)} disabled={!isValid || isLoading}>
+      <button type="submit" className={styles.submitButton} disabled={!isValid || isLoading}>
         {isLoading ? (
           <DotLoader text={t('signing_in', { ns: 'form' })} />
         ) : (
@@ -125,8 +118,9 @@ export default function SignInForm() {
         )}
       </button>
 
-      {/* Google authentication button */}
-      <GoogleAuthBtn />
+      <div className={styles.googleAuthWrapper}>
+        <GoogleAuthBtn />
+      </div>
     </form>
   );
 }

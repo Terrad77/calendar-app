@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 type Theme = 'light' | 'dark';
 
 export const useTheme = () => {
+  const { t } = useTranslation('common');
   const [theme, setTheme] = useState<Theme>(() => {
     // Check saved theme from localStorage
     const savedTheme = localStorage.getItem('theme') as Theme;
@@ -45,9 +47,45 @@ export const useTheme = () => {
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
 
-    toast.success(`Theme changed to ${newTheme === 'dark' ? '🌙 Dark' : '☀️ Light'}`);
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
+    toast.success(newTheme === 'dark' ? t('theme_changed_dark') : t('theme_changed_light'));
+    setTheme(newTheme);
+
+    // notify other listeners in same window
+    try {
+      const ev = new CustomEvent('themechange', { detail: { theme: newTheme } });
+      window.dispatchEvent(ev);
+    } catch (e) {
+      // fallback: no-op
+    }
   };
+
+  // Keep multiple hook instances in sync across same-window and cross-window changes
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'theme') {
+        const val = (e.newValue || 'light') as Theme;
+        setTheme((prev) => (prev === val ? prev : val));
+      }
+    };
+
+    const onThemeChange = (e: Event) => {
+      try {
+        const detail = (e as CustomEvent)?.detail;
+        const val = (detail && detail.theme) || (localStorage.getItem('theme') as Theme) || 'light';
+        setTheme((prev) => (prev === val ? prev : val));
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('themechange', onThemeChange as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('themechange', onThemeChange as EventListener);
+    };
+  }, []);
 
   return {
     theme,

@@ -4,40 +4,6 @@
   flex-direction: column;
 }
 
-.floatingControls {
-  display: flex;
-  position: sticky;
-  top: 0;
-
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-
-  padding: var(--space-sm);
-
-  margin-bottom: 40px;
-
-  background: var(--color-bg-primary);
-
-  z-index: 100;
-  border-bottom: 1px solid var(--color-border);
-  min-height: 60px;
-}
-
 .content {
-  flex: 1; /* Take all remaining space */
-  padding: 2px; /* prevents content sticky to sides */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* from 0 to 768px */
-@media (max-width: 768px) {
-  .floatingControls {
-    gap: var(--space-xs);
-    padding: var(--space-xs);
-    margin-bottom: 10px;
-    min-height: 50px;
-  }
+  margin-top: 2px;
 }

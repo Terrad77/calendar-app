@@ -1,4 +1,14 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import {
+  registerUser,
+  logIn,
+  logOut,
+  refreshUserToken,
+  fetchUser,
+  changePassword,
+  deleteAccount,
+  saveLanguageAndCountry,
+} from './operations';
 
 export interface User {
   id: string;
@@ -6,6 +16,8 @@ export interface User {
   email: string;
   avatarURL?: string;
   theme?: string;
+  language?: string;
+  preferredCountry?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -28,6 +40,12 @@ const initialState: UserState = {
   isRefreshing: false,
   isLoading: false,
   error: null,
+};
+
+type AuthPayload = {
+  user: User;
+  token: string;
+  refreshToken: string;
 };
 
 // --- Helpers ---
@@ -72,7 +90,7 @@ const userSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase('user/register/fulfilled', (state, action: any) => {
+      .addCase(registerUser.fulfilled, (state, action: PayloadAction<AuthPayload>) => {
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
@@ -81,18 +99,17 @@ const userSlice = createSlice({
         localStorage.setItem('accessToken', action.payload.token);
         localStorage.setItem('refreshToken', action.payload.refreshToken);
       })
-      .addCase('user/register/rejected', (state, action: any) => {
+      .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
-        state.error = action.payload || 'Registration failed';
+        state.error = action.payload?.message || action.error?.message || 'Registration failed';
       })
 
       // Login
-      .addCase('user/login/pending', (state) => {
+      .addCase(logIn.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase('user/login/fulfilled', (state, action: any) => {
-        console.log('Login fulfilled in reducer:', action.payload);
+      .addCase(logIn.fulfilled, (state, action: PayloadAction<AuthPayload>) => {
         state.isLoading = false;
         state.user = action.payload.user;
         state.token = action.payload.token;
@@ -101,18 +118,18 @@ const userSlice = createSlice({
         localStorage.setItem('accessToken', action.payload.token);
         localStorage.setItem('refreshToken', action.payload.refreshToken);
       })
-      .addCase('user/login/rejected', (state, action: any) => {
+      .addCase(logIn.rejected, (state, action: PayloadAction<string | undefined>) => {
         state.isLoading = false;
         state.error = action.payload || 'Login failed';
       })
 
       // Refresh Token
-      .addCase('user/refreshUserToken/pending', (state) => {
+      .addCase(refreshUserToken.pending, (state) => {
         state.isLoading = true;
         state.isRefreshing = true;
         state.error = null;
       })
-      .addCase('user/refreshUserToken/fulfilled', (state, action: any) => {
+      .addCase(refreshUserToken.fulfilled, (state, action: PayloadAction<AuthPayload>) => {
         state.isLoading = false;
         state.isRefreshing = false;
         state.user = action.payload.user;
@@ -122,7 +139,7 @@ const userSlice = createSlice({
         localStorage.setItem('accessToken', action.payload.token);
         localStorage.setItem('refreshToken', action.payload.refreshToken);
       })
-      .addCase('user/refreshUserToken/rejected', (state, action: any) => {
+      .addCase(refreshUserToken.rejected, (state, action: PayloadAction<string | undefined>) => {
         state.isLoading = false;
         state.isRefreshing = false;
         state.user = null;
@@ -135,11 +152,11 @@ const userSlice = createSlice({
       })
 
       // Logout
-      .addCase('user/logout/pending', (state) => {
+      .addCase(logOut.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase('user/logout/fulfilled', (state) => {
+      .addCase(logOut.fulfilled, (state) => {
         state.user = null;
         state.token = null;
         state.refreshToken = null;
@@ -150,7 +167,7 @@ const userSlice = createSlice({
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
       })
-      .addCase('user/logout/rejected', (state, action: any) => {
+      .addCase(logOut.rejected, (state, action: PayloadAction<string | undefined>) => {
         state.user = null;
         state.token = null;
         state.refreshToken = null;
@@ -163,20 +180,81 @@ const userSlice = createSlice({
       })
 
       // Fetch User
-      .addCase('user/fetchUser/pending', (state) => {
+      .addCase(fetchUser.pending, (state) => {
         state.isLoading = true;
         state.error = null;
       })
-      .addCase('user/fetchUser/fulfilled', (state, action: any) => {
+      .addCase(fetchUser.fulfilled, (state, action: PayloadAction<User>) => {
         state.user = action.payload;
         state.isLoading = false;
         state.isRefreshing = false;
         state.isLoggedIn = true;
+
+        // Save user preferences to localStorage
+        if (action.payload.language) {
+          localStorage.setItem('language', action.payload.language);
+        }
+        if (action.payload.preferredCountry) {
+          localStorage.setItem('preferredCountry', action.payload.preferredCountry);
+        }
       })
-      .addCase('user/fetchUser/rejected', (state, action: any) => {
+      .addCase(fetchUser.rejected, (state, action: PayloadAction<string | undefined>) => {
         state.isLoading = false;
         state.error = action.payload || 'Failed to fetch user';
-      });
+      })
+
+      // Change Password
+      .addCase(changePassword.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(changePassword.rejected, (state, action: PayloadAction<string | undefined>) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Delete Account
+      .addCase(deleteAccount.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteAccount.fulfilled, (state) => {
+        state.user = null;
+        state.token = null;
+        state.refreshToken = null;
+        state.isLoggedIn = false;
+        state.isLoading = false;
+        state.error = null;
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+      })
+      .addCase(deleteAccount.rejected, (state, action: PayloadAction<string | undefined>) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+      // Save Language and Country
+      .addCase(saveLanguageAndCountry.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(saveLanguageAndCountry.fulfilled, (state, action: PayloadAction<User>) => {
+        state.isLoading = false;
+        if (state.user) {
+          state.user = action.payload;
+        }
+      })
+      .addCase(
+        saveLanguageAndCountry.rejected,
+        (state, action: PayloadAction<string | undefined>) => {
+          state.isLoading = false;
+          state.error = action.payload as string;
+        }
+      );
   },
 });
 

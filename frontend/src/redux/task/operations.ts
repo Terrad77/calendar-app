@@ -52,7 +52,6 @@ export const addTask = createAsyncThunk<Task, NewNote, ThunkConfig<string>>(
 
     try {
       const { data } = await instance.post('api/task', newNote);
-      console.log('addTask API response:', data);
       return data;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : String(error);

@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import css from '../LogOutModal/LogOutModal.module.css';
-import { logout } from '../../redux/user/operations';
+import { logOut } from '../../redux/user/operations';
 import toastMaker from '../../utils/toastMaker/toastMaker';
 import { selectIsLoading } from '../../redux/user/selectors';
 import DotLoader from '../DotLoader/DotLoader';
@@ -18,7 +18,7 @@ export default function LogOutModal({ isOpen, onClose }: ModalProps) {
   if (!isOpen) return null;
 
   const onClick = () => {
-    dispatch(logout())
+    dispatch(logOut())
       .unwrap()
       .then(() => onClose())
       .catch((error: unknown) => {

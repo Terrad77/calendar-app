@@ -1,4 +1,4 @@
-import Calendar from '../../components/Calendar/Calendar';
+import Calendar from '../../components/Calendar/CalendarComponent/CalendarComponent';
 import css from './HomePage.module.css';
 import type { HomePageProps } from '../../types/types';
 

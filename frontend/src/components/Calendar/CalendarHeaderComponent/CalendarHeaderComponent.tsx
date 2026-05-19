@@ -2,9 +2,9 @@ import { styled } from '@stitches/react';
 import { useTranslation } from 'react-i18next';
 import 'dayjs/locale/uk';
 import 'dayjs/locale/en';
-import { type CalendarHeaderProps } from '../../types/types';
-import Icon from '../Icon';
-import SearchInput from './SearchInput';
+import { type CalendarHeaderProps } from '../../../types/types';
+import Icon from '../../Icon';
+import SearchInput from '../SearchInputComponent/SearchInputComponent';
 import { useMemo } from 'react';
 
 const HeaderWrapper = styled('div', {
@@ -22,6 +22,8 @@ const HeaderWrapper = styled('div', {
   color: '#2d2d2f',
   boxShadow: '0 10px 28px rgba(15, 23, 42, 0.08)',
   '@media (max-width: 768px)': {
+    flexDirection: 'column',
+    alignItems: 'stretch',
     padding: '10px',
     gap: '10px',
   },
@@ -40,6 +42,11 @@ const MonthAndCountryContainer = styled('div', {
   display: 'inline-flex',
   alignItems: 'center',
   gap: '8px',
+  '@media (max-width: 768px)': {
+    width: '100%',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
 });
 
 const CountrySelect = styled('select', {
@@ -121,6 +128,10 @@ const NavButton = styled('button', {
 
 const ButtonContainer = styled('div', {
   display: 'flex',
+  flexWrap: 'wrap',
+  '@media (max-width: 768px)': {
+    width: '100%',
+  },
   variants: {
     gapSize: {
       small: { gap: '4px' },
@@ -158,6 +169,10 @@ const ViewButton = styled('button', {
     borderColor: 'rgba(148,163,184,0.55)',
   },
   '&:active': { transform: 'translateY(1px)' },
+  '@media (max-width: 768px)': {
+    flex: '1 1 0',
+    minWidth: '0',
+  },
 });
 
 export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
@@ -226,7 +241,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           placeholder={t('search_task')}
           onChange={onSearchChange}
           value={searchInputValue}
-          css={{ margin: '0px', flexGrow: 1 }}
+          css={{ margin: '0px', flexGrow: 1, width: '100%' }}
         />
         <ButtonContainer>
           <ViewButton onClick={() => onViewModeChange('week')}>{t('week')}</ViewButton>

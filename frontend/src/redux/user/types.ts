@@ -4,6 +4,8 @@ export interface User {
   email: string;
   avatarURL?: string;
   theme?: string;
+  language?: string;
+  preferredCountry?: string;
   createdAt?: string;
   updatedAt?: string;
 }

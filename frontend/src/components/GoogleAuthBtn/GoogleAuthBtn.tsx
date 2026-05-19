@@ -1,32 +1,25 @@
 import googleLogo from '../../assets/icons/google-logo.svg';
-import css from './GoogleAuthBtn.module.css';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import clsx from 'clsx';
+import styles from './GoogleAuthBtn.module.css';
 
 export default function GoogleAuthBtn() {
-  const { t, i18n } = useTranslation(['auth']); // Specify namespace
+  const { t } = useTranslation(['auth']);
   const apiUrl = import.meta.env.VITE_AI_API_URL || 'http://localhost:3001';
 
   return (
-    <div className={css.wrapper}>
-      <p
-        className={clsx(css.separator, {
-          [css.separatorUk]: i18n.language === 'uk',
-        })}
-      >
-        {t('or_google')}
-      </p>
+    <div className={styles.wrapper}>
+      <p className={styles.separator}>{t('or_google')}</p>
       <motion.a
         whileTap={{ scale: 0.98 }}
-        whileHover={{ scale: 1.02 }}
+        whileHover={{ scale: 1.01 }}
         href={`${apiUrl}/api/auth/google`}
-        className={clsx(css.googleBtn, {
-          [css.googleBtnUk]: i18n.language === 'uk',
-        })}
+        className={styles.googleBtn}
       >
-        <img src={googleLogo} alt="Google" className={css.googleIcon} />
-        <p>{t('sign_in_with_google')}</p>
+        <span className={styles.googleIconWrap}>
+          <img src={googleLogo} alt="Google" className={styles.googleIcon} />
+        </span>
+        <span className={styles.googleText}>{t('sign_in_with_google')}</span>
       </motion.a>
     </div>
   );
