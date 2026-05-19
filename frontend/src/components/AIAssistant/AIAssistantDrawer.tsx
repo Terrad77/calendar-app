@@ -556,12 +556,7 @@ export const AIAssistantDrawer = ({
 
   return (
     <>
-      <AssistantFab
-        onOpen={toggleAssistant}
-        isActive={isOpen}
-        badgeCount={currentEvents.length}
-        className={className}
-      />
+      <AssistantFab onOpen={toggleAssistant} isActive={isOpen} className={className} />
 
       <AnimatePresence>
         {isOpen && (

@@ -1,4 +1,3 @@
-import React from 'react';
 import dayjs from 'dayjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import Modal from '../../Modal/Modal';
@@ -34,7 +33,11 @@ export const DayEventsModal: React.FC<Props> = ({
         <div
           className="absolute flex items-center justify-center w-10 h-10 rounded-full bg-white/80 dark:bg-slate-800/70 border border-neutral-100 dark:border-neutral-700 shadow-sm"
           style={{ left: 14, top: 14, zIndex: 2 }}
-        ></div>
+        >
+          <div className="w-7 h-7">
+            <Logo />
+          </div>
+        </div>
         {/* header */}
         <div className="flex items-center justify-between px-4 py-3 pl-12 border-b border-neutral-100 dark:border-neutral-800">
           <div className="flex items-center gap-3">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useTheme } from '../../hooks/useTheme';
 import DayEventsModal from '../../components/Calendar/DayEventsModalComponent/DayEventsModalComponent';
 import type { CalendarEvent } from '../../types/types';
