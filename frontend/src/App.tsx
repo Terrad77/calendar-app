@@ -9,7 +9,6 @@ import AnalyticsPage from './pages/AnalyticsPage/AnalyticsPage';
 import ContactsPage from './pages/ContactsPage/ContactsPage';
 import NotificationsPage from './pages/NotificationsPage/NotificationsPage';
 import SettingsPage from './pages/SettingsPage/SettingsPage';
-import DebugDayModal from './pages/DebugDayModal/DebugDayModal';
 // import { authenticationService } from './services/authService';
 import { AIAssistantDrawer } from './components/AIAssistant/AIAssistantDrawer';
 import { Layout } from './components/Layout/Layout';
@@ -354,18 +353,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
-        {/* Dev-only debug modal route */}
-        {process.env.NODE_ENV === 'development' && (
-          <Route
-            path="/__debug/day-modal"
-            element={
-              <Layout>
-                <DebugDayModal />
-              </Layout>
-            }
-          />
-        )}
 
         {/* Fallback route - redirect to appropriate page */}
         <Route
