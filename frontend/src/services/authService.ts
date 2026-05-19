@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_AI_API_URL || "http://localhost:3001";
+const API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:3001';
 
 export interface User {
   id: string;
@@ -42,16 +42,16 @@ class AuthenticationService {
   async register(data: RegisterData): Promise<AuthResponse> {
     try {
       const response = await fetch(`${API_URL}/api/auth/register`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Registration failed");
+        throw new Error(error.message || 'Registration failed');
       }
 
       const result = await response.json();
@@ -60,7 +60,7 @@ class AuthenticationService {
 
       return result;
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error('Registration error:', error);
       throw error;
     }
   }
@@ -71,16 +71,16 @@ class AuthenticationService {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(credentials),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Login failed");
+        throw new Error(error.message || 'Login failed');
       }
 
       const result = await response.json();
@@ -89,7 +89,7 @@ class AuthenticationService {
 
       return result;
     } catch (error) {
-      console.error("Login error:", error);
+      console.error('Login error:', error);
       throw error;
     }
   }
@@ -101,16 +101,16 @@ class AuthenticationService {
     try {
       if (this.refreshToken) {
         await fetch(`${API_URL}/api/auth/logout`, {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${this.accessToken}`,
           },
           body: JSON.stringify({ refreshToken: this.refreshToken }),
         });
       }
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error('Logout error:', error);
     } finally {
       this.clearAuth();
     }
@@ -126,15 +126,15 @@ class AuthenticationService {
 
     try {
       const response = await fetch(`${API_URL}/api/auth/refresh`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ refreshToken: this.refreshToken }),
       });
 
       if (!response.ok) {
-        throw new Error("Token refresh failed");
+        throw new Error('Token refresh failed');
       }
 
       const result = await response.json();
@@ -145,7 +145,7 @@ class AuthenticationService {
 
       return true;
     } catch (error) {
-      console.error("Token refresh error:", error);
+      console.error('Token refresh error:', error);
       this.clearAuth();
       return false;
     }
@@ -161,14 +161,14 @@ class AuthenticationService {
 
     try {
       const response = await fetch(`${API_URL}/api/auth/me`, {
-        method: "GET",
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${this.accessToken}`,
         },
       });
 
       if (!response.ok) {
-        throw new Error("Failed to get user profile");
+        throw new Error('Failed to get user profile');
       }
 
       const result = await response.json();
@@ -176,7 +176,7 @@ class AuthenticationService {
 
       return result.user;
     } catch (error) {
-      console.error("Get user error:", error);
+      console.error('Get user error:', error);
       return null;
     }
   }
@@ -191,7 +191,7 @@ class AuthenticationService {
 
     try {
       const response = await fetch(`${API_URL}/api/auth/verify`, {
-        method: "GET",
+        method: 'GET',
         headers: {
           Authorization: `Bearer ${this.accessToken}`,
         },
@@ -199,7 +199,7 @@ class AuthenticationService {
 
       return response.ok;
     } catch (error) {
-      console.error("Token verification error:", error);
+      console.error('Token verification error:', error);
       return false;
     }
   }
@@ -207,18 +207,15 @@ class AuthenticationService {
   /**
    * Make authenticated request
    */
-  async authenticatedFetch(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<Response> {
+  async authenticatedFetch(endpoint: string, options: RequestInit = {}): Promise<Response> {
     if (!this.accessToken) {
-      throw new Error("Not authenticated");
+      throw new Error('Not authenticated');
     }
 
     const headers = {
       ...options.headers,
       Authorization: `Bearer ${this.accessToken}`,
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     };
 
     let response = await fetch(`${API_URL}${endpoint}`, {
@@ -237,7 +234,7 @@ class AuthenticationService {
           headers,
         });
       } else {
-        throw new Error("Session expired. Please login again.");
+        throw new Error('Session expired. Please login again.');
       }
     }
 
@@ -286,21 +283,28 @@ class AuthenticationService {
   }
 
   /**
+   * Public helper to clear auth state without triggering logout request
+   */
+  clearAccessToken(): void {
+    this.clearAuth();
+  }
+
+  /**
    * Save to localStorage
    */
   private saveToStorage(): void {
     try {
       if (this.user) {
-        localStorage.setItem("user", JSON.stringify(this.user));
+        localStorage.setItem('user', JSON.stringify(this.user));
       }
       if (this.accessToken) {
-        localStorage.setItem("accessToken", this.accessToken);
+        localStorage.setItem('accessToken', this.accessToken);
       }
       if (this.refreshToken) {
-        localStorage.setItem("refreshToken", this.refreshToken);
+        localStorage.setItem('refreshToken', this.refreshToken);
       }
     } catch (error) {
-      console.error("Error saving to storage:", error);
+      console.error('Error saving to storage:', error);
     }
   }
 
@@ -309,9 +313,9 @@ class AuthenticationService {
    */
   private loadFromStorage(): void {
     try {
-      const userStr = localStorage.getItem("user");
-      const accessToken = localStorage.getItem("accessToken");
-      const refreshToken = localStorage.getItem("refreshToken");
+      const userStr = localStorage.getItem('user');
+      const accessToken = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
 
       if (userStr) {
         this.user = JSON.parse(userStr);
@@ -323,7 +327,7 @@ class AuthenticationService {
         this.refreshToken = refreshToken;
       }
     } catch (error) {
-      console.error("Error loading from storage:", error);
+      console.error('Error loading from storage:', error);
     }
   }
 
@@ -332,11 +336,11 @@ class AuthenticationService {
    */
   private removeFromStorage(): void {
     try {
-      localStorage.removeItem("user");
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      localStorage.removeItem('user');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
     } catch (error) {
-      console.error("Error removing from storage:", error);
+      console.error('Error removing from storage:', error);
     }
   }
 }

@@ -8,6 +8,8 @@ const WeekdayHeaderContainer = styled('div', {
   gap: '6px',
   padding: '6px',
   backgroundColor: 'rgba(255,255,255,0.65)',
+  borderRadius: '12px',
+  overflow: 'hidden',
 });
 
 const WeekdayHeaderCell = styled('div', {

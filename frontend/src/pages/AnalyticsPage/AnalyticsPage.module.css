@@ -1,0 +1,119 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.chartCard,
+.insightCard {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+  padding: 1rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sectionLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.sectionTitle {
+  margin-top: 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: #0f172a;
+}
+
+.sectionPill {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.06);
+  padding: 0.4rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.barChart {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.7rem;
+  align-items: end;
+  margin-top: 1.2rem;
+}
+
+.barItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.barTrack {
+  position: relative;
+  width: 100%;
+  min-height: 10rem;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(226, 232, 240, 0.45), rgba(241, 245, 249, 0.9));
+  overflow: hidden;
+}
+
+.barFill {
+  position: absolute;
+  inset-inline: 0.18rem;
+  bottom: 0.18rem;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #0f172a 0%, #334155 100%);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.16);
+}
+
+.barLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.focusList {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.focusItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.9), rgba(255, 255, 255, 0.92));
+  padding: 0.9rem 1rem;
+  color: #475569;
+}
+
+.focusItem strong {
+  color: #0f172a;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .focusList {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+}

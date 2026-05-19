@@ -1,6 +1,4 @@
 import axios from 'axios';
-import { store } from '../redux/store';
-import { clearCredentials } from '../redux/user/userSlice';
 import { authenticationService } from '../services/authService';
 
 // Используйте import.meta.env вместо process.env для Vite
@@ -16,9 +14,7 @@ const instance = axios.create({
 // Request interceptor - add token to all requests
 instance.interceptors.request.use(
   (config) => {
-    const state = store.getState();
     const token =
-      state.user.token ||
       authenticationService.getAccessToken() ||
       localStorage.getItem('accessToken') ||
       localStorage.getItem('token');
@@ -45,11 +41,7 @@ instance.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const state = store.getState();
-        const refreshToken =
-          state.user.refreshToken ||
-          localStorage.getItem('refreshToken') ||
-          localStorage.getItem('token');
+        const refreshToken = localStorage.getItem('refreshToken') || localStorage.getItem('token');
 
         if (!refreshToken) {
           throw new Error('No refresh token available');
@@ -68,8 +60,11 @@ instance.interceptors.response.use(
 
         return instance(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, logout user
-        store.dispatch(clearCredentials());
+        // Refresh failed, clear local auth state
+        authenticationService.clearAccessToken();
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('token');
 
         // Redirect to login
         if (typeof window !== 'undefined') {

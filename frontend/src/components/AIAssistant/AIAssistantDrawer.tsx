@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BarChart3, CalendarDays, Sparkles, Send, X } from 'lucide-react';
+import { BarChart3, CalendarDays, Send, X } from 'lucide-react';
 import clsx from 'clsx';
 import type {
   AIAction,
   AIAssistantProps,
+  AIResponse,
   CalendarEvent,
   ChatMessage,
   ColorType,
@@ -13,7 +14,9 @@ import type {
 import { convertToCalendarColor } from '../../types/types';
 import { aiService } from '../../services/aiService';
 import { generateUniqueId } from '../../utils/idGenerator';
+import Logo from '../Logo/Logo';
 import { AssistantFab } from './AssistantFab';
+import css from './AIAssistant.module.css';
 
 interface AIAssistantDrawerProps extends AIAssistantProps {
   className?: string;
@@ -134,10 +137,8 @@ export const AIAssistantDrawer = ({
   }, [isAIAvailable]);
 
   const toggleAssistant = useCallback(() => {
-    console.log('toggleAssistant invoked');
     setIsOpen((previous) => {
       const nextValue = !previous;
-      console.log('toggleAssistant next state', nextValue);
       if (nextValue) {
         ensureWelcomeMessage();
       }
@@ -154,7 +155,7 @@ export const AIAssistantDrawer = ({
   }, []);
 
   const generateActionsFromAI = useCallback(
-    (action: string | undefined, eventData: any): AIAction[] => {
+    (action: string | undefined, eventData?: AIResponse['event']): AIAction[] => {
       if (!action || action === 'query' || action === 'analyze') {
         return [];
       }
@@ -210,7 +211,7 @@ export const AIAssistantDrawer = ({
         content: String(analysis),
         timestamp: new Date().toISOString(),
       });
-    } catch (error) {
+    } catch (_e) {
       addMessage({
         role: 'assistant' as const,
         content: 'Не вдалося проаналізувати розклад. Будь ласка, спробуйте пізніше.',
@@ -222,7 +223,7 @@ export const AIAssistantDrawer = ({
   const handleAction = useCallback(
     (action: AIAction) => {
       switch (action.type) {
-        case 'create_event':
+        case 'create_event': {
           if (action.data && 'title' in action.data) {
             const actionData = action.data as { color?: string; colors?: ColorType[] };
             const calendarColor = convertToCalendarColor(actionData.color);
@@ -247,6 +248,7 @@ export const AIAssistantDrawer = ({
             });
           }
           break;
+        }
         case 'update_event':
           if (action.data) {
             const actionData = action.data as {
@@ -310,7 +312,16 @@ export const AIAssistantDrawer = ({
           console.warn('Unknown action type:', action.type);
       }
     },
-    [addMessage, handleAnalyzeSchedule, onEventCreate, onEventDelete, onEventUpdate]
+    [
+      addMessage,
+      handleAnalyzeSchedule,
+      onEventCreate,
+      onEventDelete,
+      onEventUpdate,
+      currentEvents,
+      lastCreatedEventId,
+      setLastCreatedEventId,
+    ]
   );
 
   const handleQuickAction = useCallback(
@@ -533,7 +544,7 @@ export const AIAssistantDrawer = ({
     },
     {
       label: 'Нова подія',
-      icon: Sparkles,
+      icon: Send,
       onClick: () => handleQuickAction('create_quick_event'),
     },
     {
@@ -558,7 +569,7 @@ export const AIAssistantDrawer = ({
             <motion.button
               type="button"
               aria-label="Close AI assistant overlay"
-              className="fixed inset-0 z-[1100] cursor-default bg-neutral-950/40 backdrop-blur-sm"
+              className={css.overlay}
               onClick={() => setIsOpen(false)}
               variants={overlayVariants}
               initial="hidden"
@@ -567,13 +578,8 @@ export const AIAssistantDrawer = ({
             />
 
             <motion.aside
-              className="fixed z-[1110] flex w-full max-w-[400px] flex-col border-l border-neutral-200 bg-white text-neutral-950 shadow-[0_24px_80px_rgba(0,0,0,0.18)] sm:w-[400px]"
+              className={css.drawer}
               style={{
-                top: 0,
-                right: 0,
-                bottom: 0,
-                left: 'auto',
-                height: '100%',
                 borderTopLeftRadius: isDesktop ? undefined : '1rem',
                 borderTopRightRadius: isDesktop ? undefined : '1rem',
               }}
@@ -583,17 +589,15 @@ export const AIAssistantDrawer = ({
               exit={isDesktop ? 'exit_desktop' : 'exit_mobile'}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             >
-              <header className="flex items-start justify-between gap-4 border-b border-neutral-200 px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-900 text-white shadow-sm">
-                    <Sparkles className="h-5 w-5" />
+              <header className={css.header}>
+                <div className={css.headerBrand}>
+                  <div className={css.headerLogo}>
+                    <Logo />
                   </div>
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.28em] text-neutral-500">
-                      AI Assistant
-                    </p>
-                    <h2 className="mt-1 text-lg font-semibold text-neutral-950">Smart planner</h2>
-                    <p className="text-sm text-neutral-500">
+                  <div className={css.headerText}>
+                    <p className={css.headerKicker}>AI Assistant</p>
+                    <h2 className={css.headerTitle}>Smart planner</h2>
+                    <p className={css.headerSubtitle}>
                       {isServiceAvailable && isAIAvailable
                         ? 'Minimal, fast, and event-aware'
                         : 'AI currently unavailable, but the panel is still accessible'}
@@ -604,22 +608,22 @@ export const AIAssistantDrawer = ({
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-neutral-50 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-950"
+                  className={css.closeButton}
                   aria-label="Close assistant"
                 >
-                  <X className="h-4 w-4" />
+                  <X className={css.closeIcon} />
                 </button>
               </header>
 
-              <div className="flex-1 overflow-y-auto px-5 py-4">
-                <div className="rounded-3xl border border-neutral-200 bg-neutral-50 p-4">
-                  <p className="text-sm font-medium text-neutral-950">Вітаю</p>
-                  <p className="mt-1 text-sm leading-6 text-neutral-600">
+              <div className={css.body}>
+                <div className={css.heroCard}>
+                  <p className={css.heroTitle}>Вітаю</p>
+                  <p className={css.heroText}>
                     Я можу проаналізувати розклад, створити подію або допомогти з календарем.
                   </p>
                 </div>
 
-                <div className="mt-4 grid gap-2">
+                <div className={css.quickActions}>
                   {quickActions.map((action) => {
                     const ActionIcon = action.icon;
                     return (
@@ -627,55 +631,55 @@ export const AIAssistantDrawer = ({
                         key={action.label}
                         type="button"
                         onClick={action.onClick}
-                        className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-3 text-left text-sm font-medium text-neutral-800 transition-colors hover:bg-neutral-50 hover:text-neutral-950"
+                        className={css.quickActionButton}
                       >
-                        <ActionIcon className="h-4 w-4 text-neutral-500" />
+                        <ActionIcon className={css.quickActionIcon} />
                         <span>{action.label}</span>
                       </button>
                     );
                   })}
                 </div>
 
-                <div className="mt-5 space-y-3">
+                <div className={css.messages}>
                   {messages.map((message) => (
                     <div
                       key={message.id}
                       className={clsx(
-                        'rounded-2xl border px-4 py-3',
+                        css.message,
                         message.role === 'user'
-                          ? 'ml-auto max-w-[88%] border-neutral-900 bg-neutral-900 text-white'
+                          ? css.messageUser
                           : message.role === 'system'
-                            ? 'border-emerald-200 bg-emerald-50 text-emerald-950'
-                            : 'border-neutral-200 bg-white text-neutral-900',
-                        message.isLoading && 'opacity-75'
+                            ? css.messageSystem
+                            : css.messageAssistant,
+                        message.isLoading && css.messageLoading
                       )}
                     >
                       {message.isLoading ? (
-                        <div className="flex items-center gap-2 py-1">
-                          <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400" />
-                          <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:120ms]" />
-                          <span className="h-2 w-2 animate-bounce rounded-full bg-neutral-400 [animation-delay:240ms]" />
+                        <div className={css.loadingDots}>
+                          <span />
+                          <span />
+                          <span />
                         </div>
                       ) : (
                         <>
-                          <div className="space-y-1 text-sm leading-6">
+                          <div className={css.messageText}>
                             {message.content.split('\n').map((line, index) => (
                               <p key={`${message.id}-line-${index}`}>{line}</p>
                             ))}
                           </div>
-                          <div className="mt-3 flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.18em] text-neutral-400">
+                          <div className={css.messageMeta}>
                             <span>{message.role}</span>
                             <span>{formatTime(message.timestamp ?? new Date().toISOString())}</span>
                           </div>
 
                           {message.actions && message.actions.length > 0 && (
-                            <div className="mt-3 flex flex-wrap gap-2">
+                            <div className={css.messageActions}>
                               {message.actions.map((action, index) => (
                                 <button
                                   key={`${message.id}-action-${index}`}
                                   type="button"
                                   onClick={() => handleAction(action)}
-                                  className="rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs font-medium text-neutral-700 transition-colors hover:border-neutral-300 hover:bg-white hover:text-neutral-950"
+                                  className={css.messageActionButton}
                                 >
                                   {action.label}
                                 </button>
@@ -690,11 +694,8 @@ export const AIAssistantDrawer = ({
                 </div>
               </div>
 
-              <footer className="border-t border-neutral-200 bg-neutral-50 p-4">
-                <form
-                  onSubmit={handleSubmit}
-                  className="flex items-center gap-3 rounded-2xl border border-neutral-200 bg-white px-3 py-2 shadow-sm"
-                >
+              <footer className={css.footer}>
+                <form onSubmit={handleSubmit} className={css.inputForm}>
                   <input
                     ref={inputRef}
                     type="text"
@@ -707,16 +708,16 @@ export const AIAssistantDrawer = ({
                         : 'AI недоступний. Використовуйте швидкі дії.'
                     }
                     disabled={isLoading || !(isServiceAvailable && isAIAvailable)}
-                    className="min-w-0 flex-1 bg-transparent text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none disabled:cursor-not-allowed"
+                    className={css.inputField}
                   />
                   <button
                     type="submit"
                     disabled={
                       !inputValue.trim() || isLoading || !(isServiceAvailable && isAIAvailable)
                     }
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
+                    className={css.sendButton}
                   >
-                    <Send className="h-4 w-4" />
+                    <Send className={css.sendIcon} />
                   </button>
                 </form>
               </footer>

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { styled } from '@stitches/react';
-import { logout } from '../../redux/user/operations';
+import { logOut } from '../../redux/user/operations';
 import { selectUser } from '../../redux/user/selectors';
 import { useAppDispatch } from '../../redux/hooks';
 import ChangePasswordModal from '../ChangePasswordModal/ChangePasswordModal';
@@ -161,7 +161,7 @@ export const UserProfileHeader = () => {
   }, [isOpen]);
 
   const handleLogout = async () => {
-    await dispatch(logout());
+    await dispatch(logOut());
     navigate('/');
   };
 

@@ -19,7 +19,10 @@ import { arrayMove } from '@dnd-kit/sortable';
 import type { CalendarEvent, ColorType } from '../../../types/types';
 import { TASK_MARKER_COLORS } from '../../../types/types';
 import { CalendarDayCell } from '../CalendarDayCellComponent/CalendarDayCellComponent';
+import DayEventsModal from '../DayEventsModalComponent/DayEventsModalComponent';
 import { TaskCardDraggable } from '../TaskCardDraggableComponent/TaskCardDraggableComponent';
+import Modal from '../../Modal/Modal';
+import { TaskInputForm } from '../TaskInputFormComponent/TaskInputFormComponent';
 import { CalendarHeader } from '../CalendarHeaderComponent/CalendarHeaderComponent';
 import { CalendarGridHeader } from '../CalendarGridHeaderComponent/CalendarGridHeaderComponent';
 import { generateUniqueId } from '../../../utils/idGenerator';
@@ -44,6 +47,23 @@ const LOCAL_STORAGE_KEY = 'calendarTasks';
 
 // --- BASE URL for backend ---
 const BACKEND_API_BASE_URL = 'http://localhost:3001';
+
+type RawHoliday = {
+  id: string;
+  date: string;
+  title?: string;
+  name?: string;
+  countryCode?: string;
+};
+
+const isRawHoliday = (value: unknown): value is RawHoliday => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return typeof candidate.id === 'string' && typeof candidate.date === 'string';
+};
 
 export const Calendar = ({
   events: externalEvents,
@@ -134,30 +154,20 @@ export const Calendar = ({
           if (month) {
             url += `&month=${month}`;
           }
-          console.log('Fetching holidays from:', url);
           const response = await fetch(url);
-
-          console.log('Holidays response status:', response.status);
 
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
           const contentType = response.headers.get('content-type');
           if (!contentType || !contentType.includes('application/json')) {
-            const text = await response.text();
-            console.log('Non-JSON response (first 500 chars):', text.substring(0, 500));
             throw new Error(`Expected JSON but got: ${contentType}`);
           }
 
           const result = await response.json();
 
-          // debugging logs
-          console.log('Raw API response:', result);
-          console.log('Response type:', typeof result);
-          console.log('Is array?', Array.isArray(result));
-
           // get array of holidays
-          let holidaysData: any[] = [];
+          let holidaysData: unknown[] = [];
 
           // handling different possible response structures
           if (Array.isArray(result)) {
@@ -178,19 +188,15 @@ export const Calendar = ({
             holidaysData = [];
           }
 
-          console.log(`Parsed ${holidaysData.length} holidays from response`);
-
-          const uniqueHolidaysMap = new Map<string, any>();
-          holidaysData.forEach((holiday) => {
-            if (holiday && holiday.id) {
-              uniqueHolidaysMap.set(holiday.id, holiday);
-            }
+          const uniqueHolidaysMap = new Map<string, RawHoliday>();
+          holidaysData.filter(isRawHoliday).forEach((holiday) => {
+            uniqueHolidaysMap.set(holiday.id, holiday);
           });
 
           const deduplicatedData = Array.from(uniqueHolidaysMap.values());
 
           const mappedHolidays: CalendarEvent[] = deduplicatedData.map((holiday) => ({
-            id: generateUniqueId(`holiday`), // generate new unique ID
+            id: generateUniqueId('holiday'), // generate new unique ID
             date: holiday.date,
             title: holiday.title || holiday.name || 'Holiday',
             eventType: 'holiday',
@@ -230,10 +236,17 @@ export const Calendar = ({
   const [isPending, startTransition] = useTransition();
   const [activeDayForInput, setActiveDayForInput] = useState<string | null>(null);
   const [editingTask, setEditingTask] = useState<CalendarEvent | null>(null);
+  const [dayModalDate, setDayModalDate] = useState<string | null>(null);
   const [activeDragItem, setActiveDragItem] = useState<CalendarEvent | null>(null);
 
   const [searchInputValue, setSearchInputValue] = useState(''); // immediate update input field
   const [searchQuery, setSearchQuery] = useState(''); // Delayed search
+
+  // Close modal on component mount
+  useEffect(() => {
+    setActiveDayForInput(null);
+    setEditingTask(null);
+  }, []);
 
   useEffect(() => {
     const savedCountry = user?.preferredCountry || localStorage.getItem('preferredCountry');
@@ -469,7 +482,7 @@ export const Calendar = ({
       }
       setActiveDragItem(null); // reset activeDragItem after dragging is complete
     },
-    [tasks, activeDragItem, today]
+    [tasks, activeDragItem, setTasks, today]
   );
 
   const renderedDays = useMemo(() => {
@@ -523,9 +536,17 @@ export const Calendar = ({
           setActiveDayForInput={setActiveDayForInput}
           editingTask={editingTask}
           setEditingTask={setEditingTask}
-          setAllTasks={setTasks}
           allTasks={tasks}
           isFiller={isFiller}
+          onDayClick={(date) => {
+            const dayData = filteredTasksAndHolidaysByDay[date] || { tasks: [], holidays: [] };
+            if (dayData.tasks.length + dayData.holidays.length > 0) {
+              setDayModalDate(date);
+            }
+          }}
+          onTaskClick={(task) => {
+            setEditingTask(task);
+          }}
         />
       );
     });
@@ -539,10 +560,24 @@ export const Calendar = ({
     setActiveDayForInput,
     editingTask,
     setEditingTask,
+    setTasks,
+    filteredTasksAndHolidaysByDay,
   ]);
 
+  const handleCloseDayModal = useCallback(() => {
+    setDayModalDate(null);
+  }, []);
+
+  const handleEditFromDayModal = useCallback((task: CalendarEvent) => {
+    setEditingTask(task);
+    setDayModalDate(null);
+  }, []);
+
   return (
-    <div className="flex flex-col w-full gap-4 p-4 sm:p-6 lg:p-6 bg-white rounded-lg border border-neutral-200 shadow-sm">
+    <div
+      className="flex flex-col w-full gap-4 p-4 sm:p-6 lg:p-6 bg-white rounded-lg shadow-sm"
+      style={{ marginTop: '2px' }}
+    >
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -578,6 +613,84 @@ export const Calendar = ({
         <div className="grid grid-cols-7 gap-px bg-neutral-200 rounded-lg overflow-hidden">
           {renderedDays}
         </div>
+
+        {/* Day events list modal (opened when day has items) */}
+        {dayModalDate && (
+          <DayEventsModal
+            isOpen={!!dayModalDate}
+            date={dayModalDate}
+            tasks={
+              (filteredTasksAndHolidaysByDay[dayModalDate] || { tasks: [], holidays: [] }).tasks
+            }
+            holidays={
+              (filteredTasksAndHolidaysByDay[dayModalDate] || { tasks: [], holidays: [] }).holidays
+            }
+            onClose={handleCloseDayModal}
+            onEditTask={handleEditFromDayModal}
+            onAdd={(date) => {
+              // open creation form for this date
+              setActiveDayForInput(date);
+              setDayModalDate(null);
+            }}
+            otherDays={Object.keys(filteredTasksAndHolidaysByDay)
+              .filter((d) => d !== dayModalDate)
+              .map((d) => ({
+                date: d,
+                tasks: (filteredTasksAndHolidaysByDay[d]?.tasks || []).length,
+                holidays: (filteredTasksAndHolidaysByDay[d]?.holidays || []).length,
+              }))
+              .filter((x) => x.tasks + x.holidays > 0)}
+            onSelectDay={(d) => setDayModalDate(d)}
+          />
+        )}
+
+        {/* Top-level modal for editing/creating tasks (opened when editingTask is set) */}
+        <Modal isOpen={!!editingTask} onClose={() => setEditingTask(null)}>
+          {editingTask && (
+            <TaskInputForm
+              initialTask={editingTask}
+              onSave={(task) => {
+                // update tasks
+                setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)));
+                setEditingTask(null);
+              }}
+              onDuplicate={(task) => {
+                setTasks((prev) => [...prev, task]);
+                setEditingTask(null);
+              }}
+              onCancel={() => setEditingTask(null)}
+              onDelete={(taskId) => {
+                setTasks((prev) => prev.filter((t) => t.id !== taskId));
+                setEditingTask(null);
+              }}
+            />
+          )}
+        </Modal>
+
+        {/* Top-level modal for creating a new task on a selected day */}
+        <Modal
+          isOpen={!!activeDayForInput && !editingTask}
+          onClose={() => setActiveDayForInput(null)}
+        >
+          {activeDayForInput && !editingTask && (
+            <TaskInputForm
+              initialDate={activeDayForInput}
+              onSave={(task) => {
+                setTasks((prev) => [...prev, task]);
+                setActiveDayForInput(null);
+              }}
+              onDuplicate={(task) => {
+                setTasks((prev) => [...prev, task]);
+                setActiveDayForInput(null);
+              }}
+              onCancel={() => setActiveDayForInput(null)}
+              onDelete={(taskId) => {
+                setTasks((prev) => prev.filter((t) => t.id !== taskId));
+                setActiveDayForInput(null);
+              }}
+            />
+          )}
+        </Modal>
 
         <DragOverlay>
           {activeDragItem && (

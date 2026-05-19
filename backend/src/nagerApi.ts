@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { BackendHoliday, NagerPublicHolidayResponse } from './types';
-import { getCache, setCache } from './cache';
+import { getCache, getOrSetCache } from './cache';
 import dayjs from 'dayjs';
 import { randomUUID } from 'crypto';
 
@@ -67,42 +67,41 @@ async function fetchHolidaysForCountry(
   countryCode: string
 ): Promise<BackendHoliday[]> {
   const cacheKey = `holidays-${year}-${countryCode}`;
-  const cachedData = getCache<BackendHoliday[]>(cacheKey);
+  return getOrSetCache(cacheKey, CACHE_TTL_HOLIDAYS_SECONDS, async () => {
+    const cachedData = getCache<BackendHoliday[]>(cacheKey);
 
-  if (cachedData) {
-    console.log(`[Cache Hit] Holidays for ${countryCode} in ${year}`);
-    return cachedData;
-  }
-
-  console.log(`[Cache Miss] Fetching holidays for ${countryCode} in ${year}`);
-  try {
-    const response = await axios.get<NagerPublicHolidayResponse[]>(
-      `${NAGER_API_BASE_URL}/PublicHolidays/${year}/${countryCode}`
-    );
-
-    // for chek
-    if (!Array.isArray(response.data)) {
-      console.warn(`API returned non-array data for ${countryCode} in ${year}:`, response.data);
-      return [];
+    if (cachedData) {
+      console.log(`[Cache Hit] Holidays for ${countryCode} in ${year}`);
+      return cachedData;
     }
 
-    const mappedHolidays: BackendHoliday[] = response.data.map((holiday) => ({
-      // Створюємо унікальний ID для кожного свята
-      id: `holiday-${randomUUID()}`,
-      date: holiday.date,
-      // Форматуємо назву для кращої читабельності, включаючи код країни.
-      title: `${holiday.localName || holiday.name} (${holiday.countryCode})`,
-      countryCode: holiday.countryCode,
-      eventType: 'holiday',
-    }));
+    console.log(`[Cache Miss] Fetching holidays for ${countryCode} in ${year}`);
 
-    setCache(cacheKey, mappedHolidays, CACHE_TTL_HOLIDAYS_SECONDS);
-    return mappedHolidays;
-  } catch (error) {
-    console.error(`Error fetching holidays for ${countryCode} in ${year}:`, error);
+    try {
+      const response = await axios.get<NagerPublicHolidayResponse[]>(
+        `${NAGER_API_BASE_URL}/PublicHolidays/${year}/${countryCode}`
+      );
 
-    return [];
-  }
+      if (!Array.isArray(response.data)) {
+        console.warn(`API returned non-array data for ${countryCode} in ${year}:`, response.data);
+        return [];
+      }
+
+      const mappedHolidays: BackendHoliday[] = response.data.map((holiday) => ({
+        id: `holiday-${randomUUID()}`,
+        date: holiday.date,
+        title: `${holiday.localName || holiday.name} (${holiday.countryCode})`,
+        countryCode: holiday.countryCode,
+        eventType: 'holiday',
+      }));
+
+      return mappedHolidays;
+    } catch (error) {
+      console.error(`Error fetching holidays for ${countryCode} in ${year}:`, error);
+
+      return [];
+    }
+  });
 }
 
 /**
@@ -118,45 +117,37 @@ export async function getWorldwideHolidays(
   month?: number
 ): Promise<BackendHoliday[]> {
   const cacheKey = `worldwide-holidays-${year}-${month || 'all'}`;
-  const cachedData = getCache<BackendHoliday[]>(cacheKey);
+  return getOrSetCache(cacheKey, CACHE_TTL_HOLIDAYS_SECONDS, async () => {
+    const cachedData = getCache<BackendHoliday[]>(cacheKey);
 
-  if (cachedData) {
-    console.log(`[Cache Hit] Worldwide holidays for ${year} ${month ? `month ${month}` : ''}`);
-    return cachedData;
-  }
+    if (cachedData) {
+      console.log(`[Cache Hit] Worldwide holidays for ${year} ${month ? `month ${month}` : ''}`);
+      return cachedData;
+    }
 
-  console.log(
-    `[Cache Miss] Aggregating worldwide holidays for ${year} ${month ? `month ${month}` : ''}`
-  );
+    console.log(
+      `[Cache Miss] Aggregating worldwide holidays for ${year} ${month ? `month ${month}` : ''}`
+    );
 
-  // get holidays for all specified countries
-  const allHolidaysPromises = COUNTRIES_TO_FETCH.map((countryCode) =>
-    fetchHolidaysForCountry(year, countryCode)
-  );
+    const allHolidaysPromises = COUNTRIES_TO_FETCH.map((countryCode) =>
+      fetchHolidaysForCountry(year, countryCode)
+    );
 
-  const holidaysByCountry = await Promise.all(allHolidaysPromises);
+    const holidaysByCountry = await Promise.all(allHolidaysPromises);
+    const allWorldwideHolidays = holidaysByCountry.flat();
 
-  // combine all the holiday arrays into one
-  let allWorldwideHolidays: BackendHoliday[] = [];
-  holidaysByCountry.forEach((countryHolidays) => {
-    allWorldwideHolidays.push(...countryHolidays);
+    const filteredWorldwideHolidays = month
+      ? allWorldwideHolidays.filter((h) => dayjs(h.date).month() + 1 === month)
+      : allWorldwideHolidays;
+
+    filteredWorldwideHolidays.sort((a, b) => {
+      const dateA = dayjs(a.date);
+      const dateB = dayjs(b.date);
+      if (dateA.isBefore(dateB)) return -1;
+      if (dateA.isAfter(dateB)) return 1;
+      return a.title.localeCompare(b.title);
+    });
+
+    return filteredWorldwideHolidays;
   });
-
-  // Filter by month, if it is specified in the query.
-  if (month) {
-    allWorldwideHolidays = allWorldwideHolidays.filter((h) => dayjs(h.date).month() + 1 === month);
-  }
-
-  // Sort holidays for sequential display.
-  allWorldwideHolidays.sort((a, b) => {
-    const dateA = dayjs(a.date);
-    const dateB = dayjs(b.date);
-    if (dateA.isBefore(dateB)) return -1;
-    if (dateA.isAfter(dateB)) return 1;
-    return a.title.localeCompare(b.title); // Sort by name as a second criterion
-  });
-
-  // cache the aggregated result
-  setCache(cacheKey, allWorldwideHolidays, CACHE_TTL_HOLIDAYS_SECONDS);
-  return allWorldwideHolidays;
 }

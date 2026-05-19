@@ -21,14 +21,12 @@
 .dayCell .dayNumberAndMonth {
   display: flex;
   align-items: baseline;
-  gap: 4px;
   margin-bottom: 6px;
 }
 
 .dayCell .taskCount {
   color: #6b7280;
   font-size: 0.72rem;
-  margin-left: 2px;
 }
 
 .dayCell .tasksContainer {

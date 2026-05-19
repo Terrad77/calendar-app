@@ -15,6 +15,7 @@ import toast from 'react-hot-toast';
 import { AppDispatch } from '../../redux/types';
 import { useTogglePassword } from '../../hooks/useTogglePassword';
 import { Eye, EyeOff } from 'lucide-react';
+import styles from './SignUpForm.module.css';
 
 export default function SignUpForm() {
   const dispatch = useDispatch<AppDispatch>();
@@ -71,49 +72,36 @@ export default function SignUpForm() {
           <SignUpModal />
         </Modal>
       )}
-      <form className="flex flex-col gap-6 sm:gap-7" onSubmit={handleSubmit(handleFormSubmit)}>
-        <div className="flex flex-col gap-2">
-          {/* Email field */}
-          <label htmlFor="email" className="text-sm font-medium text-neutral-950 sm:text-base">
-            {t('email_user', { ns: 'form' })}
-          </label>
+      <form className={styles.form} onSubmit={handleSubmit(handleFormSubmit)}>
+        <div className={styles.inputGroup}>
+          <label htmlFor="email">{t('email_user', { ns: 'form' })}</label>
           <input
             type="text"
             placeholder={t('enter_email', { ns: 'form' })}
             autoComplete="off"
-            className={`w-full rounded-lg border px-4 py-3 text-sm transition-all focus:outline-none sm:text-base ${
-              errors.email
-                ? 'border-red-500 focus:ring-2 focus:ring-red-500'
-                : 'border-neutral-300 bg-white focus:ring-2 focus:ring-neutral-950'
-            }`}
+            className={`${styles.inputGroupInput} ${errors.email ? styles.inputError : ''}`}
             {...register('email')}
           />
           {errors.email && (
-            <p className="text-xs text-red-600 sm:text-sm">
+            <p className={styles.error}>
               {t(errors.email.message || 'email_required', { ns: 'validation' })}
             </p>
           )}
         </div>
-        <div className="flex flex-col gap-2">
-          {/* Password field */}
-          <label htmlFor="password" className="text-sm font-medium text-neutral-950 sm:text-base">
-            {t('password_user', { ns: 'form' })}
-          </label>
-          <div className="relative flex items-center">
+
+        <div className={styles.inputGroup}>
+          <label htmlFor="password">{t('password_user', { ns: 'form' })}</label>
+          <div className={styles.passwordContainer}>
             <input
               type={passwordField.inputType}
               placeholder={t('enter_password', { ns: 'form' })}
               autoComplete="new-password"
-              className={`w-full rounded-lg border px-4 py-3 pr-12 text-sm transition-all focus:outline-none sm:text-base ${
-                errors.password
-                  ? 'border-red-500 focus:ring-2 focus:ring-red-500'
-                  : 'border-neutral-300 bg-white focus:ring-2 focus:ring-neutral-950'
-              }`}
+              className={`${styles.inputGroupInput} ${errors.password ? styles.inputError : ''}`}
               {...register('password')}
             />
             <button
               type="button"
-              className="absolute right-4 p-1 text-neutral-400 transition-colors hover:text-neutral-600"
+              className={styles.passwordToggle}
               onClick={(e) => {
                 e.stopPropagation();
                 passwordField.toggle();
@@ -122,41 +110,32 @@ export default function SignUpForm() {
               aria-label={passwordField.ariaLabel}
             >
               {passwordField.inputType === 'password' ? (
-                <Eye className="h-5 w-5" />
+                <Eye className={styles.icon} />
               ) : (
-                <EyeOff className="h-5 w-5" />
+                <EyeOff className={styles.icon} />
               )}
             </button>
           </div>
           {errors.password && (
-            <p className="text-xs text-red-600 sm:text-sm">
+            <p className={styles.error}>
               {t(errors.password.message || 'password_required', { ns: 'validation' })}
             </p>
           )}
         </div>
-        <div className="flex flex-col gap-2">
-          {/* Repeat Password field */}
-          <label
-            htmlFor="repeatPassword"
-            className="text-sm font-medium text-neutral-950 sm:text-base"
-          >
-            {t('repeat_password', { ns: 'form' })}
-          </label>
-          <div className="relative flex items-center">
+
+        <div className={styles.inputGroup}>
+          <label htmlFor="repeatPassword">{t('repeat_password', { ns: 'form' })}</label>
+          <div className={styles.passwordContainer}>
             <input
               type={repeatPasswordField.inputType}
               placeholder={t('repeat_password_placeholder', { ns: 'form' })}
               autoComplete="password-confirmation"
+              className={`${styles.inputGroupInput} ${errors.repeatPassword ? styles.inputError : ''}`}
               {...register('repeatPassword')}
-              className={`w-full rounded-lg border px-4 py-3 pr-12 text-sm transition-all focus:outline-none sm:text-base ${
-                errors.repeatPassword
-                  ? 'border-red-500 focus:ring-2 focus:ring-red-500'
-                  : 'border-neutral-300 bg-white focus:ring-2 focus:ring-neutral-950'
-              }`}
             />
             <button
               type="button"
-              className="absolute right-4 p-1 text-neutral-400 transition-colors hover:text-neutral-600"
+              className={styles.passwordToggle}
               onClick={(e) => {
                 e.stopPropagation();
                 repeatPasswordField.toggle();
@@ -165,31 +144,29 @@ export default function SignUpForm() {
               aria-label={repeatPasswordField.ariaLabel}
             >
               {repeatPasswordField.inputType === 'password' ? (
-                <Eye className="h-5 w-5" />
+                <Eye className={styles.icon} />
               ) : (
-                <EyeOff className="h-5 w-5" />
+                <EyeOff className={styles.icon} />
               )}
             </button>
           </div>
           {errors.repeatPassword && (
-            <p className="text-xs text-red-600 sm:text-sm">
+            <p className={styles.error}>
               {t(errors.repeatPassword.message || 'passwords_must_match', { ns: 'validation' })}
             </p>
           )}
         </div>
 
-        <button
-          className="flex w-full items-center justify-center rounded-lg bg-neutral-950 px-4 py-3 text-center font-semibold text-white transition-all hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 sm:mt-2"
-          type="submit"
-          disabled={!isValid || isLoading}
-        >
+        <button className={styles.submitButton} type="submit" disabled={!isValid || isLoading}>
           {isLoading ? (
             <DotLoader text={t('signing_up', { ns: 'form' })} />
           ) : (
             t('register_user', { ns: 'auth' })
           )}
         </button>
-        <GoogleAuthBtn />
+        <div className={styles.googleAuthWrapper}>
+          <GoogleAuthBtn />
+        </div>
       </form>
     </>
   );

@@ -7,7 +7,6 @@ interface AssistantFabProps {
   onClick?: () => void;
   isActive?: boolean;
   isDisabled?: boolean;
-  badgeCount?: number;
   className?: string;
 }
 
@@ -16,7 +15,6 @@ export const AssistantFab = ({
   onClick,
   isActive = false,
   isDisabled = false,
-  badgeCount,
   className,
 }: AssistantFabProps) => {
   const handleClick = () => {
@@ -34,9 +32,6 @@ export const AssistantFab = ({
         className={clsx(styles.assistantButton, isActive && styles.assistantButtonActive)}
       >
         <Sparkles className={styles.assistantIcon} />
-        {typeof badgeCount === 'number' && badgeCount > 0 && (
-          <span className={styles.assistantBadge}>{badgeCount > 99 ? '99+' : badgeCount}</span>
-        )}
       </button>
     </div>
   );

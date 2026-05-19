@@ -5,7 +5,7 @@ import express, { Request, Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import cors from 'cors';
 import { getWorldwideHolidays } from './nagerApi';
-import { CalendarEvent, AIResponse } from './types';
+import { CalendarEvent, AIResponse, ConversationMessage } from './types';
 import { authenticateToken } from './middleware/authMiddleware';
 import authRoutes from './routes/authRoutes';
 import eventsRoutes from './routes/eventsRoutes';
@@ -48,24 +48,36 @@ const CALENDAR_SYSTEM_PROMPT = `Ти - розумний AI-асістент ка
 6. Виявлення конфліктів
 7. Нагадування і рекомендації
 
+ТИПИ ПОДІЙ (ВАЖЛИВО - використовуй ТІЛЬКИ ці типи):
+- "task": звичайна задача/подія (може бути будь-якого дня)
+- "meeting": зустріч (ОБОВ'ЯЗКОВО вказуй startTime і endTime у форматі HH:MM, та location якщо доступні)
+- "reminder": напоминання про щось (час доступний)
+- "holiday": святковий день (автоматично генерується системою, НЕ створюй вручну)
+
 Коли користувач просить створити/змінити/видалити подію, відповідай у JSON форматі:
 {
   "action": "create" | "update" | "delete" | "query" | "analyze",
   "event": {
     "title": "назва події",
     "description": "опис події",
+    "eventType": "task" | "meeting" | "reminder",
     "startDate": "ISO дата",
-    "endDate": "ISO дата",
     "startTime": "HH:MM",
     "endTime": "HH:MM",
-    "color": "hex колір",
     "location": "місце проведення",
+    "color": "колір (default|red|yellow|green)",
     "participants": ["email1", "email2"]
   },
   "message": "дружнє повідомлення користувачу"
 }
 
 Для запитів інформації (action: "query" або "analyze"), використовуйте поле "message" для відповіді.
+
+Правила створення подій:
+- Якщо це зустріч → тип "meeting" з часом та місцем
+- Якщо це просто завдання → тип "task"
+- Якщо це що-то то нагадати → тип "reminder"
+- НІКОЛИ не використовуй інші типи!
 
 Поточна дата: ${new Date().toISOString()}
 Формат часу: 24-годинний
@@ -88,6 +100,11 @@ const CALENDAR_ACTION_SCHEMA = {
       properties: {
         title: { type: 'string' as const },
         description: { type: 'string' as const },
+        eventType: {
+          type: 'string' as const,
+          enum: ['task', 'meeting', 'reminder'],
+          description: 'Event type: task, meeting or reminder.',
+        },
         startDate: { type: 'string' as const },
         endDate: { type: 'string' as const },
         startTime: { type: 'string' as const },
@@ -133,7 +150,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/events', eventsRoutes);
 
 // Backward compatibility for legacy Google OAuth paths
-app.get('/api/users/google', (req: Request, res: Response) => {
+app.get('/api/users/google', (_req: Request, res: Response) => {
   res.redirect('/api/auth/google');
 });
 
@@ -147,7 +164,7 @@ app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'ok', service: 'Calendar AI Assistant' });
 });
 
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.status(200).json({ message: 'Backend is running!' });
 });
 
@@ -211,8 +228,8 @@ app.post('/api/ai/chat', authenticateToken, async (req: Request, res: Response):
       conversationHistory.length > 0
     ) {
       context += 'Conversation history:\n';
-      conversationHistory.forEach((msg: any) => {
-        context += `${msg.role || 'user'}: ${msg.content || msg.message || ''}\n`;
+      conversationHistory.forEach((msg: ConversationMessage) => {
+        context += `${msg.role || 'user'}: ${msg.content || ''}\n`;
       });
       context += '\n';
     }
@@ -423,7 +440,7 @@ app.use('*', (req: Request, res: Response) => {
 });
 
 // Error handling middleware
-app.use((error: Error, req: Request, res: Response, next: Function) => {
+app.use((error: Error, _req: Request, res: Response, _next: express.NextFunction) => {
   console.error('Unhandled error:', error);
   res.status(500).json({
     error: 'Internal server error',

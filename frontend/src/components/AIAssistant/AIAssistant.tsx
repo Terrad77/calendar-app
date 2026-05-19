@@ -7,6 +7,7 @@ import type {
   AIAssistantProps,
   MeetingEvent,
   ColorType,
+  AIResponse,
 } from '../../types/types';
 import { convertToCalendarColor } from '../../types/types';
 import { aiService } from '../../services/aiService';
@@ -22,18 +23,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   className,
   isServiceAvailable = true,
 }) => {
-  // check AI service for available
-  if (!isServiceAvailable) {
-    return (
-      <div className={clsx('ai-assistant', 'ai-assistant-disabled', className)}>
-        <div className="ai-assistant-disabled-message">
-          <span>🤖</span>
-          <p>AI асистент тимчасово недоступний</p>
-        </div>
-      </div>
-    );
-  }
-
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -69,7 +58,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, []); // Empty dependency array - only run on mount
+  }, [isAIAvailable]);
 
   // Auto-scroll to new messages
   useEffect(() => {
@@ -146,7 +135,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         content: analysisText,
         timestamp: new Date().toISOString(),
       });
-    } catch (error) {
+    } catch (_error) {
       addMessage({
         role: 'assistant' as const,
         content: '❌ Не вдалося проаналізувати розклад. Будь ласка, спробуйте пізніше.',
@@ -156,7 +145,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   }, [currentEvents, addMessage]);
 
   // Helper function to generate actions from AI response
-  const generateActionsFromAI = (action: string | undefined, eventData: any): AIAction[] => {
+  const generateActionsFromAI = (
+    action: string | undefined,
+    eventData?: AIResponse['event']
+  ): AIAction[] => {
     if (!action || action === 'query' || action === 'analyze') {
       return [];
     }
@@ -277,15 +269,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
       // Send to AI service
       const aiResponse = await aiService.chat(userMessage, currentEvents);
 
-      console.log('🔍 AI Response:', aiResponse);
-
       // Extract AI response data
       const messageContent = aiResponse.message || 'Відповідь AI';
       const aiAction = aiResponse.action;
       const aiEventData = aiResponse.event;
-
-      console.log('🔍 AI action:', aiAction);
-      console.log('🔍 AI event data:', aiEventData);
 
       // Remove loading message and add AI response
       setMessages((prev) => {
@@ -327,7 +314,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
       // Handle AI actions (create/update/delete events)
       if (aiAction === 'create' && aiEventData && onEventCreate) {
         // Convert AI color to calendar color
-        const aiColor = (aiEventData as any).color;
+        const aiColor = aiEventData.color;
         const calendarColor = convertToCalendarColor(aiColor);
 
         // Create event from AI data
@@ -345,7 +332,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 
         // Create the event
         onEventCreate(newEvent);
-        console.log('✅ Event created from AI:', newEvent);
 
         // Add confirmation message with color info
         const colorMessage = aiEventData.color ? ` з кольором ${calendarColor}` : '';
@@ -356,7 +342,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
           timestamp: new Date().toISOString(),
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Remove loading message and add error
       setMessages((prev) => {
         const filteredMessages = prev.filter((msg) => !msg.isLoading);
@@ -381,7 +367,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   const handleQuickAction = useCallback(
     (action: string) => {
       switch (action) {
-        case 'show_events':
+        case 'show_events': {
           const eventsCount = currentEvents.length;
           const todayEvents = currentEvents.filter(
             (event) => event.date === new Date().toISOString().split('T')[0]
@@ -404,7 +390,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
                 : [],
           });
           break;
-        case 'create_quick_event':
+        }
+        case 'create_quick_event': {
           const quickEvent: CalendarEvent = {
             id: generateUniqueId('event'),
             date: new Date().toISOString().split('T')[0],
@@ -420,7 +407,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
             timestamp: new Date().toISOString(),
           });
           break;
-
+        }
         default:
           break;
       }
@@ -442,6 +429,17 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
       minute: '2-digit',
     });
   };
+
+  if (!isServiceAvailable) {
+    return (
+      <div className={clsx('ai-assistant', 'ai-assistant-disabled', className)}>
+        <div className="ai-assistant-disabled-message">
+          <span>🤖</span>
+          <p>AI асистент тимчасово недоступний</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`${styles.assistantContainer} ${className}`}>

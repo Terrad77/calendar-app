@@ -7,8 +7,6 @@ export default defineConfig(({ mode }) => {
   // Load env variables for the current mode (development/production/staging)
   const env = loadEnv(mode, process.cwd(), '');
 
-  console.log(`\x1b[33m[Vite] Config loaded for mode: ${mode}\x1b[0m`);
-
   return {
     plugins: [react()],
 

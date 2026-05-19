@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useRef, useEffect, useState } from 'react';
 import { styled } from '@stitches/react';
 import dayjs, { Dayjs } from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween'; // plugin for checking if a date is between two dates
@@ -6,7 +6,6 @@ import { useDroppable } from '@dnd-kit/core';
 import { SortableContext } from '@dnd-kit/sortable';
 import type { CalendarEvent } from '../../../types/types';
 import { TaskCardDraggable } from '../TaskCardDraggableComponent/TaskCardDraggableComponent';
-import { TaskInputForm } from '../TaskInputFormComponent/TaskInputFormComponent';
 import { useLanguage } from '../../../hooks/useLanguage';
 
 dayjs.extend(isBetween); // extend dayjs with isBetween plugin
@@ -21,17 +20,18 @@ interface CalendarDayCellProps {
   setActiveDayForInput: React.Dispatch<React.SetStateAction<string | null>>;
   editingTask: CalendarEvent | null;
   setEditingTask: (task: CalendarEvent | null) => void;
-  setAllTasks: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
   allTasks: CalendarEvent[];
   isFiller: boolean;
+  onDayClick?: (date: string) => void;
+  onTaskClick?: (task: CalendarEvent) => void;
 }
 
 const DayCell = styled('div', {
-  minHeight: 'var(--calendar-day-cell-min-height, 120px)',
-  padding: '8px',
+  minHeight: 'var(--calendar-day-cell-min-height, 100px)',
+  padding: '6px',
   textAlign: 'left',
   position: 'relative',
-  fontSize: '0.92rem',
+  fontSize: '0.88rem',
   fontWeight: '600',
   display: 'flex',
   flexDirection: 'column',
@@ -45,20 +45,50 @@ const DayCell = styled('div', {
   },
   '& .day-number-and-month': {
     display: 'flex',
-    alignItems: 'baseline',
-    gap: '4px',
-    marginBottom: '6px',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: '4px',
   },
   '& .task-count': {
     color: '#6b7280',
-    fontSize: '0.72rem',
-    marginLeft: '2px',
+    fontSize: '0.66rem',
+    marginLeft: 'auto',
+    whiteSpace: 'nowrap',
   },
   '& .tasks-container': {
     flexGrow: 1,
     overflowY: 'auto',
     paddingRight: '2px',
     overflowX: 'hidden',
+    maxHeight: 'calc(var(--calendar-day-cell-min-height, 100px) - 48px)',
+    // Thin macOS-like scrollbar
+    scrollbarWidth: 'thin',
+    scrollbarColor: 'transparent transparent',
+    '&::-webkit-scrollbar': {
+      width: '6px',
+      height: '6px',
+    },
+    '&::-webkit-scrollbar-track': {
+      background: 'transparent',
+    },
+    '&::-webkit-scrollbar-thumb': {
+      background: 'rgba(100,116,139,0.0)',
+      borderRadius: '999px',
+      border: '2px solid transparent',
+      backgroundClip: 'padding-box',
+      transition: 'background 160ms ease, opacity 160ms ease',
+    },
+    '&:hover::-webkit-scrollbar-thumb': {
+      background: 'rgba(100,116,139,0.28)',
+    },
+    // firefox fallback: show faint thumb only on hover via scrollbarColor swap
+    '&:hover': {
+      scrollbarColor: 'rgba(100,116,139,0.28) transparent',
+    },
+    '&::-webkit-scrollbar-button': {
+      display: 'none',
+    },
   },
   variants: {
     isOutsideMonth: {
@@ -110,7 +140,7 @@ const DayCell = styled('div', {
     },
     isInteractive: {
       true: { cursor: 'pointer', pointerEvents: 'auto' },
-      false: { cursor: 'default', pointerEvents: 'none' },
+      false: { cursor: 'default', pointerEvents: 'auto' },
     },
   },
   defaultVariants: {
@@ -124,11 +154,11 @@ const DayCell = styled('div', {
 });
 
 const HolidayName = styled('div', {
-  fontSize: '0.74rem',
+  fontSize: '0.68rem',
   fontWeight: '600',
   color: '#be123c',
-  marginBottom: '6px',
-  padding: '4px 8px',
+  marginBottom: '4px',
+  padding: '2px 6px',
   borderRadius: '999px',
   backgroundColor: 'rgba(255, 228, 230, 0.85)',
   border: '1px solid rgba(251, 113, 133, 0.35)',
@@ -149,8 +179,8 @@ const DayNumber = styled('span', {
         color: '#fff',
         backgroundColor: '#2563eb',
         borderRadius: '50%',
-        padding: '3px 7px',
-        fontSize: '0.9em',
+        padding: '2px 6px',
+        fontSize: '0.85em',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -165,12 +195,14 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   dailyTasks,
   dailyHolidays,
   activeDragItem,
-  activeDayForInput,
-  setActiveDayForInput,
-  editingTask,
-  setEditingTask,
-  setAllTasks,
+  activeDayForInput: _activeDayForInput,
+  setActiveDayForInput: _setActiveDayForInput,
+  editingTask: _editingTask,
+  setEditingTask: _setEditingTask,
+  // setAllTasks removed; not needed here
   isFiller,
+  onDayClick,
+  onTaskClick,
 }) => {
   const { currentLanguage } = useLanguage(); // get current language
   const locale = currentLanguage === 'uk' ? 'uk' : 'en';
@@ -179,8 +211,45 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   const isOutsideActualMonth = !dayInLoop.isSame(currentMonth, 'month');
   const isToday = dayjs().isSame(dayInLoop, 'day');
   const isPastDate = dayInLoop.isBefore(today, 'day');
+  const canCreateEvent = !isPastDate;
 
-  const shouldBeInteractive = !isPastDate;
+  const tasksContainerRef = useRef<HTMLDivElement | null>(null);
+  const [hiddenCount, setHiddenCount] = useState(0);
+
+  useEffect(() => {
+    const el = tasksContainerRef.current;
+    if (!el) {
+      setHiddenCount(0);
+      return;
+    }
+
+    const computeHidden = () => {
+      const children = Array.from(el.children) as HTMLElement[];
+      if (children.length === 0) {
+        setHiddenCount(0);
+        return;
+      }
+      let visible = 0;
+      for (const ch of children) {
+        const chBottom = ch.offsetTop + ch.offsetHeight;
+        if (chBottom <= el.clientHeight + el.scrollTop) visible++;
+      }
+      setHiddenCount(Math.max(0, children.length - visible));
+    };
+
+    computeHidden();
+
+    const ro = new ResizeObserver(() => computeHidden());
+    ro.observe(el);
+    window.addEventListener('resize', computeHidden);
+    el.addEventListener('scroll', computeHidden);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', computeHidden);
+      el.removeEventListener('scroll', computeHidden);
+    };
+  }, [dailyTasks]);
 
   // show title (abbr of month) for first & last day of month
   const showMonthAbbr = useMemo(() => {
@@ -196,78 +265,30 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `day-${dayFormatted}`,
     // prevent target for Drag&Drop if cell is must be not interactive
-    disabled: !shouldBeInteractive,
+    disabled: !canCreateEvent,
   });
 
   // function to handle Cell Click (add new task)
   const handleCellClick = useCallback(() => {
-    if (!shouldBeInteractive || activeDragItem) return;
-
-    if (activeDayForInput === dayFormatted) {
-      setActiveDayForInput(null);
-      setEditingTask(null);
-    } else {
-      setActiveDayForInput(dayFormatted); // open input for this day
-      setEditingTask(null);
-    }
-  }, [
-    shouldBeInteractive,
-    activeDragItem,
-    activeDayForInput,
-    dayFormatted,
-    setActiveDayForInput,
-    setEditingTask,
-  ]);
+    // open day list modal on any click (empty or not), unless dragging
+    if (activeDragItem) return;
+    if (typeof onDayClick === 'function') onDayClick(dayFormatted);
+  }, [activeDragItem, dayFormatted, onDayClick]);
 
   //function to handle TaskCardClick (edit existing task)
   const handleTaskCardClick = useCallback(
     (e: React.MouseEvent, event: CalendarEvent) => {
       e.stopPropagation(); // stop Event Bubbling, to prevent click from reaching DayCell
+      if (activeDragItem) return;
 
-      if (!shouldBeInteractive || activeDragItem) return;
-
-      if (event.eventType === 'task') {
-        setEditingTask(event); // set the task to be edited
-        setActiveDayForInput(dayFormatted); // open input for this day
+      if (typeof onTaskClick === 'function') {
+        onTaskClick(event);
       }
     },
-    [shouldBeInteractive, activeDragItem, dayFormatted, setActiveDayForInput, setEditingTask]
+    [activeDragItem, onTaskClick]
   );
 
-  // Save function
-  const handleSaveTaskForm = useCallback(
-    (taskData: CalendarEvent) => {
-      setAllTasks((prevTasks) => {
-        // if exist initialTask (editingTask), editing
-        if (editingTask) {
-          return prevTasks.map((task) => (task.id === taskData.id ? taskData : task));
-        } else {
-          // Add new Task
-          return [...prevTasks, taskData];
-        }
-      });
-      // Close forms after Save
-      setActiveDayForInput(null);
-      setEditingTask(null);
-    },
-    [editingTask, setAllTasks, setActiveDayForInput, setEditingTask]
-  );
-
-  // Delete function
-  const handleDeleteTaskForm = useCallback(
-    (taskId: string) => {
-      setAllTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
-      setActiveDayForInput(null);
-      setEditingTask(null);
-    },
-    [setAllTasks, setActiveDayForInput, setEditingTask]
-  );
-
-  // Cancel function
-  const handleCancelForm = useCallback(() => {
-    setActiveDayForInput(null);
-    setEditingTask(null);
-  }, [setActiveDayForInput, setEditingTask]);
+  // Note: creation/editing handled by parent via callbacks; keep cell lean.
 
   return (
     <DayCell
@@ -276,7 +297,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
       isOutsideMonth={isOutsideActualMonth}
       isFiller={isFiller}
       isPastDate={isPastDate}
-      isInteractive={shouldBeInteractive}
+      isInteractive={canCreateEvent}
       onClick={handleCellClick}
     >
       <div className="day-number-and-month">
@@ -303,25 +324,36 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
           <HolidayName key={holiday.id}>{holiday.title}</HolidayName>
         ))}
       </div>
-      <div className="tasks-container">
+      <div className="tasks-container" ref={tasksContainerRef}>
         <SortableContext
           items={dailyTasks.map((task) => task.id)}
           id={`sortable-day-${dayFormatted}`}
         >
           {dailyTasks.map((task) => (
-            <TaskCardDraggable key={task.id} event={task} onCardClick={handleTaskCardClick} />
+            <TaskCardDraggable
+              key={task.id}
+              event={task}
+              onCardClick={handleTaskCardClick}
+              compact
+            />
           ))}
         </SortableContext>
       </div>
-      {/* show TaskInputForm only for interactive days */}
-      {activeDayForInput === dayFormatted && shouldBeInteractive && (
-        <TaskInputForm
-          initialTask={editingTask}
-          onSave={handleSaveTaskForm}
-          onCancel={handleCancelForm}
-          onDelete={handleDeleteTaskForm}
-          initialDate={editingTask ? undefined : dayFormatted}
-        />
+      {hiddenCount > 0 && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 8,
+            right: 8,
+            background: 'rgba(0,0,0,0.6)',
+            color: '#fff',
+            padding: '4px 8px',
+            borderRadius: 999,
+            fontSize: '0.72rem',
+          }}
+        >
+          +{hiddenCount}
+        </div>
       )}
     </DayCell>
   );

@@ -1,0 +1,141 @@
+.searchCard,
+.contactCard {
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.06);
+}
+
+.searchCard {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.sectionLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.sectionTitle {
+  margin-top: 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: #0f172a;
+}
+
+.searchInput {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 1rem;
+  background: rgba(248, 250, 252, 0.94);
+  padding: 0.95rem 1rem;
+  font-size: 0.95rem;
+  color: #0f172a;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: rgba(15, 23, 42, 0.22);
+  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.06);
+}
+
+.contactsGrid {
+  display: grid;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.contactCard {
+  display: flex;
+  gap: 0.9rem;
+  padding: 1rem;
+}
+
+.contactAvatar {
+  display: flex;
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #0f172a 0%, #334155 100%);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.contactBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.contactHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.contactName {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.contactRole,
+.contactTime {
+  color: #64748b;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.06);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.contactActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.contactButton,
+.secondaryButton {
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  padding: 0.7rem 0.95rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.contactButton {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.secondaryButton {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: rgba(248, 250, 252, 0.95);
+  color: #0f172a;
+}
+
+@media (min-width: 768px) {
+  .contactsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

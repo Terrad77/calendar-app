@@ -158,7 +158,6 @@ export const getUsers = async () => {
       message: err.response?.data?.message || 'Unknown error',
       statusCode: err.response?.status || 500,
     };
-    console.log(response.message);
 
     return response;
   }

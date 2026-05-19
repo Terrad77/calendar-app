@@ -5,6 +5,11 @@ import SignUpPage from './pages/SignUpPage/SignUpPage';
 import SignInPage from './pages/SignInPage/SignInPage';
 import AuthSuccessPage from './pages/AuthSuccessPage/AuthSuccessPage';
 import HomePage from './pages/HomePage/HomePage'; // main calendar page
+import AnalyticsPage from './pages/AnalyticsPage/AnalyticsPage';
+import ContactsPage from './pages/ContactsPage/ContactsPage';
+import NotificationsPage from './pages/NotificationsPage/NotificationsPage';
+import SettingsPage from './pages/SettingsPage/SettingsPage';
+import DebugDayModal from './pages/DebugDayModal/DebugDayModal';
 // import { authenticationService } from './services/authService';
 import { AIAssistantDrawer } from './components/AIAssistant/AIAssistantDrawer';
 import { Layout } from './components/Layout/Layout';
@@ -64,8 +69,20 @@ function App() {
   const isAuthenticated = useSelector(selectIsLoggedIn);
 
   const eventsEqual = (left: CalendarEvent, right: CalendarEvent) => {
-    const leftAny = left as any;
-    const rightAny = right as any;
+    const leftParticipants = 'participants' in left ? left.participants : undefined;
+    const rightParticipants = 'participants' in right ? right.participants : undefined;
+
+    const leftReminderTime = 'reminderTime' in left ? left.reminderTime : null;
+    const rightReminderTime = 'reminderTime' in right ? right.reminderTime : null;
+
+    const leftIsRecurring = 'isRecurring' in left ? left.isRecurring : null;
+    const rightIsRecurring = 'isRecurring' in right ? right.isRecurring : null;
+
+    const leftCompleted = 'completed' in left ? left.completed : null;
+    const rightCompleted = 'completed' in right ? right.completed : null;
+
+    const leftPriority = 'priority' in left ? left.priority : null;
+    const rightPriority = 'priority' in right ? right.priority : null;
 
     return (
       left.id === right.id &&
@@ -78,13 +95,11 @@ function App() {
       left.location === right.location &&
       left.countryCode === right.countryCode &&
       JSON.stringify(left.colors || []) === JSON.stringify(right.colors || []) &&
-      JSON.stringify(leftAny.participants || []) === JSON.stringify(rightAny.participants || []) &&
-      JSON.stringify(leftAny.reminderTime ?? null) ===
-        JSON.stringify(rightAny.reminderTime ?? null) &&
-      JSON.stringify(leftAny.isRecurring ?? null) ===
-        JSON.stringify(rightAny.isRecurring ?? null) &&
-      JSON.stringify(leftAny.completed ?? null) === JSON.stringify(rightAny.completed ?? null) &&
-      JSON.stringify(leftAny.priority ?? null) === JSON.stringify(rightAny.priority ?? null)
+      JSON.stringify(leftParticipants || []) === JSON.stringify(rightParticipants || []) &&
+      JSON.stringify(leftReminderTime) === JSON.stringify(rightReminderTime) &&
+      JSON.stringify(leftIsRecurring) === JSON.stringify(rightIsRecurring) &&
+      JSON.stringify(leftCompleted) === JSON.stringify(rightCompleted) &&
+      JSON.stringify(leftPriority) === JSON.stringify(rightPriority)
     );
   };
 
@@ -146,9 +161,7 @@ function App() {
   useEffect(() => {
     const checkAIService = async () => {
       try {
-        console.log('Checking AI service health...');
         const health = await aiService.healthCheck();
-        console.log('AI Service Health:', health);
         setAiServiceStatus(health);
 
         if (!health.available) {
@@ -297,6 +310,62 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/analytics"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <AnalyticsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/contacts"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <ContactsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <NotificationsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <SettingsPage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Dev-only debug modal route */}
+        {process.env.NODE_ENV === 'development' && (
+          <Route
+            path="/__debug/day-modal"
+            element={
+              <Layout>
+                <DebugDayModal />
+              </Layout>
+            }
+          />
+        )}
 
         {/* Fallback route - redirect to appropriate page */}
         <Route

@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import {
   Bell,
@@ -13,7 +14,9 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
+import Logo from '../Logo/Logo';
 import { selectUser } from '../../redux/user/selectors';
+import css from './Sidebar.module.css';
 
 interface SidebarNavItemProps {
   label: string;
@@ -61,10 +64,27 @@ interface SidebarProps {
 export const Sidebar = ({ className, isOpen = true, onClose }: SidebarProps) => {
   const user = useSelector(selectUser);
   const { t } = useTranslation('navigation');
-  const [activeItem, setActiveItem] = useState<(typeof navigationItems)[number]['key']>('calendar');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const activeItem = useMemo<(typeof navigationItems)[number]['key']>(() => {
+    if (location.pathname.startsWith('/analytics')) return 'analytics';
+    if (location.pathname.startsWith('/contacts')) return 'contacts';
+    if (location.pathname.startsWith('/notifications')) return 'notifications';
+    if (location.pathname.startsWith('/settings')) return 'settings';
+    return 'calendar';
+  }, [location.pathname]);
 
   const handleSelect = (key: (typeof navigationItems)[number]['key']) => {
-    setActiveItem(key);
+    const routeMap: Record<(typeof navigationItems)[number]['key'], string> = {
+      calendar: '/calendar',
+      analytics: '/analytics',
+      contacts: '/contacts',
+      notifications: '/notifications',
+      settings: '/settings',
+    };
+
+    navigate(routeMap[key]);
     onClose?.();
   };
 
@@ -79,35 +99,33 @@ export const Sidebar = ({ className, isOpen = true, onClose }: SidebarProps) => 
   }, [user?.name]);
 
   const sidebarContent = (
-    <>
-      <div className="px-6 pt-6">
-        <div className="flex items-center gap-3">
-          {/* <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-100 text-sm font-semibold text-neutral-950 shadow-lg shadow-black/10">
-            Sidebar
-          </div> */}
-          <div className="min-w-0">
-            {/* <p className="text-[10px] uppercase tracking-[0.3em] text-neutral-500">
-              {t('workspace')}
-            </p> */}
-            <h1 className="mt-1 text-lg font-semibold text-white">CalendAir</h1>
+    <div className={css.sidebarContent}>
+      <div className={css.header}>
+        <div className={css.brand}>
+          <div className={css.brandLogo}>
+            <Logo />
           </div>
-          <button
-            onClick={onClose}
-            className="ml-auto rounded-lg p-2 hover:bg-neutral-800 lg:hidden"
-            aria-label="Close sidebar"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className={css.brandText}>
+            <p className={css.brandLabel}>CalendAir</p>
+            <h1 className={css.brandTitle}>{t('workspace')}</h1>
+          </div>
         </div>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className={css.closeButton}
+          aria-label="Close sidebar"
+        >
+          <X className={css.closeIcon} />
+        </button>
       </div>
 
-      <div className="mt-6 h-px bg-neutral-800" />
+      <div className={css.divider} />
 
-      <nav className="flex-1 px-4 py-6">
-        <p className="px-2 text-[10px] uppercase tracking-[0.28em] text-neutral-500">
-          {t('sidebar_title')}
-        </p>
-        <div className="mt-4 space-y-1">
+      <nav className={css.nav}>
+        <p className={css.navTitle}>{t('sidebar_title')}</p>
+        <div className={css.navList}>
           {navigationItems.map((item) => (
             <SidebarNavItem
               key={item.key}
@@ -120,39 +138,37 @@ export const Sidebar = ({ className, isOpen = true, onClose }: SidebarProps) => 
         </div>
       </nav>
 
-      <div className="border-t border-neutral-800 p-4">
-        <div className="flex items-center gap-3 rounded-2xl bg-neutral-800 px-3 py-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-700 text-sm font-semibold text-white">
-            {initials}
+      <div className={css.footer}>
+        <div className={css.profileCard}>
+          <div className={css.avatar}>{initials}</div>
+          <div className={css.profileMeta}>
+            <p className={css.profileName}>{user?.name || 'Guest user'}</p>
+            <p className={css.profileEmail}>{user?.email || 'guest@calendar.app'}</p>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white">{user?.name || 'Guest user'}</p>
-            <p className="truncate text-xs text-neutral-400">
-              {user?.email || 'guest@calendar.app'}
-            </p>
-          </div>
-          <CircleUserRound className="h-4 w-4 shrink-0 text-neutral-400" />
+          <CircleUserRound className={css.profileIcon} />
         </div>
       </div>
-    </>
+    </div>
   );
 
   return (
     <>
-      <aside
-        className={clsx(
-          'fixed top-16 left-0 z-40 hidden h-[calc(100%-4rem)] w-64 flex-col border-r border-neutral-800 bg-neutral-900 text-neutral-100 lg:flex',
-          className
-        )}
+      <motion.aside
+        className={clsx(css.sidebar, className)}
+        inert={!isOpen}
+        initial={false}
+        animate={isOpen ? { x: 0, opacity: 1 } : { x: '-100%', opacity: 0 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+        style={{ pointerEvents: isOpen ? 'auto' : 'none' }}
       >
         {sidebarContent}
-      </aside>
+      </motion.aside>
 
       <AnimatePresence>
         {isOpen && (
           <>
             <motion.div
-              className="fixed inset-0 z-30 bg-black/50 lg:hidden"
+              className={css.backdrop}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -160,13 +176,10 @@ export const Sidebar = ({ className, isOpen = true, onClose }: SidebarProps) => 
             />
 
             <motion.aside
-              className={clsx(
-                'fixed top-16 left-0 z-50 flex h-[calc(100%-4rem)] w-64 flex-col border-r border-neutral-800 bg-neutral-900 text-neutral-100 lg:hidden',
-                className
-              )}
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
+              className={clsx(css.mobileSidebar, className)}
+              initial={{ y: '-100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             >
               {sidebarContent}

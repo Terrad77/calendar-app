@@ -1,21 +1,21 @@
 .title {
   font-weight: 700;
-  font-size: 20px;
-  line-height: 120%;
-  letter-spacing: -0.01em;
+  font-size: 1.4rem;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
   text-align: center;
-
-  margin-bottom: 16px;
+  margin-bottom: 0.9rem;
+  color: #0f172a;
 }
 
 .text {
   font-weight: 400;
-  font-size: 14px;
-  line-height: 129%;
+  font-size: 0.95rem;
+  line-height: 1.45;
   letter-spacing: -0.01em;
   text-align: center;
-
-  margin-bottom: 28px;
+  margin-bottom: 1.5rem;
+  color: #475569;
 }
 
 .okBtn {
@@ -23,38 +23,50 @@
   align-items: center;
   justify-content: center;
 
-  color: var(--color-text-primary);
+  color: #ffffff;
 
-  border: 1px solid var(--color-border);
-  border-radius: 30px;
-  padding: 4px 6px;
+  border: 1px solid rgba(15, 23, 42, 0.92);
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
 
-  background: transparent;
+  background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
   font-weight: 700;
-  font-size: 14px;
-  line-height: 129%;
+  font-size: 0.95rem;
+  line-height: 1.2;
   letter-spacing: -0.01em;
 
   outline: transparent;
-  margin-bottom: 9px;
-  transition: all var(--transition);
-  width: 118px;
+  margin-bottom: 0.25rem;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
+  width: 9rem;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16);
+}
+
+.okBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.2);
+}
+
+.okBtn:focus-visible {
+  outline: 2px solid rgba(15, 23, 42, 0.24);
+  outline-offset: 2px;
 }
 
 /* from 768px */
 @media screen and (min-width: 768px) {
   .title {
-    font-size: 28px;
-    line-height: 114%;
+    font-size: 1.75rem;
   }
   .text {
-    font-size: 18px;
-    line-height: 133%;
+    font-size: 1rem;
   }
 
   .okBtn {
-    width: 160px;
-    padding: 14px 0;
-    font-size: 16px;
+    width: 10rem;
+    padding: 1rem 0;
+    font-size: 1rem;
   }
 }

@@ -4,43 +4,49 @@
 }
 
 .themeButton {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  min-height: 40px;
-  color: var(--color-text-primary);
-  gap: var(--space-sm);
-
-  background: var(--color-bg-secondary);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-
-  opacity: 0.7;
+  gap: 0.55rem;
+  min-height: 2.5rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.98), transparent 42%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.94));
+  color: #0f172a;
   cursor: pointer;
-  padding: 0 14px; /* for fixing size jump on text show/hide */
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .themeButton:hover,
-.themeButton:focus {
-  opacity: 1;
-  border-color: var(--color-accent-hover);
-  box-shadow: inset 0 2px 6px var(--color-accent-hover);
-  border-width: 2px;
-  margin: -1px;
+.themeButton:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(15, 23, 42, 0.16);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.09);
 }
 /* for override Stitches css prop icon sizes */
 .icon {
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 .textButton {
   display: none;
-  font-size: 16px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 /* from 768px */
 @media (min-width: 768px) {
   .icon {
-    font-size: 16px !important;
+    font-size: 15px !important;
   }
 
   .textButton {

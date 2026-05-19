@@ -33,20 +33,20 @@ export default function Modal({ children, isOpen, onClose, btnClassName }: Modal
 
   const isLoading = useSelector(selectIsLoading);
 
-  return (
-    <>
-      {createPortal(
-        <div className={css.backdrop} onClick={onClose}>
-          {isLoading && <DotLoader text="Loading..." />}
-          <div className={css.modal} onClick={(e) => e.stopPropagation()}>
-            <button className={clsx(css.closeButton, btnClassName)} onClick={onClose}>
-              <Icon name="x-close" className={(css.closeIcon, css.responsiveIcon)} />
-            </button>
-            {children}
-          </div>
-        </div>,
-        document.body
-      )}
-    </>
+  if (!isOpen) {
+    return null;
+  }
+
+  return createPortal(
+    <div className={css.backdrop} onClick={onClose}>
+      {isLoading && <DotLoader text="Loading..." />}
+      <div className={css.modal} onClick={(e) => e.stopPropagation()}>
+        <button className={clsx(css.closeButton, btnClassName)} onClick={onClose} type="button">
+          <Icon name="x-close" className={clsx(css.closeIcon, css.responsiveIcon)} />
+        </button>
+        {children}
+      </div>
+    </div>,
+    document.body
   );
 }

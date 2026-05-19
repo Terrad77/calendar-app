@@ -1,6 +1,10 @@
 import passport from 'passport';
-import { Strategy as GoogleStrategy, VerifyCallback } from 'passport-google-oauth20';
+import { Strategy as GoogleStrategy, VerifyCallback, type Profile } from 'passport-google-oauth20';
 import type { SocialUserData } from '../types/auth.types';
+
+interface SerializedPassportUser {
+  id?: string;
+}
 
 export const isGoogleOAuthConfigured = Boolean(
   process.env.GOOGLE_CLIENT_ID &&
@@ -20,11 +24,16 @@ if (isGoogleOAuthConfigured) {
         //using state: true for prevent CSRF attacks
         scope: ['email', 'profile'],
       },
-      async (accessToken: string, refreshToken: string, profile: any, done: VerifyCallback) => {
+      async (
+        _accessToken: string,
+        _refreshToken: string,
+        profile: Profile,
+        done: VerifyCallback
+      ) => {
         try {
           const email =
             profile.emails && profile.emails.length > 0 ? profile.emails[0].value : null;
-          const name = profile.displayName || profile.name.givenName;
+          const name = profile.displayName || profile.name?.givenName || 'Unknown User';
           const googleId = profile.id;
 
           if (!email) {
@@ -52,8 +61,8 @@ if (isGoogleOAuthConfigured) {
   );
 }
 
-// Since we use JWT (Stateless), we don't need to serialize/deserialize the user, but Passport requires these functions to be defined
-passport.serializeUser((user: any, done) => {
+// Stateless API (no need for serialize/deserialize, but Passport requires them)
+passport.serializeUser((user: SerializedPassportUser, done) => {
   done(null, user.id);
 });
 

@@ -32,11 +32,11 @@ class AIService {
             return inner.accessToken || inner.token || inner.authToken || null;
           }
           return (parsed.accessToken as string) || (parsed.token as string) || null;
-        } catch (e) {
+        } catch (_e) {
           // ignore parse errors
         }
       }
-    } catch (err) {
+    } catch (_err) {
       // ignore
     }
 
@@ -57,9 +57,6 @@ class AIService {
       // If we get a 503, retry with exponential backoff
       if (response.status === 503 && retryCount < this.maxRetries) {
         const delay = Math.pow(2, retryCount) * 1000; // 2^retryCount seconds
-        console.log(
-          `Retrying request in ${delay}ms (attempt ${retryCount + 1}/${this.maxRetries})`
-        );
 
         await new Promise((resolve) => setTimeout(resolve, delay));
         return this.fetchWithRetry(url, options, retryCount + 1);
@@ -70,7 +67,6 @@ class AIService {
       // For network errors, also retry
       if (retryCount < this.maxRetries) {
         const delay = Math.pow(2, retryCount) * 1000;
-        console.log(`Network error, retrying in ${delay}ms`);
 
         await new Promise((resolve) => setTimeout(resolve, delay));
         return this.fetchWithRetry(url, options, retryCount + 1);
@@ -112,8 +108,6 @@ class AIService {
 
       // Reset retry attempts on successful response
       this.retryAttempts = 0;
-
-      console.log('AI chat response status:', response.status);
 
       if (response.status === 401) {
         throw new Error('AUTH_REQUIRED');
@@ -201,8 +195,6 @@ class AIService {
       // Reset retry attempts on successful response
       this.retryAttempts = 0;
 
-      console.log('AI analyze schedule response status:', response.status);
-
       if (response.status === 503) {
         this.retryAttempts++;
         throw new Error('AI service is temporarily overloaded. Please try again later.');
@@ -246,8 +238,6 @@ class AIService {
     this.isCheckingHealth = true;
 
     try {
-      console.log('Checking AI service health at:', `${API_URL}/api/ai/health`);
-
       // Use a timeout for health check
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
@@ -262,8 +252,6 @@ class AIService {
 
       clearTimeout(timeoutId);
 
-      console.log('Health check response status:', response.status);
-
       if (!response.ok) {
         throw new Error(
           `AI service health check failed: ${response.status} ${response.statusText}`
@@ -271,7 +259,6 @@ class AIService {
       }
 
       const data = await response.json();
-      console.log('Health check data:', data);
 
       this.isCheckingHealth = false;
       return {
