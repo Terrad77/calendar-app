@@ -1,8 +1,21 @@
 #!/bin/sh
 
+# GitHub Desktop on Windows can inherit an invalid /bin/bash shell for npm.
+# Force npm/lint-staged to use POSIX sh from current PATH.
+unset npm_config_script_shell
+unset NPM_CONFIG_SCRIPT_SHELL
+export npm_config_script_shell=sh
+export SHELL=sh
+
 echo "🚀 Running lint-staged..."
 if npx lint-staged; then
-    echo "✅ Pre-commit checks passed"
+    echo "🧪 Running Jest checks..."
+    if npm run test:jest; then
+        echo "✅ Pre-commit checks passed"
+    else
+        echo "❌ Jest checks failed"
+        exit 1
+    fi
 else
     echo "❌ Pre-commit checks failed"
     exit 1

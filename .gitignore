@@ -150,6 +150,9 @@ backend/node_modules/
 .DS_Store
 Thumbs.db
 
+# Temporary files
+tmp/
+
 # Environment
 .env
 .env.local
