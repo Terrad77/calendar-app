@@ -561,7 +561,6 @@ export const Calendar = ({
     editingTask,
     setEditingTask,
     setTasks,
-    filteredTasksAndHolidaysByDay,
   ]);
 
   const handleCloseDayModal = useCallback(() => {
