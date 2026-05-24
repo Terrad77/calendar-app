@@ -560,7 +560,6 @@ export const Calendar = ({
     setActiveDayForInput,
     editingTask,
     setEditingTask,
-    setTasks,
   ]);
 
   const handleCloseDayModal = useCallback(() => {

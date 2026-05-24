@@ -54,7 +54,7 @@ export const useTheme = () => {
     try {
       const ev = new CustomEvent('themechange', { detail: { theme: newTheme } });
       window.dispatchEvent(ev);
-    } catch (e) {
+    } catch (_e) {
       // fallback: no-op
     }
   };
@@ -73,7 +73,7 @@ export const useTheme = () => {
         const detail = (e as CustomEvent)?.detail;
         const val = (detail && detail.theme) || (localStorage.getItem('theme') as Theme) || 'light';
         setTheme((prev) => (prev === val ? prev : val));
-      } catch (err) {
+      } catch (_err) {
         // ignore
       }
     };
