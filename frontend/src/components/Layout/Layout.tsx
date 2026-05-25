@@ -32,7 +32,7 @@ export const Layout = ({ children }: LayoutProps) => {
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-950 [--app-header-height:4.5rem]">
+    <div className="min-h-screen bg-neutral-50 text-neutral-950 dark:bg-neutral-900 dark:text-neutral-50 [--app-header-height:4.5rem]">
       {isAuthenticated && <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
 
       <div

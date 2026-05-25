@@ -573,7 +573,7 @@ export const Calendar = ({
 
   return (
     <div
-      className="flex flex-col w-full gap-4 p-4 sm:p-6 lg:p-6 bg-white rounded-lg shadow-sm"
+      className="flex flex-col w-full gap-4 p-4 sm:p-6 lg:p-6 bg-white dark:bg-neutral-900 rounded-lg shadow-sm dark:shadow-none"
       style={{ marginTop: '2px' }}
     >
       <DndContext
@@ -597,18 +597,18 @@ export const Calendar = ({
         />
 
         {isPending && (
-          <div className="px-4 py-3 bg-blue-50 border border-blue-200 rounded-md text-center text-sm text-blue-800">
+          <div className="px-4 py-3 bg-blue-50 border border-blue-200 rounded-md text-center text-sm text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-100">
             Loading worldwide holidays...
           </div>
         )}
         {holidayError && (
-          <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-md text-center text-sm text-red-800">
+          <div className="px-4 py-3 bg-red-50 border border-red-200 rounded-md text-center text-sm text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-100">
             {holidayError}
           </div>
         )}
         <CalendarGridHeader />
 
-        <div className="grid grid-cols-7 gap-px bg-neutral-200 rounded-lg overflow-hidden">
+        <div className="grid grid-cols-7 gap-px bg-neutral-200 dark:bg-neutral-800 rounded-lg overflow-hidden">
           {renderedDays}
         </div>
 

@@ -31,7 +31,7 @@ export const Header = ({ sidebarOpen, setSidebarOpen, isAuthenticated }: HeaderP
   }, [sidebarOpen, setSidebarOpen]); // Added setSidebarOpen to dependencies
 
   return (
-    <header className="sticky top-0 z-50 border-b border-neutral-200/80 bg-neutral-50/90 backdrop-blur supports-[backdrop-filter]:bg-neutral-50/80">
+    <header className="sticky top-0 z-50 border-b border-neutral-200/80 bg-neutral-50/90 backdrop-blur supports-[backdrop-filter]:bg-neutral-50/80 dark:border-neutral-700/80 dark:bg-neutral-900/90 supports-[backdrop-filter]:dark:bg-neutral-900/80">
       <div className="mx-auto flex min-h-[var(--app-header-height)] w-full max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
         {isAuthenticated && (
           <button
