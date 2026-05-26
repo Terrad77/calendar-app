@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { styled } from '@stitches/react';
 import dayjs, { Dayjs } from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween'; // plugin for checking if a date is between two dates
@@ -206,6 +207,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
 }) => {
   const { currentLanguage } = useLanguage(); // get current language
   const locale = currentLanguage === 'uk' ? 'uk' : 'en';
+  const { t } = useTranslation('common');
   const dayFormatted = dayInLoop.format('YYYY-MM-DD');
   const today = dayjs().startOf('day');
   const isOutsideActualMonth = !dayInLoop.isSame(currentMonth, 'month');
@@ -314,7 +316,7 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
         {dailyTasks.length > 0 && (
           <span className="task-count">
             {dailyTasks.length}&nbsp;
-            {dailyTasks.length === 1 ? 'card' : 'cards'}
+            {dailyTasks.length === 1 ? t('card') : t('cards')}
           </span>
         )}
       </div>

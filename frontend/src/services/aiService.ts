@@ -1,5 +1,6 @@
 import type { CalendarEvent, AIResponse, ConversationMessage } from '../types/types';
 import { authenticationService } from './authService';
+import { getAppLanguage } from '../helpers/appLanguage';
 
 const API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:3001';
 
@@ -78,7 +79,11 @@ class AIService {
   /**
    * Send message to AI assistant with current calendar context
    */
-  async chat(message: string, currentEvents: CalendarEvent[] = []): Promise<AIResponse> {
+  async chat(
+    message: string,
+    currentEvents: CalendarEvent[] = [],
+    language: string = getAppLanguage()
+  ): Promise<AIResponse> {
     // Skip if service is overloaded (we recently got 503)
     if (this.retryAttempts >= this.maxRetries) {
       console.warn('Skipping AI request due to recent overload issues');
@@ -103,6 +108,7 @@ class AIService {
           message,
           events: currentEvents,
           conversationHistory: this.conversationHistory,
+          language,
         }),
       });
 
@@ -167,7 +173,11 @@ class AIService {
   /**
    * Analyze schedule for a given time range
    */
-  async analyzeSchedule(events: CalendarEvent[], timeRange: string = 'week'): Promise<string> {
+  async analyzeSchedule(
+    events: CalendarEvent[],
+    timeRange: string = 'week',
+    language: string = getAppLanguage()
+  ): Promise<string> {
     // Skip if service is overloaded
     if (this.retryAttempts >= this.maxRetries) {
       throw new Error('AI service is temporarily overloaded. Please try again later.');
@@ -189,6 +199,7 @@ class AIService {
         body: JSON.stringify({
           events,
           timeRange,
+          language,
         }),
       });
 

@@ -57,6 +57,20 @@
   --transition-slow: 500ms ease;
 }
 
+/* Modal variables (global so HMR applies without restart) */
+:root {
+  --modal-text: #0f172a;
+  --modal-bg: rgba(255, 255, 255, 0.84);
+  --modal-border: rgba(255, 255, 255, 0.7);
+  --modal-backdrop:
+    radial-gradient(circle at top, rgba(15, 23, 42, 0.08), transparent 40%),
+    rgba(248, 250, 252, 0.72);
+  --modal-shadow-1: 0 24px 80px rgba(15, 23, 42, 0.18);
+  --modal-shadow-2: 0 4px 18px rgba(15, 23, 42, 0.08);
+  --modal-close-bg: rgba(15, 23, 42, 0.04);
+  --modal-close-border: rgba(148, 163, 184, 0.28);
+}
+
 /* Dark theme */
 [data-theme='dark'] {
   --color-bg-primary: #1a1a1a;
@@ -81,6 +95,17 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+
+  /* Modal dark variables */
+  --modal-text: var(--color-text-primary, #ffffff);
+  --modal-bg: rgba(17, 24, 39, 0.65);
+  --modal-border: rgba(255, 255, 255, 0.06);
+  --modal-backdrop:
+    radial-gradient(circle at top, rgba(0, 0, 0, 0.5), transparent 40%), rgba(2, 6, 23, 0.6);
+  --modal-shadow-1: 0 20px 50px rgba(2, 6, 23, 0.6);
+  --modal-shadow-2: 0 6px 20px rgba(2, 6, 23, 0.45);
+  --modal-close-bg: rgba(255, 255, 255, 0.04);
+  --modal-close-border: rgba(148, 163, 184, 0.12);
 }
 
 /* CSS Reset */

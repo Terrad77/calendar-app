@@ -11,13 +11,7 @@ interface LayoutProps {
 }
 
 export const Layout = ({ children }: LayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    if (typeof window === 'undefined') {
-      return true;
-    }
-
-    return window.matchMedia('(min-width: 1024px)').matches;
-  });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const isAuthenticated = useSelector(selectIsLoggedIn);
 
   useEffect(() => {
@@ -48,8 +42,10 @@ export const Layout = ({ children }: LayoutProps) => {
           isAuthenticated={isAuthenticated}
         />
 
-        <main className={clsx(css.content, 'flex-1 px-4 py-6 sm:px-6 lg:px-8')}>
-          <div className="mx-auto w-full max-w-7xl">{children}</div>
+        <main className={clsx(css.content, 'flex-1 px-4 py-6 sm:px-6 lg:px-8 xl:px-10 2xl:px-12')}>
+          <div className="mx-auto w-full max-w-7xl xl:max-w-[86rem] 2xl:max-w-[96rem]">
+            {children}
+          </div>
         </main>
       </div>
     </div>

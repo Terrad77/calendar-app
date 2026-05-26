@@ -32,11 +32,11 @@ export const Header = ({ sidebarOpen, setSidebarOpen, isAuthenticated }: HeaderP
 
   return (
     <header className="sticky top-0 z-50 border-b border-neutral-200/80 bg-neutral-50/90 backdrop-blur supports-[backdrop-filter]:bg-neutral-50/80 dark:border-neutral-700/80 dark:bg-neutral-900/90 supports-[backdrop-filter]:dark:bg-neutral-900/80">
-      <div className="mx-auto flex min-h-[var(--app-header-height)] w-full max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-[var(--app-header-height)] w-full max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
         {isAuthenticated && (
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="inline-flex z-50 h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/30"
+            className="inline-flex z-50 h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/30 xl:h-[3.5rem] xl:w-[3.5rem] 2xl:h-[3.75rem] 2xl:w-[3.75rem]"
             aria-label={sidebarToggleLabel}
             title={sidebarToggleLabel}
             aria-expanded={sidebarOpen}

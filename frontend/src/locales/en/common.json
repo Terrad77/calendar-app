@@ -61,5 +61,10 @@
   "preview_working_hours": "09:00 - 17:00",
   "preview_event_product_sync": "Product sync",
   "preview_event_focus_block": "Focus block",
-  "preview_event_review_notes": "Review notes"
+  "preview_event_review_notes": "Review notes",
+  "card": "card",
+  "cards": "cards",
+  "ai_assistant": "AI Assistant",
+  "online": "Online",
+  "offline": "Offline"
 }

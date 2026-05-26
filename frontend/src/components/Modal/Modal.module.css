@@ -1,9 +1,11 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background:
+  background: var(
+    --modal-backdrop,
     radial-gradient(circle at top, rgba(15, 23, 42, 0.08), transparent 40%),
-    rgba(248, 250, 252, 0.72);
+    rgba(248, 250, 252, 0.72)
+  );
   backdrop-filter: blur(20px) saturate(160%);
   -webkit-backdrop-filter: blur(20px) saturate(160%);
   display: flex; /* добавляем flex для центрирования */
@@ -21,13 +23,13 @@
   justify-content: center;
   width: min(100%, 560px);
   padding: 3.25rem 1.25rem 1.25rem;
-  color: #0f172a;
-  border: 1px solid rgba(255, 255, 255, 0.7);
+  color: var(--modal-text, #0f172a);
+  border: 1px solid var(--modal-border, rgba(255, 255, 255, 0.7));
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.84);
+  background: var(--modal-bg, rgba(255, 255, 255, 0.84));
   box-shadow:
-    0 24px 80px rgba(15, 23, 42, 0.18),
-    0 4px 18px rgba(15, 23, 42, 0.08);
+    var(--modal-shadow-1, 0 24px 80px rgba(15, 23, 42, 0.18)),
+    var(--modal-shadow-2, 0 4px 18px rgba(15, 23, 42, 0.08));
   backdrop-filter: blur(18px);
 }
 
@@ -36,7 +38,7 @@
   align-items: center;
   justify-content: center;
 
-  color: #0f172a;
+  color: var(--modal-text, #0f172a);
 
   z-index: 1;
 
@@ -46,8 +48,8 @@
 
   width: 40px;
   height: 40px;
-  background: rgba(15, 23, 42, 0.04);
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: var(--modal-close-bg, rgba(15, 23, 42, 0.04));
+  border: 1px solid var(--modal-close-border, rgba(148, 163, 184, 0.28));
   border-radius: 9999px;
   cursor: pointer;
 
@@ -58,7 +60,7 @@
     background-color 0.18s ease,
     border-color 0.18s ease,
     box-shadow 0.18s ease;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 .closeIcon {
@@ -67,17 +69,17 @@
 
 .closeButton:hover {
   transform: scale(1.03);
-  background: rgba(15, 23, 42, 0.07);
+  background: rgba(255, 255, 255, 0.04);
   border-color: rgba(148, 163, 184, 0.42);
 }
 
 .closeButton:focus-visible {
-  outline: 2px solid rgba(15, 23, 42, 0.24);
+  outline: 2px solid rgba(99, 102, 241, 0.24);
   outline-offset: 2px;
 }
 
 .closeButton:hover > .closeIcon {
-  stroke: #0f172a;
+  stroke: var(--modal-text, #0f172a);
 }
 .responsiveIcon {
   font-size: 20px;

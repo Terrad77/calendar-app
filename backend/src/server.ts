@@ -200,7 +200,7 @@ app.post('/api/ai/chat', authenticateToken, async (req: Request, res: Response):
   console.log('Body:', JSON.stringify(req.body, null, 2));
 
   try {
-    const { message, events, conversationHistory } = req.body;
+    const { message, events, conversationHistory, language } = req.body;
     const authHeader = req.headers.authorization;
 
     console.log('Auth header present:', !!authHeader);
@@ -234,7 +234,9 @@ app.post('/api/ai/chat', authenticateToken, async (req: Request, res: Response):
       context += '\n';
     }
 
-    const fullPrompt = `${CALENDAR_SYSTEM_PROMPT}\n\n${context}User: ${message}\n\nResponse (in JSON format if action is needed, otherwise plain text):`;
+    const responseLanguage = language === 'uk' ? 'Ukrainian' : 'English';
+    const languageInstruction = `Respond in ${responseLanguage}.`;
+    const fullPrompt = `${CALENDAR_SYSTEM_PROMPT}\n\n${context}${languageInstruction}\nUser: ${message}\n\nResponse (in JSON format if action is needed, otherwise plain text):`;
 
     console.log('Sending to Gemini:', {
       messageLength: message.length,
@@ -300,7 +302,7 @@ app.post(
   authenticateToken,
   async (req: Request, res: Response): Promise<void> => {
     try {
-      const { events, timeRange } = req.body;
+      const { events, timeRange, language } = req.body;
       // Authenticated user ID
       const userId = req.user!.userId;
 
@@ -309,9 +311,11 @@ app.post(
         return;
       }
 
+      const analysisLanguage = language === 'uk' ? 'Ukrainian' : 'English';
+
       const prompt = `User ID: ${userId}\nAnalyze the following schedule for the period ${
         timeRange || 'week'
-      } and provide recommendations:
+      } and provide recommendations in ${analysisLanguage}:
       
 Events: ${JSON.stringify(events, null, 2)}
 
@@ -321,7 +325,7 @@ Provide:
 3. Free slots for important meetings
 4. Optimization suggestions
 
-Respond in Ukrainian or English, depending on the request language.`;
+Respond in ${analysisLanguage}.`;
 
       const result = await model.generateContent(prompt);
       const response = await result.response;

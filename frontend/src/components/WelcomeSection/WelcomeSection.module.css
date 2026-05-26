@@ -11,6 +11,70 @@
   box-shadow: 0 24px 64px rgba(15, 23, 42, 0.08);
 }
 
+@media (min-width: 1280px) {
+  .page {
+    min-height: calc(100vh - 9rem);
+  }
+
+  .shell {
+    padding: 2rem;
+    gap: 2.5rem;
+  }
+
+  .hero {
+    grid-template-columns: minmax(0, 1.1fr) minmax(20rem, 0.9fr);
+    gap: 2rem;
+  }
+
+  .copy {
+    max-width: 48rem;
+  }
+
+  .title {
+    font-size: clamp(3.2rem, 5vw, 6.25rem);
+  }
+
+  .subtitle {
+    max-width: 38rem;
+  }
+
+  .actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .previewCard {
+    width: min(100%, 28rem);
+  }
+}
+
+@media (min-width: 1536px) {
+  .page {
+    min-height: calc(100vh - 10rem);
+  }
+
+  .shell {
+    padding: 2.5rem;
+    gap: 3rem;
+  }
+
+  .hero {
+    gap: 2.5rem;
+  }
+
+  .title {
+    font-size: clamp(3.6rem, 4.6vw, 6.8rem);
+  }
+
+  .subtitle {
+    max-width: 42rem;
+    font-size: clamp(1.05rem, 1.1vw, 1.4rem);
+  }
+
+  .previewCard {
+    width: min(100%, 30rem);
+  }
+}
+
 .glowPrimary,
 .glowSecondary {
   position: absolute;

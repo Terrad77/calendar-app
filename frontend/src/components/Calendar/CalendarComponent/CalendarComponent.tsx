@@ -573,7 +573,7 @@ export const Calendar = ({
 
   return (
     <div
-      className="flex flex-col w-full gap-4 p-4 sm:p-6 lg:p-6 bg-white dark:bg-neutral-900 rounded-lg shadow-sm dark:shadow-none"
+      className="flex flex-col w-full gap-4 p-4 sm:p-6 lg:p-6 xl:p-8 2xl:p-10 bg-white dark:bg-neutral-900 rounded-lg shadow-sm dark:shadow-none xl:rounded-2xl 2xl:rounded-[1.5rem]"
       style={{ marginTop: '2px' }}
     >
       <DndContext

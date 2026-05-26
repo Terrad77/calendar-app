@@ -115,7 +115,6 @@ export const AIAssistantDrawer = ({
 
       return [
         {
-          id: generateUniqueId('msg'),
           role: 'assistant' as const,
           content: isAIAvailable
             ? 'Вітаю! Я ваш AI-помічник для керування календарем. Чим можу допомогти?'

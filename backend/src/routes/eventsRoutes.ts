@@ -105,6 +105,16 @@ const buildEventInsert = (payload: EventPayload, userId: string): EventInsert =>
   metadata: payload.metadata ?? {},
 });
 
+const isPastDate = (value: string): boolean => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const eventDate = new Date(value);
+  eventDate.setHours(0, 0, 0, 0);
+
+  return eventDate < today;
+};
+
 router.get('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -186,6 +196,14 @@ router.post('/', authenticateToken, async (req: Request, res: Response): Promise
       res.status(400).json({
         error: 'Validation error',
         message: 'title, startDate, and endDate are required',
+      });
+      return;
+    }
+
+    if (isPastDate(payload.startDate)) {
+      res.status(400).json({
+        error: 'Validation error',
+        message: 'Cannot create events in the past',
       });
       return;
     }

@@ -6,6 +6,84 @@
   width: 380px;
 }
 
+@media (min-width: 1280px) {
+  .modal {
+    width: 440px;
+    padding: 44px 0 44px 16px;
+    border-radius: 18px;
+  }
+
+  .title {
+    font-size: 22px;
+    margin-bottom: 24px;
+  }
+
+  .warningBox,
+  .inputGroup,
+  .checkboxGroup,
+  .btnWrap {
+    padding: 0 16px;
+  }
+
+  .warningBox {
+    margin: 0 16px 24px;
+  }
+
+  .passwordInput input {
+    padding: 13px 44px 13px 16px;
+    font-size: 15px;
+  }
+
+  .deleteBtn,
+  .cancelBtn {
+    padding: 15px 0;
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .modal {
+    width: 480px;
+    padding: 48px 0 48px 18px;
+    border-radius: 20px;
+  }
+
+  .title {
+    font-size: 24px;
+    margin-bottom: 26px;
+  }
+
+  .warningBox {
+    margin: 0 18px 26px;
+    padding: 14px 16px;
+  }
+
+  .inputGroup,
+  .checkboxGroup,
+  .btnWrap {
+    padding: 0 18px;
+  }
+
+  .inputGroup {
+    margin-bottom: 24px;
+  }
+
+  .checkboxGroup {
+    margin-bottom: 32px;
+  }
+
+  .passwordInput input {
+    padding: 14px 46px 14px 16px;
+    font-size: 15px;
+  }
+
+  .deleteBtn,
+  .cancelBtn {
+    padding: 16px 0;
+    font-size: 15px;
+  }
+}
+
 .title {
   font-weight: 700;
   font-size: 20px;

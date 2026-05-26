@@ -12,6 +12,8 @@ import type {
 import { convertToCalendarColor } from '../../types/types';
 import { aiService } from '../../services/aiService';
 import { generateUniqueId } from '../../utils/idGenerator';
+import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../../hooks/useLanguage';
 import clsx from 'clsx';
 import { Sparkles, X } from 'lucide-react';
 
@@ -31,6 +33,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation('common');
+  const { currentLanguage } = useLanguage();
 
   // Check AI service availability on component mount
   useEffect(() => {
@@ -127,7 +131,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
     });
 
     try {
-      const analysis = await aiService.analyzeSchedule(currentEvents, 'week');
+      const analysis = await aiService.analyzeSchedule(currentEvents, 'week', currentLanguage);
       const analysisText = String(analysis);
 
       addMessage({
@@ -142,7 +146,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         timestamp: new Date().toISOString(),
       });
     }
-  }, [currentEvents, addMessage]);
+  }, [currentEvents, addMessage, currentLanguage]);
 
   // Helper function to generate actions from AI response
   const generateActionsFromAI = (
@@ -267,7 +271,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
       });
 
       // Send to AI service
-      const aiResponse = await aiService.chat(userMessage, currentEvents);
+      const aiResponse = await aiService.chat(userMessage, currentEvents, currentLanguage);
 
       // Extract AI response data
       const messageContent = aiResponse.message || 'Відповідь AI';
@@ -361,7 +365,15 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [inputValue, isLoading, isAIAvailable, currentEvents, addMessage, onEventCreate]);
+  }, [
+    inputValue,
+    isLoading,
+    isAIAvailable,
+    currentEvents,
+    addMessage,
+    onEventCreate,
+    currentLanguage,
+  ]);
 
   // handler Quick Actions
   const handleQuickAction = useCallback(
@@ -465,11 +477,11 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
           <div className={styles.chatHeader}>
             <div className={styles.headerInfo}>
               <Sparkles className={styles.botIcon} />
-              <h3 className="ml-2">AI Assistant</h3>
+              <h3 className="ml-2">{t('ai_assistant')}</h3>
               <span
                 className={`${styles.status} ${isAIAvailable ? styles.online : styles.offline}`}
               >
-                {isAIAvailable ? 'Online' : 'Offline'}
+                {isAIAvailable ? t('online') : t('offline')}
               </span>
             </div>
             <button onClick={toggleChat} className={styles.closeButton} aria-label="Close chat">

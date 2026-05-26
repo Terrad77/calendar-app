@@ -8,6 +8,20 @@ import {
 } from '../../../types/types';
 import { generateUniqueId } from '../../../utils/idGenerator';
 
+const isPastDate = (date?: string | null) => {
+  if (!date) {
+    return false;
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const targetDate = new Date(date);
+  targetDate.setHours(0, 0, 0, 0);
+
+  return targetDate < today;
+};
+
 const TaskInputFormWrapper = styled('div', {
   display: 'flex',
   flexDirection: 'column',
@@ -22,6 +36,19 @@ const TaskInputFormWrapper = styled('div', {
   width: '100%',
   maxWidth: '520px',
   margin: '0 auto',
+
+  '@media (min-width: 1280px)': {
+    maxWidth: '580px',
+    padding: '28px',
+    gap: '18px',
+  },
+
+  '@media (min-width: 1536px)': {
+    maxWidth: '640px',
+    padding: '32px',
+    gap: '20px',
+    borderRadius: '24px',
+  },
 
   '&::before': {
     content: '',
@@ -42,6 +69,15 @@ const FormHeader = styled('div', {
   justifyContent: 'space-between',
   gap: '16px',
   paddingTop: '6px',
+
+  '@media (min-width: 1280px)': {
+    gap: '18px',
+    paddingTop: '2px',
+  },
+
+  '@media (min-width: 1536px)': {
+    gap: '20px',
+  },
 });
 
 const HeaderMeta = styled('div', {
@@ -72,6 +108,14 @@ const FormTitle = styled('h3', {
   letterSpacing: '-0.03em',
   color: '#0f172a',
   fontWeight: 700,
+
+  '@media (min-width: 1280px)': {
+    fontSize: '1.2rem',
+  },
+
+  '@media (min-width: 1536px)': {
+    fontSize: '1.3rem',
+  },
 });
 
 const FormDescription = styled('p', {
@@ -80,6 +124,16 @@ const FormDescription = styled('p', {
   lineHeight: 1.45,
   color: '#64748b',
   maxWidth: '30rem',
+
+  '@media (min-width: 1280px)': {
+    fontSize: '0.92rem',
+    maxWidth: '34rem',
+  },
+
+  '@media (min-width: 1536px)': {
+    fontSize: '0.98rem',
+    maxWidth: '38rem',
+  },
 });
 
 const TaskInput = styled('input', {
@@ -101,6 +155,18 @@ const TaskInput = styled('input', {
   '&::placeholder': {
     color: '#94a3b8',
   },
+
+  '@media (min-width: 1280px)': {
+    minHeight: '48px',
+    padding: '0.9rem 1rem',
+    fontSize: '0.98rem',
+  },
+
+  '@media (min-width: 1536px)': {
+    minHeight: '50px',
+    padding: '0.95rem 1.05rem',
+    fontSize: '1rem',
+  },
 });
 
 const FieldGroup = styled('div', {
@@ -115,6 +181,14 @@ const FieldLabel = styled('label', {
   letterSpacing: '0.04em',
   textTransform: 'uppercase',
   color: '#475569',
+
+  '@media (min-width: 1280px)': {
+    fontSize: '0.78rem',
+  },
+
+  '@media (min-width: 1536px)': {
+    fontSize: '0.8rem',
+  },
 });
 
 const HelperText = styled('p', {
@@ -122,6 +196,14 @@ const HelperText = styled('p', {
   fontSize: '0.78rem',
   color: '#94a3b8',
   marginTop: '-4px',
+
+  '@media (min-width: 1280px)': {
+    fontSize: '0.82rem',
+  },
+
+  '@media (min-width: 1536px)': {
+    fontSize: '0.86rem',
+  },
 });
 
 const TaskInputButtons = styled('div', {
@@ -131,6 +213,15 @@ const TaskInputButtons = styled('div', {
   alignItems: 'center',
   gap: '8px',
   paddingTop: '2px',
+
+  '@media (min-width: 1280px)': {
+    gap: '10px',
+    paddingTop: '4px',
+  },
+
+  '@media (min-width: 1536px)': {
+    gap: '12px',
+  },
 });
 
 const TaskInputButton = styled('button', {
@@ -155,6 +246,18 @@ const TaskInputButton = styled('button', {
   '&:focus-visible': {
     outline: '2px solid rgba(37, 99, 235, 0.24)',
     outlineOffset: '2px',
+  },
+  '@media (min-width: 1280px)': {
+    minHeight: '44px',
+    padding: '0.75rem 1.05rem',
+    fontSize: '0.9rem',
+    borderRadius: '14px',
+  },
+  '@media (min-width: 1536px)': {
+    minHeight: '46px',
+    padding: '0.8rem 1.1rem',
+    fontSize: '0.92rem',
+    borderRadius: '14px',
   },
   variants: {
     primary: {
@@ -196,6 +299,16 @@ const ColorSelectorWrapper = styled('div', {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(92px, 1fr))',
   gap: '8px',
+
+  '@media (min-width: 1280px)': {
+    gridTemplateColumns: 'repeat(auto-fit, minmax(104px, 1fr))',
+    gap: '10px',
+  },
+
+  '@media (min-width: 1536px)': {
+    gridTemplateColumns: 'repeat(auto-fit, minmax(112px, 1fr))',
+    gap: '12px',
+  },
 });
 
 const ColorOption = styled('button', {
@@ -329,12 +442,18 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
 
   const availableColors: ColorType[] = TASK_MARKER_COLORS as unknown as ColorType[];
   const isEditing = Boolean(initialTask);
+  const isCreatingInPast = !isEditing && isPastDate(initialDate);
 
   // --- handler for button "Save" ---
 
   const handleSaveClick = useCallback(() => {
     if (title.trim() === '') {
       alert('Task title cannot be empty!');
+      return;
+    }
+
+    if (isCreatingInPast) {
+      alert('Cannot create events in the past.');
       return;
     }
 
@@ -361,7 +480,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     };
 
     onSave(taskToSave);
-  }, [title, description, selectedColors, initialTask, initialDate, onSave]);
+  }, [title, description, selectedColors, initialTask, initialDate, onSave, isCreatingInPast]);
 
   // --- logic for btn "Delete"---
   const handleDeleteClick = useCallback(() => {
@@ -372,6 +491,11 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
 
   const handleDuplicateClick = useCallback(() => {
     if (!initialTask || !onDuplicate) {
+      return;
+    }
+
+    if (isPastDate(initialTask.date)) {
+      alert('Cannot duplicate events in the past.');
       return;
     }
 
@@ -431,6 +555,10 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
         </HeaderMeta>
       </FormHeader>
 
+      {isCreatingInPast && (
+        <HelperText>Events in the past can only be dragged, edited, or deleted.</HelperText>
+      )}
+
       <HelperText>Tip: use Enter to save, Esc to close.</HelperText>
 
       <InputStack>
@@ -488,7 +616,12 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
         <span>Enter to save, Esc to close</span>
         <ActionGroup>
           {initialTask && onDuplicate && (
-            <TaskInputButton type="button" onClick={handleDuplicateClick} subtle>
+            <TaskInputButton
+              type="button"
+              onClick={handleDuplicateClick}
+              subtle
+              disabled={isPastDate(initialTask.date)}
+            >
               Copy
             </TaskInputButton>
           )}
@@ -505,7 +638,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
           Cancel
         </TaskInputButton>
         <TaskInputButton type="button" primary onClick={handleSaveClick}>
-          {initialTask ? 'Save changes' : 'Add event'}
+          {initialTask ? 'Save changes' : isCreatingInPast ? 'Cannot add here' : 'Add event'}
         </TaskInputButton>
       </TaskInputButtons>
     </TaskInputFormWrapper>
