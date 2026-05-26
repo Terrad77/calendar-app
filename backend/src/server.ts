@@ -5,11 +5,8 @@ import app from './app.js';
 import { Request, Response, NextFunction } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getWorldwideHolidays } from './nagerApi.js';
-import { CalendarEvent, AIResponse, ConversationMessage } from './types.js';
+import { AIResponse, ConversationMessage } from './types.js';
 import { authenticateToken } from './middleware/authMiddleware.js';
-import authRoutes from './routes/authRoutes.js';
-import eventsRoutes from './routes/eventsRoutes.js';
-import passport from './config/passport.js';
 
 const PORT = process.env.PORT || 3001;
 
@@ -85,7 +82,7 @@ const CALENDAR_SYSTEM_PROMPT = `Ти - розумний AI-асістент ка
 
 // --- JSON SCHEMA DEFINITION for Tool Use ---
 // Defines the JSON schema expected from the AI
-const CALENDAR_ACTION_SCHEMA = {
+const _CALENDAR_ACTION_SCHEMA = {
   type: 'object' as const,
   properties: {
     action: {

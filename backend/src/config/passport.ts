@@ -2,10 +2,6 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy, VerifyCallback, type Profile } from 'passport-google-oauth20';
 import type { SocialUserData } from '../types/auth.types.js';
 
-interface SerializedPassportUser {
-  id?: string;
-}
-
 export const isGoogleOAuthConfigured = Boolean(
   process.env.GOOGLE_CLIENT_ID &&
   process.env.GOOGLE_CLIENT_SECRET &&

@@ -283,7 +283,7 @@ export class AuthService {
       await this.storeRefreshToken(payload.userId, tokens.refreshToken);
 
       return tokens;
-    } catch (error) {
+    } catch (_error) {
       await database.delete(refreshTokensTable).where(eq(refreshTokensTable.token, refreshToken));
       throw new Error('Invalid or expired refresh token');
     }
@@ -297,7 +297,7 @@ export class AuthService {
   verifyAccessToken(token: string): TokenPayload {
     try {
       return jwt.verify(token, JWT_SECRET) as TokenPayload;
-    } catch (error) {
+    } catch (_error) {
       throw new Error('Invalid or expired access token');
     }
   }

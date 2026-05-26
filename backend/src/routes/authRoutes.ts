@@ -96,7 +96,7 @@ router.post(
         user: result.user,
         tokens: result.tokens,
       });
-    } catch (error) {
+    } catch (_error) {
       res.status(401).json({
         error: 'Authentication failed',
         message: 'Invalid credentials',
