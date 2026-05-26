@@ -4,13 +4,15 @@
   "description": "calendar app with Vite + React + TS + Stitches",
   "main": "index.js",
   "scripts": {
-    "dev:frontend": "cross-env FORCE_COLOR=1 npm run dev --prefix frontend",
-    "dev:backend": "cross-env FORCE_COLOR=1 npx kill-port 3001 && npm run dev --prefix backend",
+    "dev:frontend": "cross-env FORCE_COLOR=1 npm run --silent dev --prefix frontend",
+    "dev:backend": "cross-env FORCE_COLOR=1 npx kill-port 3001 && npm run --silent dev --prefix backend",
     "dev": "cross-env FORCE_COLOR=1 concurrently --kill-others --handle-input --names \"FRONT,BACK\" --prefix-colors \"cyan,magenta\" \"npm run dev:frontend\" \"npm run dev:backend\"",
     "lint": "npm run lint --prefix frontend",
     "format:check": "prettier --check .",
-    "test": "npm run test:jest",
-    "test:jest": "jest --bail --passWithNoTests --runInBand --watchAll=false",
+    "test": "npm run test --prefix frontend && npm run test --prefix backend",
+    "test:watch": "cross-env FORCE_COLOR=1 concurrently --names \"FRONT,BACK\" --prefix-colors \"cyan,magenta\" \"npm run test:watch --prefix frontend\" \"npm run test:watch --prefix backend\"",
+    "test:frontend": "npm run test --prefix frontend",
+    "test:backend": "npm run test --prefix backend",
     "build": "npm run build --prefix frontend && npm run build --prefix backend"
   },
   "repository": {
@@ -37,11 +39,9 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "eslint-plugin-unused-imports": "^4.3.0",
     "husky": "^9.1.7",
-    "jest": "^30.4.2",
     "kill-port": "^2.0.1",
     "lint-staged": "^16.2.6",
     "prettier": "^3.8.3",
-    "ts-jest": "^29.4.11",
     "typescript-eslint": "^8.46.2"
   },
   "lint-staged": {

@@ -3,12 +3,16 @@
   "version": "1.0.0",
   "description": "Backend service for calendar holidays",
   "type": "module",
-  "main": "dist/server.js",
+  "main": "dist/src/server.js",
   "scripts": {
-    "start": "node -r dotenv/config --enable-source-maps dist/server.js",
-    "build": "tsc --build",
-    "dev": "nodemon --watch src --exec \"node -r dotenv/config --enable-source-maps --loader ts-node/esm src/server.ts\"",
-    "test": "vitest",
+    "start": "node -r dotenv/config --enable-source-maps dist/src/server.js",
+    "clean": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\"",
+    "build": "npm run clean && tsc --build --force",
+    "build:es": "node -e \"require('fs').rmSync('dist', { recursive: true, force: true })\" && npx esbuild src/server.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/src/server.js --external:*/** --sourcemap",
+    "dev": "tsx watch --env-file=.env src/server.ts",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "auto-start": "npm run build && npm start"
   },
   "dependencies": {
@@ -16,6 +20,7 @@
     "@types/passport-google-oauth20": "^2.0.17",
     "axios": "^1.7.2",
     "bcrypt": "^6.0.0",
+    "calendar-app": "file:..",
     "cors": "^2.8.5",
     "dayjs": "^1.11.13",
     "dotenv": "^17.4.2",
@@ -45,9 +50,10 @@
     "lint-staged": "^16.2.6",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
+    "supertest": "^6.3.3",
     "ts-node": "^10.9.2",
+    "tsx": "^4.22.3",
     "typescript": "^5.4.5",
-    "vitest": "^4.1.7",
-    "supertest": "^6.4.1"
+    "vitest": "^4.1.7"
   }
 }

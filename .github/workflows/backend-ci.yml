@@ -4,56 +4,128 @@ on:
   push:
     paths:
       - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/backend-ci.yml'
   pull_request:
     paths:
       - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/backend-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  test:
-    name: Test Backend
+  lint:
+    name: Lint ${{ matrix.package }}
     runs-on: ubuntu-latest
+
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [18.x, 20.x]
+        package: [frontend, backend]
+        node-version: [20.x]
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: ${{ matrix.package }}/package-lock.json
 
-      - name: Cache node modules
-        uses: actions/cache@v4
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+  build:
+    name: Build Backend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    env:
+      DATABASE_URL: postgres://calendar:calendar@localhost:5432/calendar
+      JWT_SECRET: calendar-secret
+      JWT_REFRESH_SECRET: calendar-refresh-secret
+      GOOGLE_CLIENT_ID: calendar-client-id
+      GOOGLE_CLIENT_SECRET: calendar-client-secret
+      GOOGLE_CALLBACK_URL: http://localhost:3001/api/auth/google/callback
+      GOOGLE_AI_API_KEY: calendar-ai-api-key
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
         with:
-          path: backend/node_modules
-          key: ${{ runner.os }}-backend-${{ matrix.node-version }}-${{ hashFiles('backend/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-backend-${{ matrix.node-version }}-
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
 
       - name: Install backend dependencies
-        run: npm ci --prefix backend
+        run: npm ci
 
       - name: Build backend
-        run: npm --prefix backend run build
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GOOGLE_CALLBACK_URL: ${{ secrets.GOOGLE_CALLBACK_URL }}
-          GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
+        run: npm run build
+
+  test:
+    name: Test Backend
+    runs-on: ubuntu-latest
+    needs: build
+
+    defaults:
+      run:
+        working-directory: backend
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [18.x, 20.x]
+
+    env:
+      DATABASE_URL: postgres://calendar:calendar@localhost:5432/calendar
+      JWT_SECRET: calendar-secret
+      JWT_REFRESH_SECRET: calendar-refresh-secret
+      GOOGLE_CLIENT_ID: calendar-client-id
+      GOOGLE_CLIENT_SECRET: calendar-client-secret
+      GOOGLE_CALLBACK_URL: http://localhost:3001/api/auth/google/callback
+      GOOGLE_AI_API_KEY: calendar-ai-api-key
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
 
       - name: Run tests
-        run: |
-          NODE_ENV=test npm --prefix backend run test
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          JWT_REFRESH_SECRET: ${{ secrets.JWT_REFRESH_SECRET }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          GOOGLE_CALLBACK_URL: ${{ secrets.GOOGLE_CALLBACK_URL }}
-          GOOGLE_AI_API_KEY: ${{ secrets.GOOGLE_AI_API_KEY }}
+        run: NODE_ENV=test npm run test

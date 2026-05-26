@@ -1,11 +1,9 @@
 // Ensure environment variables are loaded before any other module imports that
 // may read process.env at module-evaluation time. Use the side-effect import
 // so the loader evaluates dotenv before other ESM modules.
-import 'dotenv/config';
-
-import express, { Request, Response } from 'express';
+import app from './app.js';
+import { Request, Response, NextFunction } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import cors from 'cors';
 import { getWorldwideHolidays } from './nagerApi.js';
 import { CalendarEvent, AIResponse, ConversationMessage } from './types.js';
 import { authenticateToken } from './middleware/authMiddleware.js';
@@ -13,7 +11,6 @@ import authRoutes from './routes/authRoutes.js';
 import eventsRoutes from './routes/eventsRoutes.js';
 import passport from './config/passport.js';
 
-const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Google Gemini SDK initialization
@@ -127,30 +124,6 @@ const CALENDAR_ACTION_SCHEMA = {
   required: ['action', 'message'],
 };
 
-// Middleware
-app.use(express.json({ limit: '50kb' })); // Limit payload size to 50kb for security
-app.use(passport.initialize());
-app.use(
-  cors({
-    origin: [
-      'https://calendar-app-pi-gold.vercel.app',
-      'https://calendar-app-git-main-terrad77s-projects.vercel.app',
-      'https://calendar-app-7oetemppd-terrad77s-projects.vercel.app',
-      'http://localhost:5173',
-      'http://localhost:5174',
-    ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  })
-);
-
-// Authentication routes (public)
-app.use('/api/auth', authRoutes);
-
-// Calendar event routes (protected)
-app.use('/api/events', eventsRoutes);
-
 // Backward compatibility for legacy Google OAuth paths
 app.get('/api/users/google', (_req: Request, res: Response) => {
   res.redirect('/api/auth/google');
@@ -161,34 +134,8 @@ app.get('/api/users/google/callback', (req: Request, res: Response) => {
   res.redirect(query ? `/api/auth/google/callback?${query}` : '/api/auth/google/callback');
 });
 
-// Health check endpoints (public)
-app.get('/health', (req: Request, res: Response) => {
-  res.json({ status: 'ok', service: 'Calendar AI Assistant' });
-});
-
 app.get('/', (_req, res) => {
   res.status(200).json({ message: 'Backend is running!' });
-});
-
-// AI Health Check (public)
-app.get('/api/ai/health', (req: Request, res: Response) => {
-  const googleAIAvailable = !!process.env.GOOGLE_AI_API_KEY;
-  const googleAIKeyLength = process.env.GOOGLE_AI_API_KEY?.length || 0;
-
-  res.json({
-    status: googleAIAvailable ? 'ok' : 'error',
-    service: 'AI Assistant(Google Gemini)',
-    available: googleAIAvailable,
-    googleAI: {
-      configured: googleAIAvailable,
-      keyLength: googleAIKeyLength,
-      keyPrefix: process.env.GOOGLE_AI_API_KEY?.substring(0, 10) + '...',
-    },
-    timestamp: new Date().toISOString(),
-    message: googleAIAvailable
-      ? 'AI service is ready (Gemini)'
-      : 'GOOGLE_AI_API_KEY not configured',
-  });
 });
 
 // Protected AI endpoints - require authentication
@@ -446,7 +393,7 @@ app.use('*', (req: Request, res: Response) => {
 });
 
 // Error handling middleware
-app.use((error: Error, _req: Request, res: Response, _next: express.NextFunction) => {
+app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
   console.error('Unhandled error:', error);
   res.status(500).json({
     error: 'Internal server error',

@@ -85,8 +85,8 @@ GOOGLE_CLIENT_SECRET=<your-client-secret>
 GOOGLE_CALLBACK_URL=http://localhost:3001/api/auth/google/callback
 ```
 
-4. Перезапустите backend: `npm run dev --prefix backend` или `npm run start --prefix backend`.
-5. Проверка: откройте `http://localhost:3001/api/auth/google` — сервер должен вернуть 302 редирект на accounts.google.com.
+- Перезапустите backend: `npm run dev --prefix backend` или `npm run start --prefix backend`.
+- Проверка: откройте `http://localhost:3001/api/auth/google` — сервер должен вернуть 302 редирект на accounts.google.com.
 
 ## Хранение и управление секретами
 
