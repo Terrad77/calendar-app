@@ -9,11 +9,11 @@ export SHELL=sh
 
 echo "🚀 Running lint-staged..."
 if npx lint-staged; then
-    echo "🧪 Running Jest checks..."
-    if npm run test:jest; then
+    echo "🧪 Running frontend unit tests (Vitest)..."
+    if npm --prefix frontend run test; then
         echo "✅ Pre-commit checks passed"
     else
-        echo "❌ Jest checks failed"
+        echo "❌ Frontend tests failed"
         exit 1
     fi
 else
