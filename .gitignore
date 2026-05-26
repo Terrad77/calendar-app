@@ -157,3 +157,5 @@ tmp/
 .env
 .env.local
 EOF
+# Ensure backend local env isn't committed
+backend/.env
