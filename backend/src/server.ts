@@ -1,5 +1,7 @@
-import dotenv from 'dotenv';
-dotenv.config();
+// Ensure environment variables are loaded before any other module imports that
+// may read process.env at module-evaluation time. Use the side-effect import
+// so the loader evaluates dotenv before other ESM modules.
+import 'dotenv/config';
 
 import express, { Request, Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -452,25 +454,29 @@ app.use((error: Error, _req: Request, res: Response, _next: express.NextFunction
   });
 });
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Backend server running on http://localhost:${PORT}`);
-  console.log(`🔒 Authentication enabled (Active)`);
-  console.log(`🤖 AI Calendar Assistant ready`);
-  console.log(
-    `📅 Holidays endpoint: /api/v1/holidays/worldwide?year=<YEAR>&month=<OPTIONAL_MONTH>`
-  );
-  console.log(`💬 AI Chat endpoint: /api/ai/chat (POST)`);
-  console.log(`📊 AI Analyze endpoint: /api/ai/analyze-schedule (POST)`);
-  console.log(`⏰ AI Find Time endpoint: /api/ai/find-time (POST)`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('SIGTERM signal received: closing HTTP server');
-  server.close(() => {
-    console.log('HTTP server closed');
+// Start server only when not running tests
+let server: import('http').Server | undefined;
+if (process.env.NODE_ENV !== 'test') {
+  server = app.listen(PORT, () => {
+    console.log(`🚀 Backend server running on http://localhost:${PORT}`);
+    console.log(`🔒 Authentication enabled (Active)`);
+    console.log(`🤖 AI Calendar Assistant ready`);
+    console.log(
+      `📅 Holidays endpoint: /api/v1/holidays/worldwide?year=<YEAR>&month=<OPTIONAL_MONTH>`
+    );
+    console.log(`💬 AI Chat endpoint: /api/ai/chat (POST)`);
+    console.log(`📊 AI Analyze endpoint: /api/ai/analyze-schedule (POST)`);
+    console.log(`⏰ AI Find Time endpoint: /api/ai/find-time (POST)`);
   });
-});
 
+  // Graceful shutdown
+  process.on('SIGTERM', () => {
+    console.log('SIGTERM signal received: closing HTTP server');
+    server?.close(() => {
+      console.log('HTTP server closed');
+    });
+  });
+}
+
+export { app };
 export default app;
