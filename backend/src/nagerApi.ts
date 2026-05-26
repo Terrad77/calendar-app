@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { BackendHoliday, NagerPublicHolidayResponse } from './types';
-import { getCache, getOrSetCache } from './cache';
+import { BackendHoliday, NagerPublicHolidayResponse } from './types.js';
+import { getCache, getOrSetCache } from './cache.js';
 import dayjs from 'dayjs';
 import { randomUUID } from 'crypto';
 

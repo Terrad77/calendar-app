@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from "express";
-import { authService } from "../services/authService";
-import { TokenPayload } from "../types/auth.types";
+import { Request, Response, NextFunction } from 'express';
+import { authService } from '../services/authService.js';
+import { TokenPayload } from '../types/auth.types.js';
 
 // Extend Express Request to include user data
 declare global {
@@ -25,19 +25,19 @@ export const authenticateToken = async (
 
     if (!authHeader) {
       res.status(401).json({
-        error: "Authentication required",
-        message: "No authorization header provided",
+        error: 'Authentication required',
+        message: 'No authorization header provided',
       });
       return;
     }
 
     // Check if token format is correct (Bearer <token>)
-    const [bearer, token] = authHeader.split(" ");
+    const [bearer, token] = authHeader.split(' ');
 
-    if (bearer !== "Bearer" || !token) {
+    if (bearer !== 'Bearer' || !token) {
       res.status(401).json({
-        error: "Invalid token format",
-        message: "Authorization header must be in format: Bearer <token>",
+        error: 'Invalid token format',
+        message: 'Authorization header must be in format: Bearer <token>',
       });
       return;
     }
@@ -50,11 +50,10 @@ export const authenticateToken = async (
 
     next();
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Authentication failed";
+    const message = error instanceof Error ? error.message : 'Authentication failed';
 
     res.status(401).json({
-      error: "Authentication failed",
+      error: 'Authentication failed',
       message,
     });
   }
@@ -63,13 +62,13 @@ export const authenticateToken = async (
 /**
  * Middleware to check if user owns the resource
  */
-export const authorizeOwnership = (userIdParam: string = "userId") => {
+export const authorizeOwnership = (userIdParam: string = 'userId') => {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
       if (!req.user) {
         res.status(401).json({
-          error: "Authentication required",
-          message: "User not authenticated",
+          error: 'Authentication required',
+          message: 'User not authenticated',
         });
         return;
       }
@@ -78,7 +77,7 @@ export const authorizeOwnership = (userIdParam: string = "userId") => {
 
       if (!resourceUserId) {
         res.status(400).json({
-          error: "Bad request",
+          error: 'Bad request',
           message: `Missing ${userIdParam} parameter`,
         });
         return;
@@ -87,8 +86,8 @@ export const authorizeOwnership = (userIdParam: string = "userId") => {
       // Check if authenticated user matches resource owner
       if (req.user.userId !== resourceUserId) {
         res.status(403).json({
-          error: "Forbidden",
-          message: "You do not have permission to access this resource",
+          error: 'Forbidden',
+          message: 'You do not have permission to access this resource',
         });
         return;
       }
@@ -96,8 +95,8 @@ export const authorizeOwnership = (userIdParam: string = "userId") => {
       next();
     } catch (error) {
       res.status(500).json({
-        error: "Authorization error",
-        message: error instanceof Error ? error.message : "Unknown error",
+        error: 'Authorization error',
+        message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   };
@@ -120,9 +119,9 @@ export const optionalAuthentication = async (
       return;
     }
 
-    const [bearer, token] = authHeader.split(" ");
+    const [bearer, token] = authHeader.split(' ');
 
-    if (bearer === "Bearer" && token) {
+    if (bearer === 'Bearer' && token) {
       try {
         const payload = authService.verifyAccessToken(token);
         req.user = payload;
@@ -142,10 +141,7 @@ export const optionalAuthentication = async (
  */
 const loginAttempts = new Map<string, { count: number; resetTime: number }>();
 
-export const rateLimitAuth = (
-  maxAttempts: number = 5,
-  windowMs: number = 15 * 60 * 1000
-) => {
+export const rateLimitAuth = (maxAttempts: number = 5, windowMs: number = 15 * 60 * 1000) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     const identifier = req.body.email || req.ip;
 
@@ -176,7 +172,7 @@ export const rateLimitAuth = (
     if (current.count >= maxAttempts) {
       const remainingTime = Math.ceil((current.resetTime - now) / 1000 / 60);
       res.status(429).json({
-        error: "Too many attempts",
+        error: 'Too many attempts',
         message: `Too many login attempts. Please try again in ${remainingTime} minutes.`,
       });
       return;

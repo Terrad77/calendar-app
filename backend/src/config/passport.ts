@@ -1,6 +1,6 @@
 import passport from 'passport';
 import { Strategy as GoogleStrategy, VerifyCallback, type Profile } from 'passport-google-oauth20';
-import type { SocialUserData } from '../types/auth.types';
+import type { SocialUserData } from '../types/auth.types.js';
 
 interface SerializedPassportUser {
   id?: string;
@@ -47,7 +47,7 @@ if (isGoogleOAuthConfigured) {
             googleId,
           };
 
-          return done(null, socialUserData);
+          return done(null, socialUserData as any);
         } catch (err) {
           console.error('Google Strategy Error:', err);
           return done(err);
@@ -62,13 +62,13 @@ if (isGoogleOAuthConfigured) {
 }
 
 // Stateless API (no need for serialize/deserialize, but Passport requires them)
-passport.serializeUser((user: SerializedPassportUser, done) => {
-  done(null, user.id);
-});
+passport.serializeUser(((user: any, done: (err: any, id?: unknown) => void) => {
+  done(null, user?.id);
+}) as any);
 
-passport.deserializeUser(async (id: string, done) => {
+passport.deserializeUser(((id: string, done: (err: any, user?: any) => void) => {
   // Stateless API doesn't use this, but we keep it for completeness
-  done(null, { id });
-});
+  done(null, { id } as any);
+}) as any);
 
 export default passport;

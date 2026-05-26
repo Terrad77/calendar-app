@@ -2,12 +2,12 @@
   "name": "calendar-backend",
   "version": "1.0.0",
   "description": "Backend service for calendar holidays",
-  "type": "commonjs",
+  "type": "module",
   "main": "dist/server.js",
   "scripts": {
-    "start": "node dist/server.js",
-    "build": "tsc",
-    "dev": "nodemon --exec ts-node src/server.ts",
+    "start": "node --enable-source-maps dist/server.js",
+    "build": "tsc --build",
+    "dev": "nodemon --watch src --exec \"node --enable-source-maps --loader ts-node/esm src/server.ts\"",
     "test": "echo \"Skipping tests for now...\" && exit 0",
     "auto-start": "npm run build && npm start"
   },

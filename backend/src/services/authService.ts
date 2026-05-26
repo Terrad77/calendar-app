@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import { randomBytes, randomUUID } from 'crypto';
-import { sendVerificationEmail } from './mailerService';
+import { sendVerificationEmail } from './mailerService.js';
 import {
   AuthTokens,
   RegisterData,
@@ -10,9 +10,9 @@ import {
   TokenPayload,
   User,
   UserCredentials,
-} from '../types/auth.types';
-import { getDb } from '../db';
-import { refreshTokens as refreshTokensTable, users as usersTable } from '../schema';
+} from '../types/auth.types.js';
+import { getDb } from '../db.js';
+import { refreshTokens as refreshTokensTable, users as usersTable } from '../schema.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key';

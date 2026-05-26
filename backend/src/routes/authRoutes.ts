@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { authService, AuthService } from '../services/authService';
-import { authenticateToken, rateLimitAuth } from '../middleware/authMiddleware';
-import { RegisterData, SocialUserData, UserCredentials } from '../types/auth.types';
-import { isGoogleOAuthConfigured } from '../config/passport';
+import { authService, AuthService } from '../services/authService.js';
+import { authenticateToken, rateLimitAuth } from '../middleware/authMiddleware.js';
+import { RegisterData, SocialUserData, UserCredentials } from '../types/auth.types.js';
+import { isGoogleOAuthConfigured } from '../config/passport.js';
 import passport from 'passport';
 
 const router = Router();

@@ -1,9 +1,9 @@
 import { Router, Request, Response } from 'express';
 import { and, eq, gte, lte } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
-import { authenticateToken } from '../middleware/authMiddleware';
-import { getDb } from '../db';
-import { calendarEvents } from '../schema';
+import { authenticateToken } from '../middleware/authMiddleware.js';
+import { getDb } from '../db.js';
+import { calendarEvents } from '../schema.js';
 
 const router = Router();
 

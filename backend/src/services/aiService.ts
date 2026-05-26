@@ -1,4 +1,4 @@
-import { CalendarEvent, AIResponse, ConversationMessage } from '../types';
+import { CalendarEvent, AIResponse, ConversationMessage } from '../types.js';
 import dotenv from 'dotenv';
 dotenv.config();
 

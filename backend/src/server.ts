@@ -4,12 +4,12 @@ dotenv.config();
 import express, { Request, Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import cors from 'cors';
-import { getWorldwideHolidays } from './nagerApi';
-import { CalendarEvent, AIResponse, ConversationMessage } from './types';
-import { authenticateToken } from './middleware/authMiddleware';
-import authRoutes from './routes/authRoutes';
-import eventsRoutes from './routes/eventsRoutes';
-import passport from './config/passport';
+import { getWorldwideHolidays } from './nagerApi.js';
+import { CalendarEvent, AIResponse, ConversationMessage } from './types.js';
+import { authenticateToken } from './middleware/authMiddleware.js';
+import authRoutes from './routes/authRoutes.js';
+import eventsRoutes from './routes/eventsRoutes.js';
+import passport from './config/passport.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
