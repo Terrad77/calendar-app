@@ -1,0 +1,109 @@
+name: Root CI
+
+on:
+  push:
+    paths:
+      - '*.json'
+      - '*.md'
+      - 'docker-compose.yml'
+      - 'tsconfig.eslint.json'
+      - 'vercel.json'
+      - '.github/workflows/root-ci.yml'
+  pull_request:
+    paths:
+      - '*.json'
+      - '*.md'
+      - 'docker-compose.yml'
+      - 'tsconfig.eslint.json'
+      - 'vercel.json'
+      - '.github/workflows/root-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: root-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend Checks
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    strategy:
+      matrix:
+        node-version: [20.x]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Run tests
+        run: npm run test
+
+  backend:
+    name: Backend Checks
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: backend
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20.x, 22.x]
+
+    env:
+      DATABASE_URL: postgres://calendar:calendar@localhost:5432/calendar
+      JWT_SECRET: calendar-secret
+      JWT_REFRESH_SECRET: calendar-refresh-secret
+      GOOGLE_CLIENT_ID: calendar-client-id
+      GOOGLE_CLIENT_SECRET: calendar-client-secret
+      GOOGLE_CALLBACK_URL: http://localhost:3001/api/auth/google/callback
+      GOOGLE_AI_API_KEY: calendar-ai-api-key
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build backend
+        if: matrix.node-version == '20.x'
+        run: npm run build
+
+      - name: Run tests
+        run: NODE_ENV=test npm run test
