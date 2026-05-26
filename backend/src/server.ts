@@ -9,6 +9,8 @@ import { AIResponse, ConversationMessage } from './types.js';
 import { authenticateToken } from './middleware/authMiddleware.js';
 
 const PORT = process.env.PORT || 3001;
+const ANSI_MAGENTA = '\x1b[35m';
+const ANSI_RESET = '\x1b[0m';
 
 // Google Gemini SDK initialization
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
@@ -402,7 +404,9 @@ app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
 let server: import('http').Server | undefined;
 if (process.env.NODE_ENV !== 'test') {
   server = app.listen(PORT, () => {
-    console.log(`🚀 Backend server running on http://localhost:${PORT}`);
+    console.log(
+      `🚀 Backend server running on ${ANSI_MAGENTA}http://localhost:${PORT}${ANSI_RESET}`
+    );
     console.log(`🔒 Authentication enabled (Active)`);
     console.log(`🤖 AI Calendar Assistant ready`);
     console.log(
