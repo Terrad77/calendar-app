@@ -11,10 +11,10 @@ export default function GoogleAuthBtn() {
     <div className={styles.wrapper}>
       <p className={styles.separator}>{t('or_google')}</p>
       <motion.a
-        whileTap={{ scale: 0.98 }}
-        whileHover={{ scale: 1.01 }}
         href={`${apiUrl}/api/auth/google`}
         className={styles.googleBtn}
+        whileTap={{ scale: 0.98 }}
+        whileHover={{ scale: 1.01 }}
       >
         <span className={styles.googleIconWrap}>
           <img src={googleLogo} alt="Google" className={styles.googleIcon} />

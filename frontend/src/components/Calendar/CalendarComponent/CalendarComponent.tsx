@@ -1,4 +1,4 @@
-import { useState, useEffect, useTransition, useCallback, useMemo } from 'react';
+import { useState, useEffect, useTransition, useCallback, useMemo, Suspense, lazy } from 'react';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
@@ -19,7 +19,7 @@ import { arrayMove } from '@dnd-kit/sortable';
 import type { CalendarEvent, ColorType } from '../../../types/types';
 import { TASK_MARKER_COLORS } from '../../../types/types';
 import { CalendarDayCell } from '../CalendarDayCellComponent/CalendarDayCellComponent';
-import DayEventsModal from '../DayEventsModalComponent/DayEventsModalComponent';
+const DayEventsModal = lazy(() => import('../DayEventsModalComponent/DayEventsModalComponent'));
 import { TaskCardDraggable } from '../TaskCardDraggableComponent/TaskCardDraggableComponent';
 import Modal from '../../Modal/Modal';
 import { TaskInputForm } from '../TaskInputFormComponent/TaskInputFormComponent';
@@ -612,32 +612,35 @@ export const Calendar = ({
 
         {/* Day events list modal (opened when day has items) */}
         {dayModalDate && (
-          <DayEventsModal
-            isOpen={!!dayModalDate}
-            date={dayModalDate}
-            tasks={
-              (filteredTasksAndHolidaysByDay[dayModalDate] || { tasks: [], holidays: [] }).tasks
-            }
-            holidays={
-              (filteredTasksAndHolidaysByDay[dayModalDate] || { tasks: [], holidays: [] }).holidays
-            }
-            onClose={handleCloseDayModal}
-            onEditTask={handleEditFromDayModal}
-            onAdd={(date) => {
-              // open creation form for this date
-              setActiveDayForInput(date);
-              setDayModalDate(null);
-            }}
-            otherDays={Object.keys(filteredTasksAndHolidaysByDay)
-              .filter((d) => d !== dayModalDate)
-              .map((d) => ({
-                date: d,
-                tasks: (filteredTasksAndHolidaysByDay[d]?.tasks || []).length,
-                holidays: (filteredTasksAndHolidaysByDay[d]?.holidays || []).length,
-              }))
-              .filter((x) => x.tasks + x.holidays > 0)}
-            onSelectDay={(d) => setDayModalDate(d)}
-          />
+          <Suspense fallback={<div className="p-4">Loading...</div>}>
+            <DayEventsModal
+              isOpen={!!dayModalDate}
+              date={dayModalDate}
+              tasks={
+                (filteredTasksAndHolidaysByDay[dayModalDate] || { tasks: [], holidays: [] }).tasks
+              }
+              holidays={
+                (filteredTasksAndHolidaysByDay[dayModalDate] || { tasks: [], holidays: [] })
+                  .holidays
+              }
+              onClose={handleCloseDayModal}
+              onEditTask={handleEditFromDayModal}
+              onAdd={(date) => {
+                // open creation form for this date
+                setActiveDayForInput(date);
+                setDayModalDate(null);
+              }}
+              otherDays={Object.keys(filteredTasksAndHolidaysByDay)
+                .filter((d) => d !== dayModalDate)
+                .map((d) => ({
+                  date: d,
+                  tasks: (filteredTasksAndHolidaysByDay[d]?.tasks || []).length,
+                  holidays: (filteredTasksAndHolidaysByDay[d]?.holidays || []).length,
+                }))
+                .filter((x) => x.tasks + x.holidays > 0)}
+              onSelectDay={(d) => setDayModalDate(d)}
+            />
+          </Suspense>
         )}
 
         {/* Top-level modal for editing/creating tasks (opened when editingTask is set) */}
