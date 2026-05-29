@@ -35,8 +35,10 @@ export default defineConfig(({ mode }) => {
     },
 
     build: {
-      // Generate source maps for production error tracking (Sentry, etc.)
-      sourcemap: true,
+      // Use inline sourcemaps to ensure `source-map-explorer` can parse mappings
+      // (workaround for tools that report "generated column Infinity").
+      // Revert to `true` or adjust for CI as needed.
+      sourcemap: 'inline',
 
       // Raise chunk size warning threshold (default 500kb is too aggressive)
       chunkSizeWarningLimit: 1000,
