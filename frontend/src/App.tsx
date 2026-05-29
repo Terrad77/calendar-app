@@ -5,10 +5,10 @@ import SignUpPage from './pages/SignUpPage/SignUpPage';
 import SignInPage from './pages/SignInPage/SignInPage';
 import AuthSuccessPage from './pages/AuthSuccessPage/AuthSuccessPage';
 import HomePage from './pages/HomePage/HomePage'; // main calendar page
-import AnalyticsPage from './pages/AnalyticsPage/AnalyticsPage';
-import ContactsPage from './pages/ContactsPage/ContactsPage';
-import NotificationsPage from './pages/NotificationsPage/NotificationsPage';
-import SettingsPage from './pages/SettingsPage/SettingsPage';
+const AnalyticsPage = React.lazy(() => import('./pages/AnalyticsPage/AnalyticsPage'));
+const ContactsPage = React.lazy(() => import('./pages/ContactsPage/ContactsPage'));
+const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage/NotificationsPage'));
+const SettingsPage = React.lazy(() => import('./pages/SettingsPage/SettingsPage'));
 // import { authenticationService } from './services/authService';
 const AIAssistantDrawer = React.lazy(() =>
   import('./components/AIAssistant/AIAssistantDrawer').then((m) => ({
@@ -319,7 +319,9 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <AnalyticsPage />
+                <Suspense fallback={null}>
+                  <AnalyticsPage />
+                </Suspense>
               </Layout>
             </ProtectedRoute>
           }
@@ -330,7 +332,9 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <ContactsPage />
+                <Suspense fallback={null}>
+                  <ContactsPage />
+                </Suspense>
               </Layout>
             </ProtectedRoute>
           }
@@ -341,7 +345,9 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <NotificationsPage />
+                <Suspense fallback={null}>
+                  <NotificationsPage />
+                </Suspense>
               </Layout>
             </ProtectedRoute>
           }
@@ -352,7 +358,9 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <SettingsPage />
+                <Suspense fallback={null}>
+                  <SettingsPage />
+                </Suspense>
               </Layout>
             </ProtectedRoute>
           }

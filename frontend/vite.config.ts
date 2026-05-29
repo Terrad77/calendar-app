@@ -43,9 +43,17 @@ export default defineConfig(({ mode }) => {
 
       rollupOptions: {
         output: {
-          // Split vendor chunks for better long-term caching
-          manualChunks: {
-            vendor: ['react', 'react-dom'],
+          // Split vendor chunks for better long-term caching and smaller initial bundle
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('framer-motion')) return 'vendor_framer';
+              if (id.includes('@dnd-kit')) return 'vendor_dndkit';
+              if (id.includes('react-router')) return 'vendor_router';
+              if (id.includes('lucide-react') || id.includes('react-icons')) return 'vendor_icons';
+              if (id.includes('@reduxjs/toolkit')) return 'vendor_rtk';
+              if (id.includes('react-dom')) return 'vendor_react_dom';
+              return 'vendor';
+            }
           },
         },
       },
