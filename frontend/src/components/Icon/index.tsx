@@ -17,7 +17,7 @@ import {
   Check,
   Clock,
   Calendar as MdCalendarMonth,
-  Question,
+  CircleQuestionMark,
 } from 'lucide-react';
 
 // mapping for icons
@@ -26,7 +26,7 @@ const iconComponents = {
   'chevron-down': ChevronDown,
   calendar: MdCalendarMonth,
   search: Search,
-  'question-mark': Question, // icon for fallback
+  'question-mark': CircleQuestionMark, // icon for fallback
   'calendar-sad': MdCalendarMonth, // use lucide calendar as fallback for calendar-sad
   eye: Eye,
   eyeOff: EyeOff,

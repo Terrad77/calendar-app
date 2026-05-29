@@ -369,13 +369,15 @@ function App() {
 
       {/* AI Assistant - show for authenticated users and let the drawer handle availability */}
       {isAuthenticated && (
-        <AIAssistantDrawer
-          currentEvents={events}
-          onEventCreate={handleEventCreate}
-          onEventUpdate={handleEventUpdate}
-          onEventDelete={handleEventDelete}
-          isServiceAvailable={aiServiceStatus?.available ?? false}
-        />
+        <Suspense fallback={null}>
+          <AIAssistantDrawer
+            currentEvents={events}
+            onEventCreate={handleEventCreate}
+            onEventUpdate={handleEventUpdate}
+            onEventDelete={handleEventDelete}
+            isServiceAvailable={aiServiceStatus?.available ?? false}
+          />
+        </Suspense>
       )}
     </div>
   );
