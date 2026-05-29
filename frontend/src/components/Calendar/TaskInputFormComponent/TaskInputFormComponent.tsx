@@ -391,29 +391,8 @@ const InputStack = styled('div', {
   gap: '14px',
 });
 
-const fieldLabels = {
-  title: 'Title',
-  description: 'Description',
-  colors: 'Color',
-};
-
-const colorLabels: Record<ColorType, string> = {
-  default: 'Default',
-  red: 'Red',
-  yellow: 'Yellow',
-  green: 'Green',
-};
-
-const getFormTitle = (initialTask?: CalendarEvent | null) =>
-  initialTask ? 'Edit event' : 'Create event';
-
-const getFormDescription = (initialTask?: CalendarEvent | null) =>
-  initialTask
-    ? 'Update the details, duplicate it, or remove it from the calendar.'
-    : 'Add a new calendar item with title, notes, and a color label.';
-
-const getColorButtonLabel = (color: ColorType, selected: boolean) =>
-  `${selected ? 'Selected' : 'Choose'} ${colorLabels[color]}`;
+// Note: label text and button copy are produced via i18n `t()` calls in the component.
+// Removed unused local label helpers to satisfy TypeScript no-unused-vars checks.
 
 interface TaskInputFormProps {
   initialTask?: CalendarEvent | null;

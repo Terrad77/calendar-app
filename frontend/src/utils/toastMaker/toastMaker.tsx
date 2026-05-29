@@ -1,11 +1,12 @@
 import toast from 'react-hot-toast';
 import css from '../toastMaker/toastMaker.module.css';
 import Icon from '../../components/Icon';
+import type { IconName } from '../../types/types';
 
 type ToastStatus = 'success' | 'error';
 
 export default function toastMaker(text: string, status?: ToastStatus): string {
-  const render = (iconName: string, textClass: string) => (t: { id: string }) => (
+  const render = (iconName: IconName, textClass: string) => (t: { id: string }) => (
     <div className={css.toastContainer}>
       <Icon
         name={iconName}
