@@ -1,7 +1,10 @@
 .modal {
   border-radius: 15px;
   padding: 40px 0 40px 14px;
-  background: var(--main-white);
+  background: var(--modal-bg);
+  border: 1px solid var(--modal-border);
+  box-shadow: var(--modal-shadow-1), var(--modal-shadow-2);
+  backdrop-filter: blur(18px);
   position: relative;
   width: 380px;
 }
@@ -90,13 +93,13 @@
   line-height: 120%;
   letter-spacing: -0.01em;
   text-align: center;
-  color: #dc2626;
+  color: var(--surface-error);
   margin-bottom: 20px;
 }
 
 .warningBox {
-  background: #fee2e2;
-  border: 1px solid #fecaca;
+  background: color-mix(in srgb, var(--surface-error) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface-error) 22%, transparent);
   border-radius: 8px;
   padding: 12px 14px;
   margin: 0 14px 20px;
@@ -111,7 +114,7 @@
 
 .warningText {
   font-size: 13px;
-  color: #991b1b;
+  color: var(--surface-error);
   margin: 0;
   line-height: 1.5;
 }
@@ -125,7 +128,7 @@
   display: block;
   font-weight: 600;
   font-size: 13px;
-  color: var(--main);
+  color: var(--modal-text);
   margin-bottom: 8px;
 }
 
@@ -138,22 +141,22 @@
 .passwordInput input {
   width: 100%;
   padding: 12px 40px 12px 14px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--surface-calendar-control-border);
   border-radius: 8px;
   font-size: 14px;
-  background: var(--main-white);
-  color: var(--main);
+  background: var(--surface-calendar-control-bg);
+  color: var(--surface-calendar-text);
   transition: all 0.2s;
 }
 
 .passwordInput input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 16%, transparent);
 }
 
 .passwordInput input::placeholder {
-  color: #9ca3af;
+  color: var(--surface-calendar-placeholder);
 }
 
 .toggleBtn {
@@ -170,8 +173,9 @@
 }
 
 .checkboxGroup {
+  border: 1px solid var(--surface-calendar-control-border);
   display: flex;
-  align-items: center;
+  background: var(--surface-calendar-control-bg);
   gap: 10px;
   padding: 0 14px;
   margin-bottom: 28px;
@@ -181,12 +185,12 @@
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: #667eea;
+  accent-color: var(--color-accent);
 }
 
 .checkboxGroup label {
   font-size: 13px;
-  color: var(--main);
+  color: var(--modal-text);
   cursor: pointer;
   margin: 0;
 }
@@ -205,20 +209,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #dc2626;
+  background: linear-gradient(180deg, var(--surface-error-start) 0%, var(--surface-error-end) 100%);
   font-weight: 700;
   font-size: 14px;
   line-height: 129%;
   letter-spacing: -0.01em;
-  color: white;
-  border: none;
+  color: var(--surface-button-text);
+  border: 1px solid var(--surface-error-border);
   outline: transparent;
   transition: all var(--transition);
   cursor: pointer;
 }
 
 .deleteBtn:hover:not(.disabled) {
-  background: #b91c1c;
+  background: linear-gradient(
+    180deg,
+    var(--surface-error-hover-start) 0%,
+    var(--surface-error-hover-end) 100%
+  );
   transform: scale(1.02);
 }
 
@@ -234,10 +242,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--surface-calendar-control-border);
   outline: transparent;
-  background: var(--main-white);
-  color: var(--main);
+  background: var(--surface-panel-bg);
+  color: var(--surface-calendar-text);
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;
@@ -245,8 +253,8 @@
 }
 
 .cancelBtn:hover {
-  border-color: #667eea;
-  background: #f9fafb;
+  border-color: var(--color-accent);
+  background: var(--surface-panel-hover);
 }
 
 @media (max-width: 480px) {
@@ -255,13 +263,10 @@
     padding: 30px 0 30px 10px;
   }
 
-  .warningBox,
   .inputGroup,
-  .checkboxGroup {
-    padding: 0 10px;
-  }
-
-  .btnWrap {
-    padding: 0 10px;
+  .checkboxGroup,
+  .warningBox {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 }

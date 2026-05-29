@@ -1,6 +1,7 @@
 import { useTheme } from '../../hooks/useTheme';
 import { useTranslation } from 'react-i18next';
 import css from './ThemeSwitcher.module.css';
+import btnCss from '../Header/HeaderButton.module.css';
 import Icon from '../Icon';
 
 export const ThemeSwitcher = () => {
@@ -10,7 +11,7 @@ export const ThemeSwitcher = () => {
   return (
     <div className={css.themeButtonContainer}>
       <button
-        className={css.themeButton}
+        className={`${btnCss.headerControl} ${css.themeButton}`}
         onClick={toggleTheme}
         title={isDark ? t('switch_to_light_theme') : t('switch_to_dark_theme')}
         type="button"

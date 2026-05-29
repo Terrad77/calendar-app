@@ -7,7 +7,7 @@ const WeekdayHeaderContainer = styled('div', {
   gridTemplateColumns: 'repeat(7, 1fr)',
   gap: '6px',
   padding: '6px',
-  backgroundColor: 'rgba(255,255,255,0.65)',
+  backgroundColor: 'var(--surface-calendar-grid)',
   borderRadius: '12px',
   overflow: 'hidden',
 });
@@ -18,16 +18,16 @@ const WeekdayHeaderCell = styled('div', {
   letterSpacing: '0.02em',
   // textTransform: 'uppercase',
   textAlign: 'center',
-  backgroundColor: 'rgba(255,255,255,0.85)',
-  color: '#6b7280',
+  backgroundColor: 'var(--surface-calendar-cell)',
+  color: 'var(--surface-calendar-muted)',
   height: '34px',
   width: '100%',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  border: '1px solid rgba(148,163,184,0.2)',
+  border: '1px solid var(--surface-calendar-cell-border)',
   borderRadius: '10px',
-  boxShadow: '0 1px 4px rgba(15,23,42,0.04)',
+  boxShadow: '0 1px 4px var(--surface-calendar-cell-shadow)',
 });
 
 export const CalendarGridHeader: React.FC = () => {

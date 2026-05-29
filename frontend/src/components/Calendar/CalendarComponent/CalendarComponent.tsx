@@ -539,10 +539,8 @@ export const Calendar = ({
           allTasks={tasks}
           isFiller={isFiller}
           onDayClick={(date) => {
-            const dayData = filteredTasksAndHolidaysByDay[date] || { tasks: [], holidays: [] };
-            if (dayData.tasks.length + dayData.holidays.length > 0) {
-              setDayModalDate(date);
-            }
+            // Always open day modal so user can add an event even when the day is empty
+            setDayModalDate(date);
           }}
           onTaskClick={(task) => {
             setEditingTask(task);
@@ -681,7 +679,13 @@ export const Calendar = ({
                 setTasks((prev) => [...prev, task]);
                 setActiveDayForInput(null);
               }}
-              onCancel={() => setActiveDayForInput(null)}
+              onCancel={() => {
+                const reopenDate = activeDayForInput;
+                setActiveDayForInput(null);
+                if (reopenDate) {
+                  setDayModalDate(reopenDate);
+                }
+              }}
               onDelete={(taskId) => {
                 setTasks((prev) => prev.filter((t) => t.id !== taskId));
                 setActiveDayForInput(null);

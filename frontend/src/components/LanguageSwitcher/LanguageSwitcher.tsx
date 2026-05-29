@@ -1,5 +1,6 @@
 import { useLanguage } from '../../hooks/useLanguage';
 import css from './LanguageSwitcher.module.css';
+import btnCss from '../Header/HeaderButton.module.css';
 import { useSelector } from 'react-redux';
 import { selectIsLoggedIn } from '../../redux/user/selectors';
 import { useAppDispatch } from '../../redux/hooks';
@@ -24,7 +25,7 @@ export const LanguageSwitcher = () => {
       {languages.map((language) => (
         <button
           key={language.code}
-          className={`${css.languageButton} ${currentLanguage === language.code ? css.active : ''}`}
+          className={`${btnCss.headerControl} ${css.languageButton} ${currentLanguage === language.code ? css.active : ''}`}
           onClick={() => handleLanguageChange(language.code)}
           title={language.name}
           type="button"

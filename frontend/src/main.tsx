@@ -6,8 +6,8 @@ import { BrowserRouter } from 'react-router-dom';
 
 import './index.css';
 import App from './App';
-import { Toaster } from 'react-hot-toast';
 import { store, persistor } from './redux/store';
+import { ThemeProvider } from './contexts/ThemeContext';
 import './locales';
 
 createRoot(document.getElementById('root')!).render(
@@ -15,25 +15,9 @@ createRoot(document.getElementById('root')!).render(
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <BrowserRouter>
-          <App />
-          <Toaster
-            position="top-center"
-            toastOptions={{
-              duration: 2000,
-              style: {
-                background: 'var(--secondary-bg)',
-                color: 'var(--primary-text)',
-              },
-            }}
-            containerStyle={{
-              position: 'fixed',
-              top: '8px',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              zIndex: 9999,
-              borderRadius: '6px',
-            }}
-          />
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
         </BrowserRouter>
       </PersistGate>
     </Provider>

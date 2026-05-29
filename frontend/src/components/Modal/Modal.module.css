@@ -1,76 +1,108 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  background: var(
-    --modal-backdrop,
-    radial-gradient(circle at top, rgba(15, 23, 42, 0.08), transparent 40%),
-    rgba(248, 250, 252, 0.72)
-  );
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  display: flex; /* добавляем flex для центрирования */
+  display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000; /* убедитесь что z-index достаточный */
+  z-index: 1000;
   padding: 1.25rem;
+  background: var(
+    --modal-backdrop,
+    linear-gradient(180deg, rgba(2, 8, 20, 0.48), rgba(2, 8, 20, 0.46))
+  );
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
 }
 
 .modal {
-  position: relative; /* for catch the close button */
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: min(100%, 560px);
-  padding: 3.25rem 1.25rem 1.25rem;
+  align-items: stretch;
+  justify-content: flex-start;
+  width: min(100%, 720px);
+  padding: 1rem 1rem 1rem;
   color: var(--modal-text, #0f172a);
   border: 1px solid var(--modal-border, rgba(255, 255, 255, 0.7));
-  border-radius: 28px;
+  border-radius: 20px;
   background: var(--modal-bg, rgba(255, 255, 255, 0.84));
   box-shadow:
-    var(--modal-shadow-1, 0 24px 80px rgba(15, 23, 42, 0.18)),
-    var(--modal-shadow-2, 0 4px 18px rgba(15, 23, 42, 0.08));
-  backdrop-filter: blur(18px);
+    var(--modal-shadow-1, 0 18px 48px rgba(2, 8, 20, 0.36)),
+    var(--modal-shadow-2, 0 6px 20px rgba(2, 8, 20, 0.28));
+  backdrop-filter: none;
+  max-height: calc(100vh - 48px);
+  overflow: visible;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  height: 44px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.logoContainer :global(a) {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  transform: scale(0.76);
+  transform-origin: left center;
 }
 
 .closeButton {
   display: flex;
   align-items: center;
   justify-content: center;
-
-  color: var(--modal-text, #0f172a);
-
+  position: relative;
   z-index: 1;
-
-  position: absolute;
-  top: 12px;
-  right: 12px;
-
   width: 40px;
   height: 40px;
-  background: var(--modal-close-bg, rgba(15, 23, 42, 0.04));
-  border: 1px solid var(--modal-close-border, rgba(148, 163, 184, 0.28));
-  border-radius: 9999px;
-  cursor: pointer;
-
   padding: 0;
-  font-size: 18px; /* closeIcon size */
+  color: var(--modal-text, #0f172a);
+  background: var(--modal-close-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--modal-close-border, rgba(255, 255, 255, 0.04));
+  border-radius: 9999px;
+  box-shadow: 0 6px 18px rgba(2, 8, 20, 0.12);
+  cursor: pointer;
+  font-size: 18px;
   transition:
     transform 0.18s ease,
     background-color 0.18s ease,
     border-color 0.18s ease,
     box-shadow 0.18s ease;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
 
 .closeIcon {
   padding: 4px;
 }
 
+.responsiveIcon {
+  font-size: 20px;
+}
+
 .closeButton:hover {
-  transform: scale(1.03);
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(148, 163, 184, 0.42);
+  transform: scale(1.06);
+  background: color-mix(
+    in srgb,
+    var(--modal-close-bg, rgba(255, 255, 255, 0.06)) 85%,
+    rgba(255, 255, 255, 0.04) 15%
+  );
+  box-shadow: 0 10px 30px rgba(2, 8, 20, 0.18);
 }
 
 .closeButton:focus-visible {
@@ -81,24 +113,109 @@
 .closeButton:hover > .closeIcon {
   stroke: var(--modal-text, #0f172a);
 }
-.responsiveIcon {
-  font-size: 20px;
+
+.modalInner {
+  max-height: calc(100vh - 140px);
+  overflow: auto;
 }
 
-/* from 768px */
 @media screen and (min-width: 768px) {
   .modal {
-    width: min(100%, 580px);
-    padding: 3.75rem 1.5rem 1.5rem;
+    width: min(100%, 880px);
+    padding: 1.5rem 1.5rem 1.25rem;
   }
+
+  .modalHeader {
+    min-height: 48px;
+  }
+
+  .logoContainer {
+    height: 48px;
+  }
+
+  .logoContainer :global(a) {
+    transform: scale(0.8);
+  }
+
   .closeButton {
-    width: 44px;
-    height: 44px;
-    top: 14px;
-    right: 14px;
-    font-size: 24px;
+    width: 48px;
+    height: 48px;
+    font-size: 20px;
   }
+
   .responsiveIcon {
-    font-size: 24px;
+    font-size: 22px;
   }
+}
+
+:global(.modal-button) {
+  padding: 0.375rem 0.75rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--modal-text, #0f172a);
+  font-weight: 600;
+  font-size: 0.9rem;
+  line-height: 1;
+  transition:
+    background-color 180ms ease,
+    transform 120ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
+}
+
+:global(.modal-button:hover) {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
+}
+
+:global(.modal-button:active) {
+  transform: translateY(0);
+}
+
+:global(.modal-button[disabled]) {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+[data-theme='dark'] :global(.modal-button) {
+  background: var(--surface-button-start, rgba(30, 45, 70, 0.72));
+  border: 1px solid var(--surface-button-border, rgba(138, 155, 181, 0.22));
+  color: var(--surface-button-text, #e8ecf2);
+  box-shadow: var(--surface-button-shadow, rgba(2, 8, 20, 0.12) 0 6px 18px);
+}
+
+[data-theme='dark'] :global(.modal-button:hover) {
+  background: var(--surface-button-hover, rgba(26, 40, 60, 0.78));
+}
+
+:global(.modal-other-day) {
+  background: transparent;
+}
+
+:global(.hoverable-day):hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+:global(.selected-day) {
+  background: linear-gradient(
+    180deg,
+    var(--surface-panel-start, rgba(255, 255, 255, 0.02)),
+    var(--surface-panel-end, rgba(255, 255, 255, 0.01))
+  );
+  border-left: 2px solid var(--color-accent, #5b8cb8);
+}
+
+[data-theme='dark'] :global(.hoverable-day):hover {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-panel-start) 92%, transparent 8%),
+    var(--surface-panel-end)
+  );
+}
+
+[data-theme='dark'] :global(.selected-day) {
+  background: linear-gradient(180deg, var(--surface-panel-start), var(--surface-panel-end));
+  border-left: 2px solid var(--surface-sidebar-item-active-border, rgba(91, 140, 184, 0.28));
 }

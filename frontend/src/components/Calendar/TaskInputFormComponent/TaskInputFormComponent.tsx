@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { styled } from '@stitches/react';
 import {
   type ColorType,
@@ -28,14 +29,16 @@ const TaskInputFormWrapper = styled('div', {
   gap: '16px',
   padding: '24px',
   borderRadius: '20px',
-  border: '1px solid rgba(255,255,255,0.72)',
-  background: 'linear-gradient(180deg, rgba(255,255,255,0.99) 0%, rgba(248,250,252,0.96) 100%)',
-  boxShadow: '0 20px 50px rgba(15, 23, 42, 0.16), 0 2px 10px rgba(15, 23, 42, 0.06)',
+  border: '1px solid var(--surface-panel-border)',
+  background:
+    'linear-gradient(180deg, var(--surface-panel-start) 0%, var(--surface-panel-end) 100%)',
+  boxShadow: '0 20px 50px var(--surface-panel-shadow), 0 2px 10px var(--surface-panel-inset)',
   backdropFilter: 'blur(14px)',
   overflow: 'visible',
   width: '100%',
   maxWidth: '520px',
   margin: '0 auto',
+  color: 'var(--surface-calendar-text)',
 
   '@media (min-width: 1280px)': {
     maxWidth: '580px',
@@ -57,7 +60,7 @@ const TaskInputFormWrapper = styled('div', {
     left: 0,
     right: 0,
     height: '4px',
-    background: 'linear-gradient(90deg, #2563eb 0%, #0ea5e9 100%)',
+    background: 'linear-gradient(90deg, var(--color-accent) 0%, var(--color-accent-hover) 100%)',
     borderTopLeftRadius: '20px',
     borderTopRightRadius: '20px',
   },
@@ -93,8 +96,8 @@ const FormKicker = styled('span', {
   gap: '6px',
   padding: '4px 10px',
   borderRadius: '999px',
-  backgroundColor: 'rgba(37, 99, 235, 0.08)',
-  color: '#1d4ed8',
+  backgroundColor: 'color-mix(in srgb, var(--color-accent) 12%, transparent)',
+  color: 'var(--color-accent)',
   fontSize: '0.72rem',
   fontWeight: 700,
   letterSpacing: '0.04em',
@@ -106,7 +109,7 @@ const FormTitle = styled('h3', {
   fontSize: '1.05rem',
   lineHeight: 1.15,
   letterSpacing: '-0.03em',
-  color: '#0f172a',
+  color: 'var(--surface-calendar-title)',
   fontWeight: 700,
 
   '@media (min-width: 1280px)': {
@@ -122,7 +125,7 @@ const FormDescription = styled('p', {
   margin: 0,
   fontSize: '0.86rem',
   lineHeight: 1.45,
-  color: '#64748b',
+  color: 'var(--surface-calendar-subtle)',
   maxWidth: '30rem',
 
   '@media (min-width: 1280px)': {
@@ -140,20 +143,20 @@ const TaskInput = styled('input', {
   width: '100%',
   minHeight: '44px',
   padding: '0.8rem 0.95rem',
-  border: '1px solid rgba(148, 163, 184, 0.28)',
+  border: '1px solid var(--surface-calendar-control-border)',
   borderRadius: '14px',
-  backgroundColor: 'rgba(255, 255, 255, 0.92)',
+  backgroundColor: 'var(--surface-calendar-control-bg)',
   fontSize: '0.92rem',
-  color: '#0f172a',
-  boxShadow: '0 1px 0 rgba(15, 23, 42, 0.03) inset',
+  color: 'var(--surface-calendar-control-text)',
+  boxShadow: '0 1px 0 var(--surface-panel-inset) inset',
   transition: 'border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease',
   '&:focus': {
     outline: 'none',
-    borderColor: 'rgba(37, 99, 235, 0.46)',
-    boxShadow: '0 0 0 4px rgba(37, 99, 235, 0.12)',
+    borderColor: 'var(--color-accent)',
+    boxShadow: '0 0 0 4px color-mix(in srgb, var(--color-accent) 18%, transparent)',
   },
   '&::placeholder': {
-    color: '#94a3b8',
+    color: 'var(--surface-calendar-search-placeholder)',
   },
 
   '@media (min-width: 1280px)': {
@@ -180,7 +183,7 @@ const FieldLabel = styled('label', {
   fontWeight: 700,
   letterSpacing: '0.04em',
   textTransform: 'uppercase',
-  color: '#475569',
+  color: 'var(--surface-calendar-subtle)',
 
   '@media (min-width: 1280px)': {
     fontSize: '0.78rem',
@@ -194,7 +197,7 @@ const FieldLabel = styled('label', {
 const HelperText = styled('p', {
   margin: 0,
   fontSize: '0.78rem',
-  color: '#94a3b8',
+  color: 'var(--surface-calendar-muted)',
   marginTop: '-4px',
 
   '@media (min-width: 1280px)': {
@@ -228,23 +231,23 @@ const TaskInputButton = styled('button', {
   minHeight: '40px',
   padding: '0.65rem 0.95rem',
   borderRadius: '12px',
-  border: '1px solid rgba(148, 163, 184, 0.24)',
-  backgroundColor: 'rgba(255,255,255,0.9)',
+  border: '1px solid var(--surface-calendar-control-border)',
+  backgroundColor: 'var(--surface-calendar-control-bg)',
   cursor: 'pointer',
   fontSize: '0.84rem',
   fontWeight: 600,
-  color: '#0f172a',
-  boxShadow: '0 4px 12px rgba(15, 23, 42, 0.06)',
+  color: 'var(--surface-calendar-control-text)',
+  boxShadow: '0 4px 12px var(--surface-calendar-search-shadow)',
   transition:
     'transform 0.18s ease, background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
   '&:hover': {
-    backgroundColor: '#fff',
-    borderColor: 'rgba(148, 163, 184, 0.4)',
-    boxShadow: '0 8px 20px rgba(15, 23, 42, 0.1)',
+    backgroundColor: 'var(--surface-calendar-control-hover-bg)',
+    borderColor: 'var(--surface-calendar-control-hover-border)',
+    boxShadow: '0 8px 20px var(--surface-calendar-search-shadow)',
     transform: 'translateY(-1px)',
   },
   '&:focus-visible': {
-    outline: '2px solid rgba(37, 99, 235, 0.24)',
+    outline: '2px solid color-mix(in srgb, var(--color-accent) 24%, transparent)',
     outlineOffset: '2px',
   },
   '@media (min-width: 1280px)': {
@@ -262,34 +265,36 @@ const TaskInputButton = styled('button', {
   variants: {
     primary: {
       true: {
-        background: 'linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%)',
-        color: '#fff',
-        borderColor: 'rgba(37, 99, 235, 0.55)',
-        boxShadow: '0 10px 24px rgba(37, 99, 235, 0.24)',
+        background:
+          'linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%)',
+        color: 'var(--surface-button-text)',
+        borderColor: 'var(--surface-button-border)',
+        boxShadow: '0 10px 24px var(--surface-button-shadow)',
         '&:hover': {
-          background: 'linear-gradient(180deg, #1d4ed8 0%, #1e40af 100%)',
-          borderColor: 'rgba(37, 99, 235, 0.7)',
-          boxShadow: '0 12px 28px rgba(37, 99, 235, 0.28)',
+          background:
+            'linear-gradient(180deg, var(--color-accent-hover) 0%, var(--color-accent) 100%)',
+          borderColor: 'var(--surface-button-border)',
+          boxShadow: '0 12px 28px var(--surface-button-shadow)',
         },
       },
     },
     danger: {
       true: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        color: '#b91c1c',
-        borderColor: 'rgba(248, 113, 113, 0.28)',
-        boxShadow: '0 4px 12px rgba(185, 28, 28, 0.08)',
+        backgroundColor: 'color-mix(in srgb, var(--color-status-error) 16%, transparent)',
+        color: 'color-mix(in srgb, var(--color-status-error) 28%, var(--surface-calendar-text))',
+        borderColor: 'color-mix(in srgb, var(--color-status-error) 28%, transparent)',
+        boxShadow: '0 4px 12px color-mix(in srgb, var(--color-status-error) 14%, transparent)',
         '&:hover': {
-          backgroundColor: 'rgba(254, 242, 242, 0.96)',
-          borderColor: 'rgba(248, 113, 113, 0.38)',
+          backgroundColor: 'color-mix(in srgb, var(--color-status-error) 24%, transparent)',
+          borderColor: 'color-mix(in srgb, var(--color-status-error) 38%, transparent)',
         },
       },
     },
     subtle: {
       true: {
-        backgroundColor: 'rgba(255,255,255,0.72)',
-        color: '#0f172a',
-        borderColor: 'rgba(148, 163, 184, 0.22)',
+        backgroundColor: 'var(--surface-calendar-control-bg)',
+        color: 'var(--surface-calendar-control-text)',
+        borderColor: 'var(--surface-calendar-control-border)',
       },
     },
   },
@@ -315,8 +320,8 @@ const ColorOption = styled('button', {
   minHeight: '36px',
   padding: '0.45rem 0.65rem',
   borderRadius: '999px',
-  border: '1px solid rgba(148, 163, 184, 0.24)',
-  backgroundColor: 'rgba(255,255,255,0.9)',
+  border: '1px solid var(--surface-calendar-control-border)',
+  backgroundColor: 'var(--surface-calendar-control-bg)',
   cursor: 'pointer',
   transition: 'transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease',
   display: 'inline-flex',
@@ -325,30 +330,31 @@ const ColorOption = styled('button', {
   gap: '8px',
   fontSize: '0.8rem',
   fontWeight: 600,
-  color: '#334155',
-  boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)',
+  color: 'var(--surface-calendar-control-text)',
+  boxShadow: '0 4px 12px var(--surface-calendar-search-shadow)',
 
   '&:hover': {
-    borderColor: 'rgba(148, 163, 184, 0.42)',
+    borderColor: 'var(--surface-calendar-control-hover-border)',
     transform: 'translateY(-1px)',
   },
 
   '&:focus-visible': {
-    outline: '2px solid rgba(37, 99, 235, 0.24)',
+    outline: '2px solid color-mix(in srgb, var(--color-accent) 24%, transparent)',
     outlineOffset: '2px',
   },
 
   variants: {
     color: {
-      default: { '--swatch': '#a0a0a0', color: '#475569' },
-      red: { '--swatch': '#f05050', color: '#b91c1c' },
-      yellow: { '--swatch': '#f2d200', color: '#a16207' },
-      green: { '--swatch': '#62c050', color: '#166534' },
+      default: { '--swatch': '#94a3b8', color: 'var(--surface-calendar-control-text)' },
+      red: { '--swatch': '#f05050', color: 'var(--surface-calendar-control-text)' },
+      yellow: { '--swatch': '#f2d200', color: 'var(--surface-calendar-control-text)' },
+      green: { '--swatch': '#62c050', color: 'var(--surface-calendar-control-text)' },
     },
     isSelected: {
       true: {
-        borderColor: 'rgba(37, 99, 235, 0.55)',
-        boxShadow: '0 0 0 4px rgba(37, 99, 235, 0.12)',
+        borderColor: 'var(--surface-calendar-today-border)',
+        boxShadow:
+          '0 0 0 4px color-mix(in srgb, var(--surface-calendar-today-border) 24%, transparent)',
       },
     },
   },
@@ -359,7 +365,7 @@ const ColorOption = styled('button', {
     height: '10px',
     borderRadius: '999px',
     backgroundColor: 'var(--swatch)',
-    boxShadow: '0 0 0 1px rgba(255,255,255,0.65) inset',
+    boxShadow: '0 0 0 1px var(--surface-panel-inset) inset',
   },
 });
 
@@ -368,7 +374,7 @@ const FooterNote = styled('div', {
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: '12px',
-  color: '#64748b',
+  color: 'var(--surface-calendar-muted)',
   fontSize: '0.76rem',
 });
 
@@ -439,6 +445,8 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       initialTask?.colors && initialTask.colors.length > 0 ? initialTask.colors : ['default']
     );
   }, [initialTask]);
+
+  const { t } = useTranslation(['calendar', 'common']);
 
   const availableColors: ColorType[] = TASK_MARKER_COLORS as unknown as ColorType[];
   const isEditing = Boolean(initialTask);
@@ -549,25 +557,25 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     <TaskInputFormWrapper onClick={(e) => e.stopPropagation()}>
       <FormHeader>
         <HeaderMeta>
-          <FormKicker>{isEditing ? 'Calendar event' : 'New event'}</FormKicker>
-          <FormTitle>{getFormTitle(initialTask)}</FormTitle>
-          <FormDescription>{getFormDescription(initialTask)}</FormDescription>
+          <FormKicker>{isEditing ? t('form_kicker_edit') : t('form_kicker_new')}</FormKicker>
+          <FormTitle>{isEditing ? t('form_title_edit') : t('form_title_create')}</FormTitle>
+          <FormDescription>
+            {isEditing ? t('form_description_edit') : t('form_description_create')}
+          </FormDescription>
         </HeaderMeta>
       </FormHeader>
 
-      {isCreatingInPast && (
-        <HelperText>Events in the past can only be dragged, edited, or deleted.</HelperText>
-      )}
+      {isCreatingInPast && <HelperText>{t('past_events_only_edit_delete')}</HelperText>}
 
-      <HelperText>Tip: use Enter to save, Esc to close.</HelperText>
+      <HelperText>{t('enter_to_save')}</HelperText>
 
       <InputStack>
         <FieldGroup>
-          <FieldLabel htmlFor="task-title">{fieldLabels.title}</FieldLabel>
+          <FieldLabel htmlFor="task-title">{t('label_title')}</FieldLabel>
           <TaskInput
             id="task-title"
             type="text"
-            placeholder="Add a clear title"
+            placeholder={t('placeholder_title')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -577,11 +585,11 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
         </FieldGroup>
 
         <FieldGroup>
-          <FieldLabel htmlFor="task-description">{fieldLabels.description}</FieldLabel>
+          <FieldLabel htmlFor="task-description">{t('label_description')}</FieldLabel>
           <TaskInput
             id="task-description"
             type="text"
-            placeholder="Add details, context, or notes"
+            placeholder={t('placeholder_description')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             aria-label="Task description input"
@@ -590,10 +598,13 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       </InputStack>
 
       <FieldGroup>
-        <FieldLabel>{fieldLabels.colors}</FieldLabel>
+        <FieldLabel>{t('label_color')}</FieldLabel>
         <ColorSelectorWrapper>
           {availableColors.map((color) => {
             const selected = selectedColors.includes(color);
+
+            const colorLabel = t(`color_${color}`);
+            const ariaLabel = `${selected ? t('selected') : t('choose')} ${colorLabel}`;
 
             return (
               <ColorOption
@@ -603,9 +614,9 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
                 onClick={() => handleColorToggle(color)}
                 type="button"
                 aria-pressed={selected}
-                aria-label={getColorButtonLabel(color, selected)}
+                aria-label={ariaLabel}
               >
-                {colorLabels[color]}
+                {colorLabel}
               </ColorOption>
             );
           })}
@@ -613,7 +624,6 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       </FieldGroup>
 
       <FooterNote>
-        <span>Enter to save, Esc to close</span>
         <ActionGroup>
           {initialTask && onDuplicate && (
             <TaskInputButton
@@ -622,12 +632,12 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
               subtle
               disabled={isPastDate(initialTask.date)}
             >
-              Copy
+              {t('copy')}
             </TaskInputButton>
           )}
           {initialTask && onDelete && (
             <TaskInputButton type="button" onClick={handleDeleteClick} danger>
-              Delete
+              {t('delete')}
             </TaskInputButton>
           )}
         </ActionGroup>
@@ -635,10 +645,14 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
 
       <TaskInputButtons>
         <TaskInputButton type="button" onClick={onCancel}>
-          Cancel
+          {t('common:cancel')}
         </TaskInputButton>
         <TaskInputButton type="button" primary onClick={handleSaveClick}>
-          {initialTask ? 'Save changes' : isCreatingInPast ? 'Cannot add here' : 'Add event'}
+          {initialTask
+            ? t('save_changes')
+            : isCreatingInPast
+              ? t('cannot_add_here')
+              : t('add_event_button')}
         </TaskInputButton>
       </TaskInputButtons>
     </TaskInputFormWrapper>

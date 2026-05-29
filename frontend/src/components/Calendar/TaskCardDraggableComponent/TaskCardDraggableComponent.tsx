@@ -11,7 +11,7 @@ const TaskMarker = styled('span', {
   flexShrink: 0,
   variants: {
     color: {
-      default: { backgroundColor: '#a0a0a0' },
+      default: { backgroundColor: '#94a3b8' },
       red: { backgroundColor: '#f05050' },
       yellow: { backgroundColor: '#f2d200' },
       green: { backgroundColor: '#62c050' },
@@ -20,17 +20,17 @@ const TaskMarker = styled('span', {
 });
 
 const TaskCard = styled('div', {
-  backgroundColor: 'rgba(255,255,255,0.95)',
+  backgroundColor: 'var(--surface-calendar-cell)',
   borderRadius: '8px',
   padding: '6px 8px',
   fontSize: '0.7rem',
   fontWeight: '500',
-  color: '#1f2937',
+  color: 'var(--surface-calendar-title)',
   marginBottom: '4px',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-  border: '1px solid rgba(148,163,184,0.22)',
-  boxShadow: '0 3px 10px rgba(15,23,42,0.06)',
+  border: '1px solid var(--surface-calendar-cell-border)',
+  boxShadow: '0 3px 10px var(--surface-calendar-cell-shadow)',
   transition: 'all 0.2s ease-in-out',
 
   '&:last-child': {
@@ -47,20 +47,20 @@ const TaskCard = styled('div', {
     eventType: {
       task: {
         '&:hover': {
-          boxShadow: '0 8px 16px rgba(15,23,42,0.12)',
+          boxShadow: '0 8px 16px var(--surface-calendar-cell-hover-shadow)',
         },
-        backgroundColor: 'rgba(239,246,255,0.9)',
+        backgroundColor: 'var(--surface-calendar-cell-hover)',
       },
       holiday: {
-        color: '#be123c',
-        backgroundColor: 'rgba(255,241,242,0.92)',
-        borderColor: 'rgba(251,113,133,0.35)',
-        boxShadow: '0 3px 12px rgba(225,29,72,0.14)',
+        color: 'var(--surface-calendar-holiday-text)',
+        backgroundColor: 'var(--surface-calendar-holiday-bg)',
+        borderColor: 'var(--surface-calendar-holiday-border)',
+        boxShadow: '0 3px 12px var(--surface-calendar-cell-shadow)',
       },
     },
 
     colors: {
-      default: { borderColor: '#a0a0a0' },
+      default: { borderColor: '#94a3b8' },
       red: { borderColor: '#f05050' },
       yellow: { borderColor: '#f2d200' },
       green: { borderColor: '#62c050' },
@@ -68,7 +68,7 @@ const TaskCard = styled('div', {
     isDragging: {
       true: {
         opacity: 0.7,
-        boxShadow: '0 10px 22px rgba(15,23,42,0.2)',
+        boxShadow: '0 10px 22px var(--surface-calendar-cell-hover-shadow)',
       },
     },
     customCursor: {
@@ -172,7 +172,7 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
         <p
           style={{
             fontSize: '0.66rem',
-            color: '#6b7280',
+            color: 'var(--surface-calendar-subtle)',
             marginTop: '4px',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
@@ -186,7 +186,13 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
 
       {/*country code only for holidays */}
       {event.eventType === 'holiday' && event.countryCode && (
-        <p style={{ fontSize: '0.66rem', color: '#e11d48', marginTop: '4px' }}>
+        <p
+          style={{
+            fontSize: '0.66rem',
+            color: 'var(--surface-calendar-holiday-text)',
+            marginTop: '4px',
+          }}
+        >
           ({event.countryCode})
         </p>
       )}

@@ -1,23 +1,30 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../hooks/useTheme';
+import { Toaster } from 'react-hot-toast';
 import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher';
 import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
 import css from './Header.module.css';
+import btnCss from './HeaderButton.module.css';
 
 interface HeaderProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
   isAuthenticated: boolean;
+  headerVariant?: 'default' | 'compact' | 'overlay';
 }
 
-export const Header = ({ sidebarOpen, setSidebarOpen, isAuthenticated }: HeaderProps) => {
+export const Header: React.FC<HeaderProps> = ({
+  sidebarOpen,
+  setSidebarOpen,
+  isAuthenticated,
+  headerVariant = 'default',
+}: HeaderProps) => {
   const { t } = useTranslation('common');
-  const { isDark } = useTheme();
   const sidebarToggleLabel = sidebarOpen ? t('close_sidebar') : t('toggle_sidebar');
+  const isCompact = headerVariant === 'compact';
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -31,24 +38,33 @@ export const Header = ({ sidebarOpen, setSidebarOpen, isAuthenticated }: HeaderP
   }, [sidebarOpen, setSidebarOpen]); // Added setSidebarOpen to dependencies
 
   return (
-    <header className="sticky top-0 z-50 border-b border-neutral-200/80 bg-neutral-50/90 backdrop-blur supports-[backdrop-filter]:bg-neutral-50/80 dark:border-neutral-700/80 dark:bg-neutral-900/90 supports-[backdrop-filter]:dark:bg-neutral-900/80">
-      <div className="mx-auto flex min-h-[var(--app-header-height)] w-full max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8 xl:px-10 2xl:px-12">
+    <header
+      className={clsx(
+        css.headerSurface,
+        'relative',
+        'sticky top-0 z-50 backdrop-blur supports-[backdrop-filter]:backdrop-blur-xl'
+      )}
+    >
+      <div
+        className={clsx(
+          css.headerContent,
+          'mx-auto flex min-h-[var(--app-header-height)] w-full max-w-[var(--layout-content-max-width)] items-center justify-between gap-3',
+          headerVariant === 'overlay' && css.variantOverlay,
+          headerVariant === 'compact' && css.variantCompact
+        )}
+      >
         {isAuthenticated && (
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="inline-flex z-50 h-[3.25rem] w-[3.25rem] items-center justify-center rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/30 xl:h-[3.5rem] xl:w-[3.5rem] 2xl:h-[3.75rem] 2xl:w-[3.75rem]"
+            className={`${btnCss.headerControl} inline-flex z-50 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 ${
+              isCompact
+                ? 'h-[2.75rem] w-[2.75rem] xl:h-[3rem] xl:w-[3rem]'
+                : 'h-[3.25rem] w-[3.25rem] xl:h-[3.5rem] xl:w-[3.5rem] 2xl:h-[3.75rem] 2xl:w-[3.75rem]'
+            }`}
             aria-label={sidebarToggleLabel}
             title={sidebarToggleLabel}
             aria-expanded={sidebarOpen}
             type="button"
-            style={{
-              color: isDark ? '#f8fafc' : '#334155',
-              backgroundColor: isDark ? 'rgba(15, 23, 42, 0.72)' : 'rgba(255, 255, 255, 0.72)',
-              borderColor: isDark ? 'rgba(148, 163, 184, 0.24)' : 'rgba(148, 163, 184, 0.16)',
-              boxShadow: isDark
-                ? '0 10px 24px rgba(15, 23, 42, 0.24)'
-                : '0 8px 20px rgba(15, 23, 42, 0.08)',
-            }}
           >
             <AnimatePresence initial={false} mode="wait">
               {sidebarOpen ? (
@@ -77,10 +93,41 @@ export const Header = ({ sidebarOpen, setSidebarOpen, isAuthenticated }: HeaderP
             </AnimatePresence>
           </button>
         )}
-        <div className={clsx('ml-auto flex items-center gap-3 sm:gap-4', css.btnContainer)}>
+        <div
+          className={clsx(
+            css.btnContainer,
+            'flex items-center gap-2 sm:gap-3',
+            isCompact ? 'w-full justify-center' : 'ml-auto'
+          )}
+        >
           <ThemeSwitcher />
           <LanguageSwitcher />
         </div>
+      </div>
+      <div className={css.toastLayer}>
+        <Toaster
+          position="top-center"
+          gutter={10}
+          reverseOrder={false}
+          toastOptions={{
+            duration: 2500,
+            style: {
+              background: 'transparent',
+              color: 'var(--color-text-primary)',
+              boxShadow: 'none',
+              padding: '0',
+            },
+          }}
+          containerStyle={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 'min(420px, calc(100vw - 32px))',
+            zIndex: 9999,
+            pointerEvents: 'none',
+          }}
+        />
       </div>
     </header>
   );

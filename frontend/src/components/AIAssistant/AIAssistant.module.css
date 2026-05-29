@@ -59,7 +59,7 @@
   cursor: default;
   border: none;
   background: rgba(15, 23, 42, 0.2);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(10px);
 }
 
 .drawer {
@@ -446,6 +446,138 @@
   padding: 0.95rem;
   color: #64748b;
   font-size: 0.9rem;
+}
+
+:global([data-theme='dark']) .assistantButton {
+  border-color: var(--surface-panel-border);
+  background:
+    radial-gradient(
+      circle at top,
+      color-mix(in srgb, var(--surface-panel-inset) 88%, transparent),
+      transparent 40%
+    ),
+    linear-gradient(180deg, var(--surface-panel-start), var(--surface-panel-end));
+  color: var(--color-text-primary);
+  box-shadow:
+    0 18px 40px color-mix(in srgb, var(--surface-panel-shadow) 65%, transparent),
+    0 2px 6px color-mix(in srgb, var(--surface-panel-shadow) 40%, transparent);
+}
+
+:global([data-theme='dark']) .assistantButtonActive {
+  border-color: color-mix(in srgb, var(--color-accent) 35%, var(--surface-panel-border));
+  box-shadow:
+    0 22px 48px color-mix(in srgb, var(--surface-panel-shadow) 75%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--color-accent) 16%, transparent);
+}
+
+:global([data-theme='dark']) .overlay {
+  background: rgba(2, 8, 20, 0.44);
+}
+
+:global([data-theme='dark']) .drawer {
+  border-left-color: var(--surface-panel-border);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-panel-start) 96%, transparent),
+      color-mix(in srgb, var(--surface-panel-end) 96%, transparent)
+    ),
+    color-mix(in srgb, var(--surface-panel-end) 88%, transparent);
+  color: var(--color-text-primary);
+  box-shadow: -24px 0 80px color-mix(in srgb, var(--surface-panel-shadow) 80%, transparent);
+}
+
+:global([data-theme='dark']) .header {
+  border-bottom-color: var(--surface-panel-border);
+}
+
+:global([data-theme='dark']) .headerKicker,
+:global([data-theme='dark']) .headerSubtitle,
+:global([data-theme='dark']) .quickActionIcon,
+:global([data-theme='dark']) .assistantDisabledMessage {
+  color: var(--color-text-secondary);
+}
+
+:global([data-theme='dark']) .headerTitle,
+:global([data-theme='dark']) .heroTitle,
+:global([data-theme='dark']) .messageAssistant,
+:global([data-theme='dark']) .messageActionButton,
+:global([data-theme='dark']) .inputField,
+:global([data-theme='dark']) .quickActionButton {
+  color: var(--color-text-primary);
+}
+
+:global([data-theme='dark']) .closeButton {
+  border-color: var(--surface-panel-border);
+  background: color-mix(in srgb, var(--surface-panel-end) 88%, transparent);
+  color: var(--color-text-secondary);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--surface-panel-shadow) 45%, transparent);
+}
+
+:global([data-theme='dark']) .closeButton:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 30%, var(--surface-panel-border));
+  background: color-mix(in srgb, var(--surface-panel-start) 95%, transparent);
+}
+
+:global([data-theme='dark']) .closeButton:focus-visible {
+  outline-color: color-mix(in srgb, var(--color-accent) 34%, transparent);
+}
+
+:global([data-theme='dark']) .heroCard,
+:global([data-theme='dark']) .quickActionButton,
+:global([data-theme='dark']) .message,
+:global([data-theme='dark']) .inputForm {
+  border-color: var(--surface-panel-border);
+  background: linear-gradient(180deg, var(--surface-panel-start), var(--surface-panel-end));
+  box-shadow: 0 12px 24px color-mix(in srgb, var(--surface-panel-shadow) 55%, transparent);
+}
+
+:global([data-theme='dark']) .heroText {
+  color: var(--color-text-secondary);
+}
+
+:global([data-theme='dark']) .quickActionButton:hover,
+:global([data-theme='dark']) .messageActionButton:hover {
+  border-color: color-mix(in srgb, var(--color-accent) 28%, var(--surface-panel-border));
+  background: color-mix(in srgb, var(--surface-panel-start) 96%, transparent);
+}
+
+:global([data-theme='dark']) .messageAssistant {
+  background: linear-gradient(180deg, var(--surface-panel-start), var(--surface-panel-end));
+}
+
+:global([data-theme='dark']) .messageSystem {
+  background: color-mix(in srgb, var(--color-status-success) 18%, var(--surface-panel-end));
+  color: color-mix(in srgb, var(--color-status-success) 65%, var(--color-text-primary));
+  border-color: color-mix(in srgb, var(--color-status-success) 36%, var(--surface-panel-border));
+}
+
+:global([data-theme='dark']) .messageActionButton {
+  border-color: var(--surface-panel-border);
+  background: color-mix(in srgb, var(--surface-panel-start) 88%, transparent);
+}
+
+:global([data-theme='dark']) .loadingDots span {
+  background: color-mix(in srgb, var(--color-text-secondary) 72%, transparent);
+}
+
+:global([data-theme='dark']) .footer {
+  border-top-color: var(--surface-panel-border);
+  background: color-mix(in srgb, var(--surface-panel-end) 92%, transparent);
+}
+
+:global([data-theme='dark']) .inputField::placeholder {
+  color: color-mix(in srgb, var(--color-text-secondary) 85%, transparent);
+}
+
+:global([data-theme='dark']) .sendButton {
+  border-color: color-mix(in srgb, var(--color-accent) 55%, transparent);
+  background: linear-gradient(180deg, var(--color-accent-hover) 0%, var(--color-accent) 100%);
+  box-shadow: 0 12px 22px color-mix(in srgb, var(--color-accent) 35%, transparent);
+}
+
+:global([data-theme='dark']) .sendButton:hover:not(:disabled) {
+  box-shadow: 0 16px 26px color-mix(in srgb, var(--color-accent) 42%, transparent);
 }
 
 @media (min-width: 768px) {

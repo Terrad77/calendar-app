@@ -6,7 +6,7 @@
 }
 
 .taskMarker.colorDefault {
-  background-color: #a0a0a0;
+  background-color: var(--surface-calendar-muted);
 }
 
 .taskMarker.colorRed {
@@ -22,17 +22,17 @@
 }
 
 .taskCard {
-  background-color: rgba(255, 255, 255, 0.95);
+  background-color: var(--surface-calendar-cell);
   border-radius: 10px;
   padding: 8px 10px;
   font-size: 0.74rem;
   font-weight: 500;
-  color: #1f2937;
+  color: var(--surface-calendar-title);
   margin-bottom: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.06);
+  border: 1px solid var(--surface-calendar-cell-border);
+  box-shadow: 0 3px 10px var(--surface-calendar-cell-shadow);
   transition: all 0.2s ease-in-out;
 }
 
@@ -84,22 +84,22 @@
 }
 
 .taskCard.eventTypeTask {
-  background-color: rgba(239, 246, 255, 0.9);
+  background-color: var(--surface-calendar-cell-hover);
 }
 
 .taskCard.eventTypeTask:hover {
-  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 8px 16px var(--surface-calendar-cell-hover-shadow);
 }
 
 .taskCard.eventTypeHoliday {
-  color: #be123c;
-  background-color: rgba(255, 241, 242, 0.92);
-  border-color: rgba(251, 113, 133, 0.35);
-  box-shadow: 0 3px 12px rgba(225, 29, 72, 0.14);
+  color: var(--surface-calendar-holiday-text);
+  background-color: var(--surface-calendar-holiday-bg);
+  border-color: var(--surface-calendar-holiday-border);
+  box-shadow: 0 3px 12px var(--surface-calendar-cell-shadow);
 }
 
 .taskCard.colorDefault {
-  border-color: #a0a0a0;
+  border-color: var(--surface-calendar-muted);
 }
 
 .taskCard.colorRed {
@@ -116,27 +116,27 @@
 
 @media (min-width: 1280px) {
   .taskCard.eventTypeTask:hover {
-    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.14);
+    box-shadow: 0 10px 20px var(--surface-calendar-cell-hover-shadow);
   }
 
   .taskCard.eventTypeHoliday {
-    box-shadow: 0 4px 14px rgba(225, 29, 72, 0.16);
+    box-shadow: 0 4px 14px var(--surface-calendar-holiday-shadow);
   }
 }
 
 @media (min-width: 1536px) {
   .taskCard.eventTypeTask:hover {
-    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.16);
+    box-shadow: 0 12px 24px var(--surface-calendar-cell-hover-shadow);
   }
 
   .taskCard.eventTypeHoliday {
-    box-shadow: 0 5px 16px rgba(225, 29, 72, 0.18);
+    box-shadow: 0 5px 16px var(--surface-calendar-holiday-shadow);
   }
 }
 
 .taskCard.isDragging {
   opacity: 0.7;
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.2);
+  box-shadow: 0 10px 22px var(--surface-calendar-cell-hover-shadow);
 }
 
 .taskCard.cursorPointer {

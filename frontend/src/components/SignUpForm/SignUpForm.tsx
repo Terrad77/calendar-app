@@ -12,6 +12,7 @@ import Modal from '../Modal/Modal.js';
 import { signUpSchema } from '../../schemas/validationSchemas';
 import { SignUpFormData, RegisterError } from '../../types/types';
 import toast from 'react-hot-toast';
+import toastMaker from '../../utils/toastMaker/toastMaker';
 import { AppDispatch } from '../../redux/types';
 import { useTogglePassword } from '../../hooks/useTogglePassword';
 import { Eye, EyeOff } from 'lucide-react';
@@ -45,7 +46,7 @@ export default function SignUpForm() {
 
     try {
       await dispatch(registerUser({ name, email, password })).unwrap();
-      toast.success(t('register_successful', { ns: 'common' }));
+      toastMaker(t('register_successful', { ns: 'common' }), 'success');
       reset();
       setIsModalOpen(true);
     } catch (error: unknown) {
@@ -76,9 +77,10 @@ export default function SignUpForm() {
         <div className={styles.inputGroup}>
           <label htmlFor="email">{t('email_user', { ns: 'form' })}</label>
           <input
+            id="email"
             type="text"
             placeholder={t('enter_email', { ns: 'form' })}
-            autoComplete="off"
+            autoComplete="email"
             className={`${styles.inputGroupInput} ${errors.email ? styles.inputError : ''}`}
             {...register('email')}
           />
@@ -93,6 +95,7 @@ export default function SignUpForm() {
           <label htmlFor="password">{t('password_user', { ns: 'form' })}</label>
           <div className={styles.passwordContainer}>
             <input
+              id="password"
               type={passwordField.inputType}
               placeholder={t('enter_password', { ns: 'form' })}
               autoComplete="new-password"
@@ -102,10 +105,7 @@ export default function SignUpForm() {
             <button
               type="button"
               className={styles.passwordToggle}
-              onClick={(e) => {
-                e.stopPropagation();
-                passwordField.toggle();
-              }}
+              onClick={passwordField.toggle}
               tabIndex={-1}
               aria-label={passwordField.ariaLabel}
             >
@@ -127,19 +127,17 @@ export default function SignUpForm() {
           <label htmlFor="repeatPassword">{t('repeat_password', { ns: 'form' })}</label>
           <div className={styles.passwordContainer}>
             <input
+              id="repeatPassword"
               type={repeatPasswordField.inputType}
               placeholder={t('repeat_password_placeholder', { ns: 'form' })}
-              autoComplete="password-confirmation"
+              autoComplete="new-password"
               className={`${styles.inputGroupInput} ${errors.repeatPassword ? styles.inputError : ''}`}
               {...register('repeatPassword')}
             />
             <button
               type="button"
               className={styles.passwordToggle}
-              onClick={(e) => {
-                e.stopPropagation();
-                repeatPasswordField.toggle();
-              }}
+              onClick={repeatPasswordField.toggle}
               tabIndex={-1}
               aria-label={repeatPasswordField.ariaLabel}
             >

@@ -16,28 +16,107 @@
   color-scheme: light dark;
 
   /* Light theme (default) */
-  --color-bg-primary: #ffffff;
-  --color-bg-secondary: #dfdddd;
-  --color-bg-card: #ffffff;
-  --color-bg-input: #ffffff;
+  --color-bg-primary: #f5f0e8;
+  --color-bg-secondary: #ece6db;
+  --color-bg-card: rgba(255, 255, 255, 0.65);
+  --color-bg-input: rgba(255, 255, 255, 0.78);
 
-  --color-text-primary: #213547;
-  --color-text-secondary: #817f7f;
-  --color-text-input: #213547;
-  --color-text-placeholder: rgba(0, 0, 0, 0.5);
+  --color-text-primary: #2c2418;
+  --color-text-secondary: #8c7e6a;
+  --color-text-input: #2c2418;
+  --color-text-placeholder: rgba(44, 36, 24, 0.48);
 
-  --color-accent: #646cff;
-  --color-accent-hover: #535bf2;
+  --color-accent: #9b7b5b;
+  --color-accent-hover: #8a6b4d;
 
-  --color-border: #bfbcbc;
-  --color-border-input: #ddd;
+  --color-border: rgba(140, 126, 106, 0.28);
+  --color-border-input: rgba(140, 126, 106, 0.24);
 
-  --color-status-error: #d32f2f;
-  --color-status-success: #2e7d32;
+  --surface-page-start: #f5f0e8;
+  --surface-page-end: #ece6db;
+  --surface-page-grid: rgba(255, 255, 255, 0.18);
+  --surface-page-grid-fade: rgba(255, 255, 255, 0.12);
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --surface-panel-start: rgba(255, 255, 255, 0.65);
+  --surface-panel-end: rgba(255, 255, 255, 0.52);
+  --surface-panel-border: rgba(60, 48, 36, 0.32);
+  --surface-panel-shadow: rgba(44, 36, 24, 0.08);
+  --surface-panel-inset: rgba(255, 255, 255, 0.42);
+
+  --surface-sidebar-start: rgba(255, 255, 255, 0.96);
+  --surface-sidebar-end: rgba(244, 238, 229, 0.92);
+  --surface-sidebar-border: rgba(140, 126, 106, 0.14);
+  --surface-sidebar-shadow: rgba(44, 36, 24, 0.07);
+  --surface-sidebar-text: #2c2418;
+  --surface-sidebar-muted: #8c7e6a;
+  --surface-sidebar-item: rgba(255, 255, 255, 0.72);
+  --surface-sidebar-item-hover: rgba(255, 255, 255, 0.92);
+  --surface-sidebar-item-active: rgba(255, 255, 255, 0.96);
+  --surface-sidebar-item-border: rgba(140, 126, 106, 0.14);
+  --surface-sidebar-item-active-border: rgba(155, 123, 91, 0.2);
+  --surface-sidebar-icon: #6f5f4d;
+  --surface-sidebar-icon-muted: #b7ab9b;
+  --surface-sidebar-chevron: #b7ab9b;
+  --surface-sidebar-profile: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(244, 238, 229, 0.95)
+  );
+  --surface-sidebar-backdrop: rgba(44, 36, 24, 0.12);
+  --surface-sidebar-backdrop-blur: 12px;
+
+  --surface-button-start: rgba(255, 255, 255, 0.96);
+  --surface-button-end: rgba(245, 239, 230, 0.94);
+  --surface-button-border: rgba(140, 126, 106, 0.22);
+  --surface-button-text: #2c2418;
+  --surface-button-shadow: rgba(44, 36, 24, 0.07);
+
+  --surface-calendar-shell: rgba(255, 255, 255, 0.64);
+  --surface-calendar-shell-border: rgba(140, 126, 106, 0.16);
+  --surface-calendar-shell-shadow: rgba(44, 36, 24, 0.08);
+  --surface-calendar-title: #2c2418;
+  --surface-calendar-text: #4a3d2e;
+  --surface-calendar-day-number-current: #2c2418;
+  --surface-calendar-day-number-outside: #8c7e6a;
+  --surface-calendar-muted: #8c7e6a;
+  --surface-calendar-subtle: #6d604f;
+  --surface-calendar-grid: #e4ddd2;
+  --surface-calendar-cell: rgba(255, 255, 255, 0.9);
+  --surface-calendar-cell-outside: rgba(250, 246, 239, 0.96);
+  --surface-calendar-cell-filler: rgba(250, 246, 239, 0.92);
+  --surface-calendar-cell-hover: rgba(255, 255, 255, 0.98);
+  --surface-calendar-cell-border: rgba(60, 48, 36, 0.32);
+  --surface-calendar-cell-shadow: rgba(44, 36, 24, 0.05);
+  --surface-calendar-cell-hover-shadow: rgba(44, 36, 24, 0.08);
+  --surface-calendar-today-border: rgba(155, 123, 91, 0.34);
+  --surface-calendar-today-shadow: rgba(155, 123, 91, 0.14);
+  --surface-calendar-dragover: rgba(255, 250, 242, 0.96);
+  --surface-calendar-dragover-outline: rgba(155, 123, 91, 0.42);
+  --surface-calendar-holiday-bg: rgba(251, 236, 228, 0.92);
+  --surface-calendar-holiday-border: rgba(155, 123, 91, 0.2);
+  --surface-calendar-holiday-text: #8a6b4d;
+  --surface-calendar-number-today-bg: #9b7b5b;
+  --surface-calendar-number-today-text: #ffffff;
+  --surface-calendar-search-bg: rgba(255, 255, 255, 0.92);
+  --surface-calendar-search-border: rgba(140, 126, 106, 0.3);
+  --surface-calendar-search-text: #2c2418;
+  --surface-calendar-search-placeholder: #9c8d7b;
+  --surface-calendar-search-shadow: rgba(44, 36, 24, 0.08);
+  --surface-calendar-control-bg: rgba(255, 255, 255, 0.92);
+  --surface-calendar-control-border: rgba(140, 126, 106, 0.3);
+  --surface-calendar-control-text: #2c2418;
+  --surface-calendar-control-hover-bg: #ffffff;
+  --surface-calendar-control-hover-border: rgba(140, 126, 106, 0.48);
+  --surface-calendar-control-disabled-bg: #e8e0d5;
+  --surface-calendar-control-disabled-text: #b5a896;
+  --surface-calendar-control-disabled-border: #d8cec0;
+
+  --color-status-error: #c64d3a;
+  --color-status-success: #5b8c61;
+
+  --shadow-sm: 0 1px 2px rgba(44, 36, 24, 0.05);
+  --shadow-md: 0 6px 14px rgba(44, 36, 24, 0.1);
+  --shadow-lg: 0 14px 24px rgba(44, 36, 24, 0.12);
 
   /* Spacing */
   --space-xs: 0.25rem; /* 4px */
@@ -45,6 +124,7 @@
   --space-md: 1rem; /* 16px */
   --space-lg: 1.5rem; /* 24px */
   --space-xl: 2rem; /* 32px */
+  --layout-content-max-width: 80rem; /* 1280px, aligned with previous max-w-7xl */
   /* Border radius */
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -59,53 +139,230 @@
 
 /* Modal variables (global so HMR applies without restart) */
 :root {
-  --modal-text: #0f172a;
-  --modal-bg: rgba(255, 255, 255, 0.84);
-  --modal-border: rgba(255, 255, 255, 0.7);
+  --modal-text: #2c2418;
+  --modal-bg: rgba(255, 255, 255, 0.82);
+  --modal-border: rgba(60, 48, 36, 0.6);
   --modal-backdrop:
-    radial-gradient(circle at top, rgba(15, 23, 42, 0.08), transparent 40%),
-    rgba(248, 250, 252, 0.72);
-  --modal-shadow-1: 0 24px 80px rgba(15, 23, 42, 0.18);
-  --modal-shadow-2: 0 4px 18px rgba(15, 23, 42, 0.08);
-  --modal-close-bg: rgba(15, 23, 42, 0.04);
-  --modal-close-border: rgba(148, 163, 184, 0.28);
+    radial-gradient(circle at top, rgba(44, 36, 24, 0.08), transparent 40%),
+    rgba(245, 240, 232, 0.74);
+  --modal-shadow-1: 0 24px 80px rgba(44, 36, 24, 0.14);
+  --modal-shadow-2: 0 4px 18px rgba(44, 36, 24, 0.08);
+  --modal-close-bg: rgba(44, 36, 24, 0.04);
+  --modal-close-border: rgba(60, 48, 36, 0.44);
+  --modal-button-border: rgba(60, 48, 36, 0.28);
 }
 
 /* Dark theme */
 [data-theme='dark'] {
-  --color-bg-primary: #1a1a1a;
-  --color-bg-secondary: #2d2d2d;
-  --color-bg-card: #2d2d2d;
-  --color-bg-input: #3a3a3a;
+  --color-bg-primary: #0f1a2e;
+  --color-bg-secondary: #162033;
+  --color-bg-card: rgba(30, 45, 70, 0.6);
+  --color-bg-input: rgba(30, 45, 70, 0.74);
 
-  --color-text-primary: #ffffff;
-  --color-text-secondary: #a0a0a0;
-  --color-text-input: #ffffff;
-  --color-text-placeholder: rgba(255, 255, 255, 0.5);
+  --color-text-primary: #e8ecf2;
+  --color-text-secondary: #8a9bb5;
+  --color-text-input: #e8ecf2;
+  --color-text-placeholder: rgba(232, 236, 242, 0.52);
 
-  --color-accent: #747bff;
-  --color-accent-hover: #9499ff;
+  --color-accent: #5b8cb8;
+  --color-accent-hover: #6a9cc4;
 
-  --color-border: #444444;
-  --color-border-input: #555555;
+  --color-border: rgba(138, 155, 181, 0.22);
+  --color-border-input: rgba(138, 155, 181, 0.24);
 
-  --color-status-error: #f44336;
-  --color-status-success: #4caf50;
+  --surface-page-start: #0f1a2e;
+  --surface-page-end: #162033;
+  --surface-page-grid: rgba(232, 236, 242, 0.08);
+  --surface-page-grid-fade: rgba(232, 236, 242, 0.05);
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+  --surface-panel-start: rgba(30, 45, 70, 0.6);
+  --surface-panel-end: rgba(30, 45, 70, 0.48);
+  --surface-panel-border: rgba(138, 155, 181, 0.2);
+  --surface-panel-shadow: rgba(2, 8, 20, 0.48);
+  --surface-panel-inset: rgba(232, 236, 242, 0.08);
+
+  --surface-sidebar-start: rgba(30, 45, 70, 0.86);
+  --surface-sidebar-end: rgba(22, 32, 51, 0.84);
+  --surface-sidebar-border: rgba(138, 155, 181, 0.18);
+  --surface-sidebar-shadow: rgba(2, 8, 20, 0.56);
+  --surface-sidebar-text: #e8ecf2;
+  --surface-sidebar-muted: #8a9bb5;
+  --surface-sidebar-item: rgba(30, 45, 70, 0.78);
+  --surface-sidebar-item-hover: rgba(44, 63, 92, 0.92);
+  --surface-sidebar-item-active: rgba(22, 32, 51, 0.96);
+  --surface-sidebar-item-border: rgba(138, 155, 181, 0.16);
+  --surface-sidebar-item-active-border: rgba(91, 140, 184, 0.28);
+  --surface-sidebar-icon: #c7d2de;
+  --surface-sidebar-icon-muted: #8a9bb5;
+  --surface-sidebar-chevron: #7f93ad;
+  --surface-sidebar-profile: linear-gradient(
+    180deg,
+    rgba(30, 45, 70, 0.96),
+    rgba(22, 32, 51, 0.88)
+  );
+  --surface-sidebar-backdrop: rgba(2, 8, 20, 0.44);
+  --surface-sidebar-backdrop-blur: 16px;
+
+  --surface-button-start: rgba(30, 45, 70, 0.72);
+  --surface-button-end: rgba(22, 32, 51, 0.68);
+  --surface-button-border: rgba(138, 155, 181, 0.22);
+  --surface-button-text: #e8ecf2;
+  --surface-button-shadow: rgba(2, 8, 20, 0.3);
+
+  --surface-calendar-shell: rgba(30, 45, 70, 0.56);
+  --surface-calendar-shell-border: rgba(138, 155, 181, 0.18);
+  --surface-calendar-shell-shadow: rgba(2, 8, 20, 0.42);
+  --surface-calendar-title: #e8ecf2;
+  --surface-calendar-text: #d8e0ea;
+  --surface-calendar-day-number-current: #eef4fb;
+  --surface-calendar-day-number-outside: #8a9bb5;
+  --surface-calendar-muted: #8a9bb5;
+  --surface-calendar-subtle: #b6c2d1;
+  --surface-calendar-grid: rgba(138, 155, 181, 0.14);
+  --surface-calendar-cell: rgba(30, 45, 70, 0.68);
+  --surface-calendar-cell-outside: rgba(22, 32, 51, 0.48);
+  --surface-calendar-cell-filler: rgba(22, 32, 51, 0.38);
+  --surface-calendar-cell-hover: rgba(44, 63, 92, 0.9);
+  --surface-calendar-cell-border: rgba(138, 155, 181, 0.18);
+  --surface-calendar-cell-shadow: rgba(2, 8, 20, 0.36);
+  --surface-calendar-cell-hover-shadow: rgba(2, 8, 20, 0.5);
+  --surface-calendar-today-border: rgba(91, 140, 184, 0.42);
+  --surface-calendar-today-shadow: rgba(91, 140, 184, 0.18);
+  --surface-calendar-dragover: rgba(44, 63, 92, 0.96);
+  --surface-calendar-dragover-outline: rgba(91, 140, 184, 0.5);
+  --surface-calendar-holiday-bg: rgba(97, 47, 60, 0.34);
+  --surface-calendar-holiday-border: rgba(155, 123, 91, 0.24);
+  --surface-calendar-holiday-text: #f2d9d0;
+  --surface-calendar-number-today-bg: #5b8cb8;
+  --surface-calendar-number-today-text: #ffffff;
+  --surface-calendar-search-bg: rgba(30, 45, 70, 0.66);
+  --surface-calendar-search-border: rgba(138, 155, 181, 0.24);
+  --surface-calendar-search-text: #e8ecf2;
+  --surface-calendar-search-placeholder: #8a9bb5;
+  --surface-calendar-search-shadow: rgba(2, 8, 20, 0.28);
+  --surface-calendar-control-bg: rgba(30, 45, 70, 0.68);
+  --surface-calendar-control-border: rgba(138, 155, 181, 0.22);
+  --surface-calendar-control-text: #e8ecf2;
+  --surface-calendar-control-hover-bg: rgba(44, 63, 92, 0.92);
+  --surface-calendar-control-hover-border: rgba(138, 155, 181, 0.34);
+  --surface-calendar-control-disabled-bg: rgba(44, 63, 92, 0.58);
+  --surface-calendar-control-disabled-text: #70849c;
+  --surface-calendar-control-disabled-border: rgba(96, 115, 140, 0.8);
+
+  --color-status-error: #ff7d66;
+  --color-status-success: #8bc59b;
+
+  --shadow-sm: 0 1px 2px rgba(2, 8, 20, 0.22);
+  --shadow-md: 0 8px 18px rgba(2, 8, 20, 0.28);
+  --shadow-lg: 0 16px 28px rgba(2, 8, 20, 0.34);
 
   /* Modal dark variables */
-  --modal-text: var(--color-text-primary, #ffffff);
-  --modal-bg: rgba(17, 24, 39, 0.65);
-  --modal-border: rgba(255, 255, 255, 0.06);
+  --modal-text: var(--color-text-primary, #e8ecf2);
+  --modal-bg: rgba(30, 45, 70, 0.68);
+  --modal-border: rgba(138, 155, 181, 0.12);
   --modal-backdrop:
-    radial-gradient(circle at top, rgba(0, 0, 0, 0.5), transparent 40%), rgba(2, 6, 23, 0.6);
-  --modal-shadow-1: 0 20px 50px rgba(2, 6, 23, 0.6);
-  --modal-shadow-2: 0 6px 20px rgba(2, 6, 23, 0.45);
-  --modal-close-bg: rgba(255, 255, 255, 0.04);
-  --modal-close-border: rgba(148, 163, 184, 0.12);
+    radial-gradient(circle at top, rgba(2, 8, 20, 0.46), transparent 40%), rgba(2, 8, 20, 0.58);
+  --modal-shadow-1: 0 20px 50px rgba(2, 8, 20, 0.58);
+  --modal-shadow-2: 0 6px 20px rgba(2, 8, 20, 0.42);
+  --modal-close-bg: rgba(232, 236, 242, 0.04);
+  --modal-close-border: rgba(138, 155, 181, 0.12);
+  --modal-button-border: rgba(255, 255, 255, 0.06);
+}
+
+/* Ensure modal buttons have visible borders inside modal */
+._modal_vwsjz_33 .modal-button {
+  border-color: var(--modal-button-border);
+}
+
+/* Ensure modal-other-day buttons show left border inside modal (no !important) */
+._modal_vwsjz_33 button.modal-button.modal-other-day {
+  border-left-style: solid;
+  border-left-width: 0.8px;
+  border-left-color: var(--modal-button-border);
+}
+
+/* Add minimal padding for the "Other days" list inside modal so items don't touch edges */
+._modal_vwsjz_33 .space-y-2.max-h-64.overflow-auto,
+._modal_vwsjz_33 .space-y-2.max-h-72.overflow-auto,
+._modal_vwsjz_33 .space-y-2.max-h-80.overflow-auto {
+  padding: 6px;
+  padding-inline: 8px;
+  box-sizing: border-box;
+}
+
+/* Make header in right column have small horizontal padding so it doesn't stick */
+._modal_vwsjz_33 .w-1\/3 .mb-3 {
+  padding-inline: 8px;
+  box-sizing: border-box;
+}
+
+/* Add left padding to the right column container ("Інші дні з подіями") */
+._modal_vwsjz_33 .w-1\/3 {
+  padding-inline-start: 8px;
+  box-sizing: border-box;
+}
+
+/* More specific path to target the right column inside modal when layout uses .relative > .flex */
+._modal_vwsjz_33 .relative > .flex > .w-1\/3 {
+  padding-inline-start: 8px;
+}
+
+/* Target right column by position (second child of .flex) to reliably add left padding */
+._modal_vwsjz_33 .relative > .flex > div:nth-child(2),
+.relative > .flex > div:nth-child(2) {
+  padding-left: 8px;
+  box-sizing: border-box;
+}
+
+/* Add small 2px left/right padding inside the right-column list and header so items don't touch edges */
+._modal_vwsjz_33 .w-1\/3 .space-y-2,
+._modal_vwsjz_33 .w-1\/3 .mb-3,
+._modal_vwsjz_33 .w-1\/3 .mb-2 {
+  padding-inline: 2px;
+  box-sizing: border-box;
+}
+
+/* Apply small horizontal padding to any stacked list inside the modal */
+[class*='_modal_'] .space-y-2 {
+  padding-inline: 2px;
+  padding-left: 2px;
+  padding-right: 2px;
+  box-sizing: border-box;
+}
+
+[class*='_modal_'] .mb-3,
+[class*='_modal_'] .mb-2 {
+  padding-left: 2px;
+  padding-right: 2px;
+  box-sizing: border-box;
+}
+
+/* Increase vertical gap between list items in the right column inside modal */
+._modal_vwsjz_33 .space-y-2 > * + * {
+  margin-top: 10px !important;
+}
+
+/* Add 4px extra spacing from the right border for the left events column inside modal */
+._modal_vwsjz_33 .w-2\/3.border-r {
+  padding-inline-end: calc(1rem + 4px); /* base: p-4 (1rem) + 4px */
+}
+
+@media (min-width: 1280px) {
+  ._modal_vwsjz_33 .w-2\/3.border-r {
+    padding-inline-end: calc(1.25rem + 4px); /* xl: p-5 (1.25rem) + 4px */
+  }
+}
+
+@media (min-width: 1536px) {
+  ._modal_vwsjz_33 .w-2\/3.border-r {
+    padding-inline-end: calc(1.5rem + 4px); /* 2xl: p-6 (1.5rem) + 4px */
+  }
+}
+
+/* Fallback: ensure any element inside modal that uses Tailwind border-r gets a small extra gap from the border */
+._modal_vwsjz_33 [class*='border-r'] {
+  padding-inline-end: 4px;
+  box-sizing: border-box;
 }
 
 /* CSS Reset */
@@ -119,15 +376,23 @@
 
 /* Base styles */
 html {
+  height: 100%;
   scroll-behavior: smooth;
 }
 
 body {
+  min-height: 100%;
+  /* allow vertical scrolling when content exceeds viewport */
+  overflow-y: auto;
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
   transition:
     background-color var(--transition-base),
     color var(--transition-base);
+}
+
+#root {
+  min-height: 100%;
 }
 
 /* Typography scale */
@@ -192,5 +457,39 @@ a:hover {
       var(--color-bg-primary) calc(50% + 600px),
       var(--color-bg-secondary) calc(50% + 600px)
     );
+  }
+}
+
+/* Global styles for react-hot-toast container */
+[data-rht-toaster] {
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  z-index: 9999;
+}
+
+[data-rht-toaster] > * {
+  pointer-events: auto;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: color-mix(in srgb, var(--surface-panel-start) 92%, transparent);
+  color: var(--color-text-primary);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  border: 1px solid color-mix(in srgb, var(--color-text-primary) 6%, transparent);
+  font-weight: 500;
+  overflow: hidden;
+}
+
+@media (max-width: 560px) {
+  [data-rht-toaster] > * {
+    width: 100%;
   }
 }

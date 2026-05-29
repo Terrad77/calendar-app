@@ -5,26 +5,31 @@ import Icon from '../../components/Icon';
 type ToastStatus = 'success' | 'error';
 
 export default function toastMaker(text: string, status?: ToastStatus): string {
+  const render = (iconName: string, textClass: string) => (t: { id: string }) => (
+    <div className={css.toastContainer}>
+      <Icon
+        name={iconName}
+        className={textClass === css.toastError ? css.iconError : css.iconSuccess}
+      />
+      <span className={textClass}>{text}</span>
+      <button className={css.toastCloseBtn} onClick={() => toast.dismiss(t.id)} aria-label="close">
+        ×
+      </button>
+    </div>
+  );
+
   switch (status) {
     case 'success':
-      return toast((t: { id: string }) => (
-        <div className={css.toastContainer}>
-          <Icon name="calendar-sad" className={css.iconSuccess} />
-          <span className={css.toastSuccess}>{text}</span>
-          <button onClick={() => toast.dismiss(t.id)}>Close</button>
-        </div>
-      ));
+      // Success toasts are intentionally suppressed — prefer inline success messages
+      // for forms and lightweight UI feedback. Keep toasts only for errors and
+      // global notifications.
+      return '';
 
     case 'error':
-      return toast((t: { id: string }) => (
-        <div className={css.toastContainer}>
-          <Icon name="calendar-sad" className={css.iconError} />
-          <span className={css.toastError}>{text}</span>
-          <button onClick={() => toast.dismiss(t.id)}>Close</button>
-        </div>
-      ));
+      return toast(render('x-close', css.toastError));
 
     default:
-      return toast(text);
+      // Default / global messages still use toasts
+      return toast(render('clock', css.toastSuccess));
   }
 }

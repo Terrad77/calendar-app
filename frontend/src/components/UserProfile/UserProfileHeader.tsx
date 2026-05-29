@@ -38,7 +38,7 @@ const UserButton = styled('button', {
 });
 
 const Avatar = styled('div', {
-  width: '32px',
+  width: '3px',
   height: '32px',
   borderRadius: '50%',
   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',

@@ -176,6 +176,7 @@ export interface ModalProps {
   title?: string;
   size?: 'small' | 'medium' | 'large';
   showCloseButton?: boolean;
+  showLogo?: boolean;
   overlayClassName?: string;
   closeOnOverlayClick?: boolean;
 }

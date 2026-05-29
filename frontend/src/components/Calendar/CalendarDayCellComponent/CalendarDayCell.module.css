@@ -9,13 +9,13 @@
   flex-direction: column;
   overflow: hidden;
   border-radius: 14px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+  border: 1px solid var(--surface-calendar-cell-border);
+  box-shadow: 0 4px 14px var(--surface-calendar-cell-shadow);
   transition: all 0.2s ease;
 }
 
 .dayCell:hover {
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 20px var(--surface-calendar-cell-hover-shadow);
 }
 
 .dayCell .dayNumberAndMonth {
@@ -25,7 +25,7 @@
 }
 
 .dayCell .taskCount {
-  color: #6b7280;
+  color: var(--surface-calendar-muted);
   font-size: 0.72rem;
 }
 
@@ -37,47 +37,47 @@
 }
 
 .dayCell.isOutsideMonth {
-  background-color: rgba(249, 250, 251, 0.95);
-  color: #9ca3af;
+  background-color: var(--surface-calendar-cell-outside);
+  color: color-mix(in srgb, var(--surface-calendar-muted) 72%, transparent);
 }
 
 .dayCell.isOutsideMonth .dayNumber,
 .dayCell.isOutsideMonth .monthAbbr {
-  color: #9ca3af;
+  color: color-mix(in srgb, var(--surface-calendar-muted) 72%, transparent);
 }
 
 .dayCell:not(.isOutsideMonth) {
-  background-color: rgba(255, 255, 255, 0.92);
-  color: #374151;
+  background-color: var(--surface-calendar-cell);
+  color: var(--surface-calendar-text);
 }
 
 .dayCell:not(.isOutsideMonth) .dayNumber {
-  color: #374151;
+  color: var(--surface-calendar-text);
 }
 
 .dayCell:not(.isOutsideMonth) .monthAbbr {
-  color: #4b5563;
+  color: var(--surface-calendar-subtle);
 }
 
 .dayCell.isToday {
-  border-color: rgba(59, 130, 246, 0.35);
-  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.14);
+  border-color: var(--surface-calendar-today-border);
+  box-shadow: 0 10px 24px var(--surface-calendar-today-shadow);
 }
 
 .dayCell.isDragOver {
-  outline: 2px solid rgba(59, 130, 246, 0.5);
-  background-color: rgba(239, 246, 255, 0.95);
+  outline: 2px solid var(--surface-calendar-dragover-outline);
+  background-color: var(--surface-calendar-dragover);
 }
 
 .dayCell.isFiller {
-  background-color: rgba(249, 250, 251, 0.9);
-  color: #d1d5db;
+  background-color: var(--surface-calendar-cell-filler);
+  color: color-mix(in srgb, var(--surface-calendar-muted) 38%, transparent);
   opacity: 0.75;
 }
 
 .dayCell.isPastDate {
   opacity: 0.65;
-  background-color: rgba(243, 244, 246, 0.92);
+  background-color: color-mix(in srgb, var(--surface-calendar-cell) 84%, transparent);
 }
 
 .dayCell:not(.isInteractive) {
@@ -88,12 +88,12 @@
 .holidayName {
   font-size: 0.74rem;
   font-weight: 600;
-  color: #be123c;
+  color: var(--surface-calendar-holiday-text);
   margin-bottom: 6px;
   padding: 4px 8px;
   border-radius: 999px;
-  background-color: rgba(255, 228, 230, 0.85);
-  border: 1px solid rgba(251, 113, 133, 0.35);
+  background-color: var(--surface-calendar-holiday-bg);
+  border: 1px solid var(--surface-calendar-holiday-border);
   text-align: left;
   white-space: wrap;
   overflow: hidden;
@@ -107,8 +107,8 @@
 }
 
 .dayNumber.isToday {
-  color: #fff;
-  background-color: #2563eb;
+  color: var(--surface-calendar-number-today-text);
+  background-color: var(--surface-calendar-number-today-bg);
   border-radius: 50%;
   padding: 3px 7px;
   font-size: 0.9em;

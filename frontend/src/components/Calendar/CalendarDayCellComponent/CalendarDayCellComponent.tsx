@@ -38,11 +38,11 @@ const DayCell = styled('div', {
   flexDirection: 'column',
   overflow: 'hidden',
   borderRadius: '14px',
-  border: '1px solid rgba(148,163,184,0.18)',
-  boxShadow: '0 4px 14px rgba(15,23,42,0.05)',
+  border: '1px solid var(--surface-calendar-cell-border)',
+  boxShadow: '0 4px 14px var(--surface-calendar-cell-shadow)',
   transition: 'all 0.2s ease',
   '&:hover': {
-    boxShadow: '0 8px 20px rgba(15,23,42,0.08)',
+    boxShadow: '0 8px 20px var(--surface-calendar-cell-hover-shadow)',
   },
   '& .day-number-and-month': {
     display: 'flex',
@@ -52,7 +52,7 @@ const DayCell = styled('div', {
     marginBottom: '4px',
   },
   '& .task-count': {
-    color: '#6b7280',
+    color: 'var(--surface-calendar-muted)',
     fontSize: '0.66rem',
     marginLeft: 'auto',
     whiteSpace: 'nowrap',
@@ -74,18 +74,18 @@ const DayCell = styled('div', {
       background: 'transparent',
     },
     '&::-webkit-scrollbar-thumb': {
-      background: 'rgba(100,116,139,0.0)',
+      background: 'transparent',
       borderRadius: '999px',
       border: '2px solid transparent',
       backgroundClip: 'padding-box',
       transition: 'background 160ms ease, opacity 160ms ease',
     },
     '&:hover::-webkit-scrollbar-thumb': {
-      background: 'rgba(100,116,139,0.28)',
+      background: 'var(--surface-scrollbar-thumb)',
     },
     // firefox fallback: show faint thumb only on hover via scrollbarColor swap
     '&:hover': {
-      scrollbarColor: 'rgba(100,116,139,0.28) transparent',
+      scrollbarColor: 'var(--surface-scrollbar-thumb) transparent',
     },
     '&::-webkit-scrollbar-button': {
       display: 'none',
@@ -94,49 +94,50 @@ const DayCell = styled('div', {
   variants: {
     isOutsideMonth: {
       true: {
-        backgroundColor: 'rgba(249,250,251,0.95)',
-        color: '#9ca3af',
+        backgroundColor: 'var(--surface-calendar-outside-bg)',
+        color: 'var(--surface-calendar-muted)',
         '& .day-number': {
-          color: '#9ca3af',
+          color: 'var(--surface-calendar-muted)',
         },
         '& .month-abbr': {
-          color: '#9ca3af',
+          color: 'var(--surface-calendar-muted)',
         },
       },
       false: {
-        backgroundColor: 'rgba(255,255,255,0.92)',
-        color: '#374151',
+        backgroundColor: 'var(--surface-calendar-cell)',
+        color: 'var(--surface-calendar-text)',
         '& .day-number': {
-          color: '#374151',
+          color: 'var(--surface-calendar-text)',
         },
         '& .month-abbr': {
-          color: '#4b5563',
+          color: 'var(--surface-calendar-muted)',
         },
       },
     },
     isToday: {
       true: {
-        borderColor: 'rgba(59,130,246,0.35)',
-        boxShadow: '0 10px 24px rgba(59,130,246,0.14)',
+        borderColor: 'var(--surface-calendar-today-border)',
+        boxShadow: '0 10px 24px var(--surface-calendar-today-shadow)',
       },
     },
     isDragOver: {
       true: {
-        outline: '2px solid rgba(59,130,246,0.5)',
-        backgroundColor: 'rgba(239,246,255,0.95)',
+        outline:
+          '2px solid color-mix(in srgb, var(--surface-calendar-today-border) 50%, transparent)',
+        backgroundColor: 'var(--surface-calendar-dragover-bg)',
       },
     },
     isFiller: {
       true: {
-        backgroundColor: 'rgba(249,250,251,0.9)',
-        color: '#d1d5db',
+        backgroundColor: 'var(--surface-calendar-filler-bg)',
+        color: 'var(--surface-calendar-filler-text)',
         opacity: 0.75,
       },
     },
     isPastDate: {
       true: {
         opacity: 0.65,
-        backgroundColor: 'rgba(243,244,246,0.92)',
+        backgroundColor: 'var(--surface-calendar-past-bg)',
       },
     },
     isInteractive: {
@@ -157,12 +158,12 @@ const DayCell = styled('div', {
 const HolidayName = styled('div', {
   fontSize: '0.68rem',
   fontWeight: '600',
-  color: '#be123c',
+  color: 'var(--surface-calendar-holiday-text)',
   marginBottom: '4px',
   padding: '2px 6px',
   borderRadius: '999px',
-  backgroundColor: 'rgba(255, 228, 230, 0.85)',
-  border: '1px solid rgba(251, 113, 133, 0.35)',
+  backgroundColor: 'var(--surface-calendar-holiday-bg)',
+  border: '1px solid var(--surface-calendar-holiday-border)',
   textAlign: 'left',
   whiteSpace: 'wrap',
   overflow: 'hidden',
@@ -172,13 +173,13 @@ const HolidayName = styled('div', {
 const DayNumber = styled('span', {
   variants: {
     isCurrentMonth: {
-      true: { color: '#374151' },
-      false: { color: '#9ca3af' },
+      true: { color: 'var(--surface-calendar-day-number-current)' },
+      false: { color: 'var(--surface-calendar-day-number-outside)' },
     },
     isToday: {
       true: {
-        color: '#fff',
-        backgroundColor: '#2563eb',
+        color: 'var(--surface-calendar-number-today-text)',
+        backgroundColor: 'var(--surface-calendar-number-today-bg)',
         borderRadius: '50%',
         padding: '2px 6px',
         fontSize: '0.85em',
@@ -347,8 +348,8 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
             position: 'absolute',
             bottom: 8,
             right: 8,
-            background: 'rgba(0,0,0,0.6)',
-            color: '#fff',
+            background: 'var(--surface-calendar-badge-bg)',
+            color: 'var(--surface-calendar-badge-text)',
             padding: '4px 8px',
             borderRadius: 999,
             fontSize: '0.72rem',

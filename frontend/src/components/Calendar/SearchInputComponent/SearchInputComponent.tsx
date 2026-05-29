@@ -6,9 +6,9 @@ import { type SearchInputProps } from '../../../types/types';
 const InputWrapper = styled('div', {
   display: 'flex',
   alignItems: 'center',
-  border: '1px solid #ccc',
+  border: '1px solid var(--surface-calendar-search-border)',
   borderRadius: '8px',
-  backgroundColor: '#fff',
+  backgroundColor: 'var(--surface-calendar-search-bg)',
   padding: '4px 8px',
   margin: '12px',
   maxWidth: '400px',
@@ -17,8 +17,9 @@ const InputWrapper = styled('div', {
 
   '&:focus-within': {
     // при фокусі будь-якого елемента всередині Wrapper
-    borderColor: '#007bff',
-    boxShadow: '0 0 0 2px rgba(0,123,255,.25)',
+    borderColor: 'var(--surface-calendar-today-border)',
+    boxShadow:
+      '0 0 0 2px color-mix(in srgb, var(--surface-calendar-today-border) 22%, transparent)',
   },
 });
 
@@ -28,12 +29,12 @@ const StyledInput = styled('input', {
   outline: 'none',
   padding: '8px 0',
   fontSize: '1rem',
-  color: '#333',
+  color: 'var(--surface-calendar-search-text)',
   backgroundColor: 'transparent',
   boxSizing: 'border-box',
 
   '&::placeholder': {
-    color: '#aaa',
+    color: 'var(--surface-calendar-search-placeholder)',
   },
 });
 
@@ -46,14 +47,14 @@ const SearchIconButton = styled('button', {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  color: '#555',
+  color: 'var(--surface-calendar-muted)',
   fontSize: '1.1rem',
 
   '&:hover': {
-    color: '#007bff',
+    color: 'var(--surface-calendar-control-text)',
   },
   '&:active': {
-    color: '#0056b3',
+    color: 'var(--surface-calendar-today-border)',
     outline: 'none',
   },
 });

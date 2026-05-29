@@ -4,8 +4,10 @@
   width: 100%;
   max-width: 1400px;
   margin: 20px;
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background-color: var(--surface-calendar-shell);
+  border: 1px solid var(--surface-calendar-shell-border);
+  box-shadow: 0 2px 8px var(--surface-calendar-shell-shadow);
+  backdrop-filter: blur(18px) saturate(140%);
   overflow: hidden;
 }
 
@@ -13,7 +15,7 @@
   display: grid;
   grid-template-columns: repeat(7, minmax(150px, 1fr));
   gap: 4px;
-  background-color: #edeff1;
+  background-color: var(--surface-calendar-grid);
   min-height: calc(var(--calendar-day-cell-min-height, 120px) * 6 + 4px * 5);
 }
 
@@ -25,22 +27,22 @@
 
 .statusMessage {
   padding: 8px 16px;
-  background-color: #fffbebe6;
-  color: #856404;
-  border: 1px solid #ffeeba;
+  background-color: color-mix(in srgb, var(--surface-calendar-holiday-bg) 35%, transparent);
+  color: var(--surface-calendar-holiday-text);
+  border: 1px solid color-mix(in srgb, var(--surface-calendar-holiday-border) 55%, transparent);
   border-radius: 4px;
   margin: 12px;
   text-align: center;
 }
 
 .statusMessage.error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background-color: color-mix(in srgb, #7f1d1d 25%, transparent);
+  color: #fecdd3;
+  border: 1px solid color-mix(in srgb, #fb7185 35%, transparent);
 }
 
 .statusMessage.loading {
-  background-color: #d1ecf1;
-  color: #0c5460;
-  border: 1px solid #bee5eb;
+  background-color: color-mix(in srgb, #0f172a 18%, transparent);
+  color: var(--surface-calendar-text);
+  border: 1px solid color-mix(in srgb, var(--surface-calendar-border) 65%, transparent);
 }

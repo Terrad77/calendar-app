@@ -6,17 +6,19 @@
 .themeButton {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  min-height: 2.5rem;
-  padding: 0.55rem 0.9rem;
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  gap: 0.4rem;
+  white-space: nowrap;
+  min-height: 2rem;
+  padding: 0.32rem 0.55rem;
+  justify-content: center;
+  border: 1px solid var(--surface-button-border);
   border-radius: 9999px;
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.98), transparent 42%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.94));
-  color: #0f172a;
+    radial-gradient(circle at top, color-mix(in srgb, #ffffff 92%, transparent), transparent 42%),
+    linear-gradient(180deg, var(--surface-button-start), var(--surface-button-end));
+  color: var(--surface-button-text);
   cursor: pointer;
-  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 12px 26px var(--surface-button-shadow);
   transition:
     transform 0.18s ease,
     border-color 0.18s ease,
@@ -25,11 +27,30 @@
     color 0.18s ease;
 }
 
+:global([data-theme='light']) .themeButton {
+  border-color: rgba(148, 163, 184, 0.34);
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.98), transparent 40%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.96));
+  color: #0f172a;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 8px 18px rgba(15, 23, 42, 0.1);
+}
+
 .themeButton:hover,
 .themeButton:focus-visible {
   transform: translateY(-1px);
-  border-color: rgba(15, 23, 42, 0.16);
-  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.09);
+  border-color: color-mix(in srgb, var(--surface-button-border) 78%, var(--surface-button-text));
+  box-shadow: 0 16px 30px color-mix(in srgb, var(--surface-button-shadow) 72%, transparent);
+}
+
+:global([data-theme='light']) .themeButton:hover,
+:global([data-theme='light']) .themeButton:focus-visible {
+  border-color: rgba(148, 163, 184, 0.48);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.76) inset,
+    0 12px 24px rgba(15, 23, 42, 0.14);
 }
 /* for override Stitches css prop icon sizes */
 .icon {
@@ -38,7 +59,7 @@
 
 .textButton {
   display: none;
-  font-size: 0.92rem;
+  font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
@@ -51,5 +72,7 @@
 
   .textButton {
     display: block;
+    min-width: 3.5rem;
+    text-align: center;
   }
 }

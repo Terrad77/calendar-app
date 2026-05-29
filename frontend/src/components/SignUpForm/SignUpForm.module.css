@@ -2,31 +2,42 @@
   display: flex;
   width: 100%;
   flex-direction: column;
-  gap: 1.1rem;
+  gap: 0.85rem;
+  box-sizing: border-box;
+  max-width: 100%;
+  /* controllable paddings for form content */
+  --form-padding-inline: 0.5rem;
+  --form-padding-block: 0.5rem;
+  --form-gap: 0.85rem;
+  padding: var(--form-padding-block) var(--form-padding-inline);
+  font-family: inherit;
 }
 
 .inputGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.35rem;
 }
 
 .inputGroup > label {
-  font-size: 0.95rem;
+  font-size: 16px;
   font-weight: 600;
-  line-height: 1.2;
-  color: #0f172a;
+  line-height: 20px;
+  color: var(--color-text-secondary);
 }
 
 .inputGroupInput {
   width: 100%;
-  border: 1px solid rgba(148, 163, 184, 0.45);
+  border: 1px solid var(--color-border-input);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.92);
-  padding: 0.9rem 1rem;
+  background: var(--color-bg-input);
+  padding: 0.6rem 0.95rem;
   padding-right: 3rem;
-  font-size: 0.95rem;
-  color: #0f172a;
+  min-height: 44px;
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--color-text-input);
+  font-family: inherit;
   outline: none;
   transition:
     border-color 0.18s ease,
@@ -37,13 +48,13 @@
 }
 
 .inputGroupInput::placeholder {
-  color: #94a3b8;
+  color: var(--color-text-placeholder);
 }
 
 .inputGroupInput:focus {
-  border-color: rgba(15, 23, 42, 0.28);
-  box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.08);
-  background: #ffffff;
+  border-color: color-mix(in srgb, var(--color-accent) 35%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 16%, transparent);
+  background: var(--color-bg-input);
 }
 
 .inputError {
@@ -75,7 +86,7 @@
   border-radius: 9999px;
   background: transparent;
   padding: 0.45rem;
-  color: #94a3b8;
+  color: var(--color-text-secondary);
   cursor: pointer;
   transition:
     color 0.18s ease,
@@ -84,12 +95,12 @@
 }
 
 .passwordToggle:hover {
-  background: rgba(148, 163, 184, 0.12);
-  color: #334155;
+  background: color-mix(in srgb, var(--color-text-secondary) 12%, transparent);
+  color: var(--color-text-primary);
 }
 
 .passwordToggle:focus-visible {
-  outline: 2px solid rgba(15, 23, 42, 0.22);
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 28%, transparent);
   outline-offset: 2px;
 }
 
@@ -106,8 +117,10 @@
   border: 1px solid rgba(15, 23, 42, 0.9);
   border-radius: 16px;
   background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
-  padding: 0.95rem 1rem;
-  font-size: 0.98rem;
+  padding: 0.72rem 0.9rem;
+  min-height: 44px;
+  font-size: 16px;
+  line-height: 20px;
   font-weight: 700;
   color: #ffffff;
   cursor: pointer;
@@ -135,28 +148,7 @@
 }
 
 .googleAuthWrapper {
-  margin-top: 0.35rem;
-}
-
-@media (min-width: 640px) {
-  .form {
-    gap: 1.15rem;
-  }
-
-  .inputGroup > label {
-    font-size: 1rem;
-  }
-
-  .inputGroupInput {
-    padding: 1rem 1.05rem;
-    padding-right: 3rem;
-    font-size: 1rem;
-  }
-
-  .submitButton {
-    padding: 1rem;
-    font-size: 1rem;
-  }
+  margin-top: 0.2rem;
 }
 
 .title {
@@ -165,7 +157,7 @@
   line-height: 120%;
   letter-spacing: -0.01em;
   text-align: center;
-  color: var(--main);
+  color: var(--color-text-primary);
   margin-bottom: 16px;
 }
 
@@ -175,7 +167,7 @@
   line-height: 129%;
   letter-spacing: -0.01em;
   text-align: center;
-  color: var(--main);
+  color: var(--color-text-primary);
   margin-bottom: 28px;
 }
 
@@ -192,7 +184,7 @@
   line-height: 129%;
   letter-spacing: -0.01em;
   text-align: center;
-  color: var(--main);
+  color: var(--color-text-primary);
   border: none;
   outline: transparent;
   margin-bottom: 9px;
@@ -222,10 +214,12 @@
 .logoutBtn:focus {
   background-color: var(--accent-hover);
 }
+
 .cancelBtn:hover,
 .cancelBtn:focus {
   color: var(--main);
 }
+
 .closeBtn {
   top: 16px;
   right: 16px;
@@ -239,49 +233,63 @@
   color: #323f474d;
 }
 
-/* from 768px */
+@media (min-width: 640px) {
+  .form {
+    gap: var(--form-gap);
+  }
+
+  .inputGroup > label {
+    font-size: 16px;
+    line-height: 20px;
+  }
+
+  .inputGroupInput {
+    padding: 0.65rem 1rem;
+    padding-right: 3rem;
+    font-size: 16px;
+    line-height: 20px;
+  }
+
+  .submitButton {
+    padding: 0.8rem 1rem;
+    font-size: 16px;
+    line-height: 20px;
+  }
+}
+
 @media screen and (min-width: 768px) {
   .form {
-    width: 436px;
+    max-width: 520px;
+    width: 100%;
+    /* increase paddings on larger screens */
+    --form-padding-inline: 0.75rem;
+    --form-padding-block: 0.75rem;
+    --form-gap: 1rem;
   }
-  .modal {
-    width: 516px;
-    padding: 40px;
+
+  /* Mobile: slightly reduce paddings and gaps for small screens */
+  @media screen and (max-width: 639px) {
+    .form {
+      --form-padding-inline: 0.4rem;
+      --form-padding-block: 0.4rem;
+      --form-gap: 0.6rem;
+    }
+
+    .inputGroupInput {
+      padding: 0.55rem 0.85rem;
+    }
+
+    .submitButton {
+      padding: 0.6rem 0.8rem;
+    }
   }
   .title {
     font-size: 28px;
     line-height: 114%;
   }
+
   .text {
     font-size: 18px;
     line-height: 133%;
-  }
-  .btnWrap {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-  }
-  .logoutBtn {
-    padding: 18px 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    line-height: 150%;
-    min-width: 0;
-    margin-bottom: 0;
-  }
-  .cancelBtn {
-    min-width: 0;
-    padding: 18px 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    line-height: 150%;
-  }
-  .closeBtn {
-    top: 20px;
-    right: 20px;
   }
 }

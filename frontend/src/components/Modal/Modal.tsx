@@ -3,12 +3,15 @@ import css from './Modal.module.css';
 import { createPortal } from 'react-dom';
 import clsx from 'clsx';
 import Icon from '../Icon';
-import DotLoader from '../DotLoader/DotLoader.js';
+import Logo from '../Logo/Logo';
+import DotLoader from '../DotLoader/DotLoader';
 import { useSelector } from 'react-redux';
 import { selectIsLoading } from '../../redux/user/selectors';
 import { ModalProps } from '../../types/types';
+import { useTranslation } from 'react-i18next';
 
-export default function Modal({ children, isOpen, onClose, btnClassName }: ModalProps) {
+export default function Modal({ children, isOpen, onClose, btnClassName, showLogo }: ModalProps) {
+  const { t } = useTranslation('common');
   useEffect(() => {
     // Handle Escape key to close modal
     const handleEscape = (event: KeyboardEvent) => {
@@ -36,15 +39,24 @@ export default function Modal({ children, isOpen, onClose, btnClassName }: Modal
   if (!isOpen) {
     return null;
   }
-
+  // createPortal(children, container);
   return createPortal(
     <div className={css.backdrop} onClick={onClose}>
-      {isLoading && <DotLoader text="Loading..." />}
+      {isLoading && <DotLoader text={t('loading')} />}
       <div className={css.modal} onClick={(e) => e.stopPropagation()}>
-        <button className={clsx(css.closeButton, btnClassName)} onClick={onClose} type="button">
-          <Icon name="x-close" className={clsx(css.closeIcon, css.responsiveIcon)} />
-        </button>
-        {children}
+        <div className={css.modalHeader}>
+          {showLogo && (
+            <div className={css.logoContainer}>
+              <Logo />
+            </div>
+          )}
+
+          <button className={clsx(css.closeButton, btnClassName)} onClick={onClose} type="button">
+            <Icon name="x-close" className={clsx(css.closeIcon, css.responsiveIcon)} />
+          </button>
+        </div>
+
+        <div className={css.modalInner}>{children}</div>
       </div>
     </div>,
     document.body

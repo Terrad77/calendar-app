@@ -29,21 +29,11 @@ const SidebarNavItem = ({ label, icon: Icon, active, onSelect }: SidebarNavItemP
   <button
     type="button"
     onClick={onSelect}
-    className={clsx(
-      'group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-all duration-200',
-      active
-        ? 'bg-neutral-800 text-white shadow-sm'
-        : 'text-neutral-300 hover:bg-neutral-800 hover:text-white'
-    )}
+    className={clsx(css.navItem, active && css.navItemActive)}
   >
-    <Icon className="h-4 w-4 shrink-0 text-current transition-transform duration-200 group-hover:scale-105" />
-    <span className="flex-1">{label}</span>
-    <ChevronRight
-      className={clsx(
-        'h-4 w-4 transition-opacity duration-200',
-        active ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
-      )}
-    />
+    <Icon className={css.navIcon} />
+    <span className={css.navLabel}>{label}</span>
+    <ChevronRight className={clsx(css.navChevron, active && css.navChevronActive)} />
   </button>
 );
 

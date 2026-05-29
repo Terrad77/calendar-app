@@ -5,11 +5,12 @@ import { logIn } from '../../redux/user/operations';
 import { useDispatch, useSelector } from 'react-redux';
 import GoogleAuthBtn from '../GoogleAuthBtn/GoogleAuthBtn';
 import { selectIsLoading } from '../../redux/user/selectors';
-import DotLoader from '../../components/DotLoader/DotLoader.jsx';
+import DotLoader from '../DotLoader/DotLoader';
 import { signInSchema } from '../../schemas/validationSchemas';
 import { SignInFormData } from '../../types/types';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import toastMaker from '../../utils/toastMaker/toastMaker';
 import { AppDispatch } from '../../redux/types';
 import { useTogglePassword } from '../../hooks/useTogglePassword';
 import { Eye, EyeOff } from 'lucide-react';
@@ -39,7 +40,7 @@ export default function SignInForm() {
     try {
       await dispatch(logIn(data)).unwrap();
 
-      toast.success(t('login_successful', { ns: 'common' }));
+      toastMaker(t('login_successful', { ns: 'common' }), 'success');
       navigate('/');
     } catch (error: unknown) {
       if (typeof error === 'object' && error !== null) {

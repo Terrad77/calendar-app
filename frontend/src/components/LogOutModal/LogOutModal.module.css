@@ -1,68 +1,64 @@
 .modal {
   border-radius: 15px;
   padding: 40px 0 40px 14px;
-  background: var(--main-white);
+  background: var(--modal-bg);
+  border: 1px solid var(--modal-border);
+  box-shadow: var(--modal-shadow-1), var(--modal-shadow-2);
+  backdrop-filter: blur(18px);
   position: relative;
   width: 330px;
 }
 
-.title {
+.title,
+.titleUk {
   font-weight: 700;
   font-size: 20px;
   line-height: 120%;
   letter-spacing: -0.01em;
   text-align: center;
-  color: var(--main);
+  color: var(--modal-text);
   margin-bottom: 16px;
 }
 
 .titleUk {
   font-family: var(--font-family);
-  font-weight: 700;
-  font-size: 20px;
-  line-height: 120%;
-  letter-spacing: -0.01em;
-  text-align: center;
-  color: var(--main);
-  margin-bottom: 16px;
 }
 
-.text {
+.text,
+.textUk {
   font-weight: 400;
   font-size: 14px;
   line-height: 129%;
   letter-spacing: -0.01em;
   text-align: center;
-  color: var(--main);
+  color: var(--surface-calendar-subtle);
   margin-bottom: 28px;
 }
 
 .textUk {
   font-family: var(--font-family);
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 129%;
-  letter-spacing: -0.01em;
-  text-align: center;
-  color: var(--main);
-  margin-bottom: 28px;
 }
 
-.logoutBtn {
+.logoutBtn,
+.logoutBtnUk {
   border-radius: 30px;
   padding: 14px 0;
   min-width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--accent);
+  background: linear-gradient(
+    180deg,
+    var(--surface-button-start) 0%,
+    var(--surface-button-end) 100%
+  );
   font-weight: 700;
   font-size: 14px;
   line-height: 129%;
   letter-spacing: -0.01em;
   text-align: center;
-  color: var(--main);
-  border: none;
+  color: var(--surface-button-text);
+  border: 1px solid var(--surface-button-border);
   outline: transparent;
   margin-bottom: 9px;
   transition: all var(--transition);
@@ -70,72 +66,49 @@
 
 .logoutBtnUk {
   font-family: var(--font-family);
-  border-radius: 30px;
-  padding: 14px 0;
-  min-width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--accent);
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 129%;
-  letter-spacing: -0.01em;
-  text-align: center;
-  color: var(--main);
-  border: none;
-  outline: transparent;
-  margin-bottom: 9px;
-  transition: all var(--transition);
 }
 
-.cancelBtn {
+.cancelBtn,
+.cancelBtnUk {
   min-width: 100%;
   border-radius: 30px;
   padding: 14px 126px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: none;
+  border: 1px solid var(--surface-calendar-control-border);
   outline: transparent;
-  background: var(--background);
+  background: var(--surface-panel-bg);
   font-weight: 700;
   font-size: 14px;
   line-height: 129%;
   letter-spacing: -0.01em;
   text-align: center;
-  color: rgba(50, 63, 71, 0.3);
+  color: var(--surface-calendar-text);
   transition: all var(--transition);
 }
 
 .cancelBtnUk {
   font-family: var(--font-family);
-  min-width: 100%;
-  border-radius: 30px;
-  padding: 14px 126px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  outline: transparent;
-  background: var(--background);
-  font-weight: 700;
-  font-size: 14px;
-  line-height: 129%;
-  letter-spacing: -0.01em;
-  text-align: center;
-  color: rgba(50, 63, 71, 0.3);
-  transition: all var(--transition);
 }
 
 .logoutBtn:hover,
 .logoutBtn:focus {
-  background-color: var(--accent-hover);
+  background: linear-gradient(
+    180deg,
+    var(--surface-button-hover-start) 0%,
+    var(--surface-button-hover-end) 100%
+  );
 }
+
 .cancelBtn:hover,
-.cancelBtn:focus {
-  color: var(--main);
+.cancelBtn:focus,
+.cancelBtnUk:hover,
+.cancelBtnUk:focus {
+  color: var(--modal-text);
+  background: var(--surface-panel-hover);
 }
+
 .closeBtn {
   top: 16px;
   right: 16px;
@@ -146,48 +119,46 @@
   line-height: 129%;
   letter-spacing: -0.01em;
   text-align: center;
-  color: #323f474d;
+  color: var(--surface-calendar-subtle);
 }
-
-/* =================TABLET=============== */
 
 @media screen and (min-width: 768px) {
   .modal {
     width: 476px;
     padding: 40px 0 40px 40px;
   }
-  .title {
+
+  .title,
+  .titleUk {
     font-size: 28px;
     line-height: 114%;
   }
-  .text {
+
+  .text,
+  .textUk {
     font-size: 18px;
     line-height: 133%;
   }
+
   .btnWrap {
     display: flex;
     justify-content: center;
     gap: 10px;
   }
-  .logoutBtn {
+
+  .logoutBtn,
+  .logoutBtnUk {
     padding: 18px 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    line-height: 150%;
     min-width: 0;
     margin-bottom: 0;
   }
-  .cancelBtn {
+
+  .cancelBtn,
+  .cancelBtnUk {
     min-width: 0;
     padding: 18px 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    line-height: 150%;
   }
+
   .closeBtn {
     top: 20px;
     right: 20px;

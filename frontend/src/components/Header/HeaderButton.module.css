@@ -1,0 +1,30 @@
+.headerControl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid var(--surface-button-border);
+  background:
+    radial-gradient(
+      circle at top,
+      color-mix(in srgb, var(--surface-button-start) 92%, transparent),
+      transparent 42%
+    ),
+    linear-gradient(180deg, var(--surface-button-start), var(--surface-button-end));
+  color: var(--surface-button-text);
+  box-shadow: var(--surface-button-shadow);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    color 0.18s ease;
+  white-space: nowrap;
+}
+
+.headerControl:hover,
+.headerControl:focus-visible {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--surface-button-border) 78%, var(--surface-button-text));
+  box-shadow: 0 16px 30px color-mix(in srgb, var(--surface-button-shadow) 72%, transparent);
+}

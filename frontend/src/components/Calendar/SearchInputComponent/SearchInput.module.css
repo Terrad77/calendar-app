@@ -1,19 +1,20 @@
 .inputWrapper {
   display: flex;
   align-items: center;
-  border: 1px solid #ccc;
+  border: 1px solid var(--surface-calendar-search-border);
   border-radius: 8px;
-  background-color: #fff;
+  background-color: var(--surface-calendar-search-bg);
   padding: 4px 8px;
   margin: 12px;
   max-width: 400px;
   width: 100%;
   box-sizing: border-box;
+  box-shadow: 0 8px 20px var(--surface-calendar-search-shadow);
 }
 
 .inputWrapper:focus-within {
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  border-color: var(--surface-calendar-today-border);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--surface-calendar-today-border) 22%, transparent);
 }
 
 .styledInput {
@@ -22,13 +23,13 @@
   outline: none;
   padding: 8px 0;
   font-size: 1rem;
-  color: #333;
+  color: var(--surface-calendar-search-text);
   background-color: transparent;
   box-sizing: border-box;
 }
 
 .styledInput::placeholder {
-  color: #aaa;
+  color: var(--surface-calendar-search-placeholder);
 }
 
 .searchIconButton {
@@ -39,15 +40,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #555;
+  color: var(--surface-calendar-muted);
   font-size: 1.1rem;
 }
 
 .searchIconButton:hover {
-  color: #007bff;
+  color: var(--surface-calendar-control-text);
 }
 
 .searchIconButton:active {
-  color: #0056b3;
+  color: var(--surface-calendar-today-border);
   outline: none;
 }

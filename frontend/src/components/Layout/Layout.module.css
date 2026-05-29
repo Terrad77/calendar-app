@@ -1,9 +1,63 @@
+.page {
+  position: relative;
+  overflow-x: clip;
+  /* allow vertical scrolling when content exceeds viewport */
+  overflow-y: visible;
+  min-height: 100dvh;
+  background:
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, #2563eb 8%, transparent),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, #0ea5e9 6%, transparent),
+      transparent 24%
+    ),
+    linear-gradient(180deg, var(--surface-page-start) 0%, var(--surface-page-end) 100%);
+}
+
+.page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--surface-page-grid) 1px, transparent 1px),
+    linear-gradient(var(--surface-page-grid-fade) 1px, transparent 1px);
+  background-size: 120px 120px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.22), transparent 78%);
+  opacity: 0.22;
+}
+
 .layout {
-  min-height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
+  position: relative;
+  z-index: 1;
 }
 
 .content {
-  margin-top: 2px;
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  /* allow content to flow and be scrolled when needed */
+  overflow: visible;
+}
+
+/* When header overlays the page, add top padding prevent to cover content isn't covered */
+.contentOverlay {
+  padding-top: var(--app-header-height);
+}
+
+@media (min-width: 1024px) {
+  .content > div {
+    border-radius: 1.75rem;
+
+    /* Prevent backdrop-filter / shadows from visually bleeding past rounded corners */
+    overflow: hidden;
+    background-clip: padding-box;
+  }
 }

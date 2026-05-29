@@ -13,10 +13,18 @@
 }
 .logo span {
   /* color: var(--color-accent); */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75em;
+  height: 2.75em;
   box-shadow: inset 1px 0 6px var(--color-accent);
-  padding: 4px 6px;
+  padding: 0;
   border-radius: 50%;
+  line-height: 1;
   text-transform: none;
+  flex: 0 0 auto;
+  margin-left: 2px;
 }
 
 @media screen and (min-width: 768px) {
@@ -24,14 +32,16 @@
     font-size: 18px;
   }
   .logo span {
-    padding: 8px;
+    width: 2.5em;
+    height: 2.5em;
   }
   @media screen and (min-width: 1440px) {
     .logo {
       font-size: 22px;
     }
     .logo span {
-      padding: 12px;
+      width: 2.7em;
+      height: 2.7em;
     }
   }
 }

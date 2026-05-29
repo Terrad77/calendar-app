@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { BarChart3, CalendarDays, Send, X } from 'lucide-react';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import type {
   AIAction,
   AIAssistantProps,
@@ -47,6 +48,7 @@ export const AIAssistantDrawer = ({
   className,
   isServiceAvailable = true,
 }: AIAssistantDrawerProps) => {
+  const { t, i18n } = useTranslation('common');
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -118,14 +120,14 @@ export const AIAssistantDrawer = ({
           id: generateUniqueId('msg'),
           role: 'assistant' as const,
           content: isAIAvailable
-            ? 'Вітаю! Я ваш AI-помічник для керування календарем. Чим можу допомогти?'
-            : 'AI сервіс тимчасово недоступний. Ви можете використовувати швидкі дії для керування подіями.',
+            ? t('assistant_welcome_message')
+            : t('assistant_unavailable_message'),
           timestamp: new Date().toISOString(),
           actions: isAIAvailable
             ? [
                 {
                   type: 'analyze_schedule' as const,
-                  label: 'Проаналізувати розклад',
+                  label: t('assistant_action_analyze_schedule'),
                   data: { timeRange: 'week' },
                   confidence: 0.9,
                 },
@@ -134,7 +136,7 @@ export const AIAssistantDrawer = ({
         },
       ];
     });
-  }, [isAIAvailable]);
+  }, [isAIAvailable, t]);
 
   const toggleAssistant = useCallback(() => {
     setIsOpen((previous) => {
@@ -145,6 +147,36 @@ export const AIAssistantDrawer = ({
       return nextValue;
     });
   }, [ensureWelcomeMessage]);
+
+  // When the UI language changes, update the initial welcome message
+  // so the greeting and quick action labels are translated immediately.
+  useEffect(() => {
+    setMessages((previousMessages) => {
+      if (previousMessages.length === 0) return previousMessages;
+
+      const first = previousMessages[0];
+      if (first.role !== 'assistant') return previousMessages;
+
+      const updatedFirst: typeof first = {
+        ...first,
+        content: isAIAvailable
+          ? t('assistant_welcome_message')
+          : t('assistant_unavailable_message'),
+        actions: isAIAvailable
+          ? [
+              {
+                type: 'analyze_schedule' as const,
+                label: t('assistant_action_analyze_schedule'),
+                data: { timeRange: 'week' },
+                confidence: 0.9,
+              },
+            ]
+          : [],
+      };
+
+      return [updatedFirst, ...previousMessages.slice(1)];
+    });
+  }, [i18n.language, t, isAIAvailable]);
 
   const addMessage = useCallback((message: Omit<ChatMessage, 'id'>) => {
     const newMessage: ChatMessage = {
@@ -166,7 +198,7 @@ export const AIAssistantDrawer = ({
         return [
           {
             type: 'create_event' as const,
-            label: 'Підтвердити створення',
+            label: t('assistant_action_confirm_create'),
             data: {
               title: eventData.title,
               date: eventData.startDate?.split('T')[0] || new Date().toISOString().split('T')[0],
@@ -184,14 +216,14 @@ export const AIAssistantDrawer = ({
 
       return [];
     },
-    []
+    [t]
   );
 
   const handleAnalyzeSchedule = useCallback(async () => {
     if (currentEvents.length === 0) {
       addMessage({
         role: 'assistant' as const,
-        content: 'У вашому календарі поки що немає подій для аналізу.',
+        content: t('assistant_no_events_to_analyze'),
         timestamp: new Date().toISOString(),
       });
       return;
@@ -199,7 +231,7 @@ export const AIAssistantDrawer = ({
 
     addMessage({
       role: 'assistant' as const,
-      content: 'Аналізую ваш розклад...',
+      content: t('assistant_analyzing_schedule'),
       timestamp: new Date().toISOString(),
       isLoading: true,
     });
@@ -214,11 +246,11 @@ export const AIAssistantDrawer = ({
     } catch (_e) {
       addMessage({
         role: 'assistant' as const,
-        content: 'Не вдалося проаналізувати розклад. Будь ласка, спробуйте пізніше.',
+        content: t('assistant_analyze_error'),
         timestamp: new Date().toISOString(),
       });
     }
-  }, [currentEvents, addMessage]);
+  }, [currentEvents, addMessage, t]);
 
   const handleAction = useCallback(
     (action: AIAction) => {
@@ -230,7 +262,7 @@ export const AIAssistantDrawer = ({
             const newEvent = {
               id: generateUniqueId('event'),
               date: action.data.date || new Date().toISOString().split('T')[0],
-              title: action.data.title || 'Нова подія',
+              title: action.data.title || t('assistant_new_event_title'),
               description: action.data.description,
               startTime: action.data.startTime,
               endTime: action.data.endTime,
@@ -243,7 +275,7 @@ export const AIAssistantDrawer = ({
             setLastCreatedEventId(newEvent.id);
             addMessage({
               role: 'system' as const,
-              content: `Подію "${newEvent.title}" створено`,
+              content: t('assistant_event_created_named', { title: newEvent.title }),
               timestamp: new Date().toISOString(),
             });
           }
@@ -290,7 +322,7 @@ export const AIAssistantDrawer = ({
             setLastCreatedEventId(updatedEvent.id);
             addMessage({
               role: 'system' as const,
-              content: `Подію "${updatedEvent.title}" оновлено`,
+              content: t('assistant_event_updated_named', { title: updatedEvent.title }),
               timestamp: new Date().toISOString(),
             });
           }
@@ -300,7 +332,7 @@ export const AIAssistantDrawer = ({
             onEventDelete(action.data.eventId);
             addMessage({
               role: 'system' as const,
-              content: 'Подію видалено',
+              content: t('assistant_event_deleted'),
               timestamp: new Date().toISOString(),
             });
           }
@@ -321,6 +353,7 @@ export const AIAssistantDrawer = ({
       currentEvents,
       lastCreatedEventId,
       setLastCreatedEventId,
+      t,
     ]
   );
 
@@ -334,14 +367,14 @@ export const AIAssistantDrawer = ({
 
           addMessage({
             role: 'assistant' as const,
-            content: `У вас ${eventsCount} подій у календарі, ${todayEvents} на сьогодні.`,
+            content: t('assistant_events_summary', { total: eventsCount, today: todayEvents }),
             timestamp: new Date().toISOString(),
             actions:
               eventsCount > 0
                 ? [
                     {
                       type: 'analyze_schedule' as const,
-                      label: 'Проаналізувати розклад',
+                      label: t('assistant_action_analyze_schedule'),
                       data: { timeRange: 'week' },
                       confidence: 0.9,
                     },
@@ -354,15 +387,15 @@ export const AIAssistantDrawer = ({
           const quickEvent: CalendarEvent = {
             id: generateUniqueId('event'),
             date: new Date().toISOString().split('T')[0],
-            title: 'Нова подія',
-            description: 'Швидко створена подія',
+            title: t('assistant_new_event_title'),
+            description: t('assistant_quick_event_description'),
             eventType: 'task',
             colors: ['default'],
           };
           onEventCreate(quickEvent);
           addMessage({
             role: 'system' as const,
-            content: 'Швидку подію створено. Ви можете відредагувати її в календарі.',
+            content: t('assistant_quick_event_created'),
             timestamp: new Date().toISOString(),
           });
           break;
@@ -374,7 +407,7 @@ export const AIAssistantDrawer = ({
           break;
       }
     },
-    [addMessage, currentEvents, handleAnalyzeSchedule, onEventCreate]
+    [addMessage, currentEvents, handleAnalyzeSchedule, onEventCreate, t]
   );
 
   const handleSendMessage = useCallback(async () => {
@@ -394,13 +427,13 @@ export const AIAssistantDrawer = ({
     try {
       addMessage({
         role: 'assistant' as const,
-        content: 'Думаю...',
+        content: t('assistant_thinking'),
         timestamp: new Date().toISOString(),
         isLoading: true,
       });
 
       const aiResponse = await aiService.chat(userMessage, currentEvents);
-      const messageContent = aiResponse.message || 'Відповідь AI';
+      const messageContent = aiResponse.message || t('assistant_default_ai_response');
       const aiAction = aiResponse.action;
       const aiEventData = aiResponse.event;
 
@@ -419,11 +452,11 @@ export const AIAssistantDrawer = ({
           const colorMessage: ChatMessage = {
             id: generateUniqueId('msg'),
             role: 'assistant' as const,
-            content: 'Чи бажаєте змінити колір події?',
+            content: t('assistant_change_event_color_question'),
             timestamp: new Date().toISOString(),
             actions: ['default', 'red', 'yellow', 'green'].map((color) => ({
               type: 'update_event' as const,
-              label: `Колір: ${color}`,
+              label: t('assistant_color_label', { color }),
               data: {
                 colors: [color as ColorType],
               },
@@ -444,7 +477,7 @@ export const AIAssistantDrawer = ({
         const newEvent: MeetingEvent = {
           id: generateUniqueId('event'),
           date: aiEventData.startDate?.split('T')[0] || new Date().toISOString().split('T')[0],
-          title: aiEventData.title || 'Нова подія',
+          title: aiEventData.title || t('assistant_new_event_title'),
           description: aiEventData.description || '',
           startTime: aiEventData.startTime || '09:00',
           endTime: aiEventData.endTime || '10:00',
@@ -458,7 +491,12 @@ export const AIAssistantDrawer = ({
 
         addMessage({
           role: 'system' as const,
-          content: `Подію "${newEvent.title}"${aiColor ? ` з кольором ${calendarColor}` : ''} створено у календарі`,
+          content: aiColor
+            ? t('assistant_event_created_in_calendar_with_color', {
+                title: newEvent.title,
+                color: calendarColor,
+              })
+            : t('assistant_event_created_in_calendar', { title: newEvent.title }),
           timestamp: new Date().toISOString(),
         });
       } else if (aiAction === 'update' && aiEventData) {
@@ -486,7 +524,7 @@ export const AIAssistantDrawer = ({
           onEventUpdate(updatedEvent);
           addMessage({
             role: 'system' as const,
-            content: `Подію "${updatedEvent.title}" оновлено`,
+            content: t('assistant_event_updated_named', { title: updatedEvent.title }),
             timestamp: new Date().toISOString(),
           });
         }
@@ -495,7 +533,7 @@ export const AIAssistantDrawer = ({
       setMessages((previousMessages) => previousMessages.filter((message) => !message.isLoading));
       addMessage({
         role: 'assistant' as const,
-        content: 'Вибачте, сталася помилка. Будь ласка, спробуйте ще раз.',
+        content: t('assistant_chat_error'),
         timestamp: new Date().toISOString(),
       });
       console.error('AI chat error:', error);
@@ -512,6 +550,7 @@ export const AIAssistantDrawer = ({
     onEventCreate,
     onEventUpdate,
     lastCreatedEventId,
+    t,
   ]);
 
   const handleSubmit = useCallback(
@@ -530,7 +569,8 @@ export const AIAssistantDrawer = ({
   };
 
   const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('uk-UA', {
+    const locale = i18n.language?.startsWith('uk') ? 'uk-UA' : 'en-US';
+    return new Date(timestamp).toLocaleTimeString(locale, {
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -538,21 +578,27 @@ export const AIAssistantDrawer = ({
 
   const quickActions = [
     {
-      label: 'Мої події',
+      label: t('assistant_quick_my_events'),
       icon: CalendarDays,
       onClick: () => handleQuickAction('show_events'),
     },
     {
-      label: 'Нова подія',
+      label: t('assistant_quick_new_event'),
       icon: Send,
       onClick: () => handleQuickAction('create_quick_event'),
     },
     {
-      label: 'Аналіз тижня',
+      label: t('assistant_quick_analyze_week'),
       icon: BarChart3,
       onClick: () => handleQuickAction('analyze_week'),
     },
   ] as const;
+
+  const roleLabelMap: Record<'assistant' | 'user' | 'system', string> = {
+    assistant: t('assistant_role_assistant'),
+    user: t('assistant_role_user'),
+    system: t('assistant_role_system'),
+  };
 
   return (
     <>
@@ -563,7 +609,7 @@ export const AIAssistantDrawer = ({
           <>
             <motion.button
               type="button"
-              aria-label="Close AI assistant overlay"
+              aria-label={t('assistant_close_overlay')}
               className={css.overlay}
               onClick={() => setIsOpen(false)}
               variants={overlayVariants}
@@ -590,12 +636,12 @@ export const AIAssistantDrawer = ({
                     <Logo />
                   </div>
                   <div className={css.headerText}>
-                    <p className={css.headerKicker}>AI Assistant</p>
-                    <h2 className={css.headerTitle}>Smart planner</h2>
+                    <p className={css.headerKicker}>{t('ai_assistant')}</p>
+                    <h2 className={css.headerTitle}>{t('assistant_smart_planner')}</h2>
                     <p className={css.headerSubtitle}>
                       {isServiceAvailable && isAIAvailable
-                        ? 'Minimal, fast, and event-aware'
-                        : 'AI currently unavailable, but the panel is still accessible'}
+                        ? t('assistant_subtitle_ready')
+                        : t('assistant_subtitle_unavailable')}
                     </p>
                   </div>
                 </div>
@@ -604,7 +650,7 @@ export const AIAssistantDrawer = ({
                   type="button"
                   onClick={() => setIsOpen(false)}
                   className={css.closeButton}
-                  aria-label="Close assistant"
+                  aria-label={t('assistant_close')}
                 >
                   <X className={css.closeIcon} />
                 </button>
@@ -612,10 +658,8 @@ export const AIAssistantDrawer = ({
 
               <div className={css.body}>
                 <div className={css.heroCard}>
-                  <p className={css.heroTitle}>Вітаю</p>
-                  <p className={css.heroText}>
-                    Я можу проаналізувати розклад, створити подію або допомогти з календарем.
-                  </p>
+                  <p className={css.heroTitle}>{t('assistant_hero_title')}</p>
+                  <p className={css.heroText}>{t('assistant_hero_text')}</p>
                 </div>
 
                 <div className={css.quickActions}>
@@ -663,7 +707,7 @@ export const AIAssistantDrawer = ({
                             ))}
                           </div>
                           <div className={css.messageMeta}>
-                            <span>{message.role}</span>
+                            <span>{roleLabelMap[message.role]}</span>
                             <span>{formatTime(message.timestamp ?? new Date().toISOString())}</span>
                           </div>
 
@@ -699,8 +743,8 @@ export const AIAssistantDrawer = ({
                     onKeyDown={handleKeyDown}
                     placeholder={
                       isServiceAvailable && isAIAvailable
-                        ? 'Запитайте про події, розклад...'
-                        : 'AI недоступний. Використовуйте швидкі дії.'
+                        ? t('assistant_input_placeholder')
+                        : t('assistant_input_placeholder_unavailable')
                     }
                     disabled={isLoading || !(isServiceAvailable && isAIAvailable)}
                     className={css.inputField}

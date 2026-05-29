@@ -109,9 +109,12 @@
 /* General App Styles */
 .app-container {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 var(--space-xs);
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  min-height: 100dvh;
+  overflow-x: clip;
+  overflow-y: auto;
 }
 
 .card {
@@ -121,9 +124,4 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Responsive design - only for app-container */
-@media (min-width: 768px) {
-  .app-container {
-    padding: 0 var(--space-lg);
-  }
-}
+/* Width is constrained inside feature layouts, not on the app shell */

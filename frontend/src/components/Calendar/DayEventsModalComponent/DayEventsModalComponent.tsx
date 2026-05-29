@@ -1,8 +1,9 @@
 import dayjs from 'dayjs';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import Modal from '../../Modal/Modal';
 import type { CalendarEvent } from '../../../types/types';
-import Logo from '../../Logo/Logo';
+import { useLanguage } from '../../../hooks/useLanguage';
 
 type Props = {
   date: string;
@@ -27,7 +28,11 @@ export const DayEventsModal: React.FC<Props> = ({
   otherDays = [],
   onSelectDay,
 }) => {
+  const { t } = useTranslation('calendar');
+  const { currentLanguage } = useLanguage();
   const isPastDay = dayjs(date).isBefore(dayjs().startOf('day'), 'day');
+  const locale = currentLanguage.startsWith('uk') ? 'uk' : 'en';
+  const formattedDate = dayjs(date).locale(locale).format('DD MMMM YYYY');
 
   const getColorClass = (c?: string) => {
     if (!c) return 'bg-neutral-400 dark:bg-neutral-600';
@@ -44,42 +49,44 @@ export const DayEventsModal: React.FC<Props> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
+    <Modal isOpen={isOpen} onClose={onClose} showLogo>
       <div className="relative w-full max-w-3xl xl:max-w-4xl 2xl:max-w-5xl rounded-lg overflow-hidden">
         {/* header */}
-        <div className="flex items-start justify-between gap-4 px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
-          <div className="flex flex-col items-start gap-2">
-            <div className="flex items-center justify-center w-10 h-10 xl:w-11 xl:h-11 2xl:w-12 2xl:h-12 rounded-full bg-white/80 dark:bg-slate-800/70 border border-neutral-100 dark:border-neutral-700 shadow-sm">
-              <div className="w-7 h-7 xl:w-8 xl:h-8 2xl:w-9 2xl:h-9">
-                <Logo />
-              </div>
-            </div>
-            <div>
-              <div className="text-sm xl:text-[0.95rem] 2xl:text-base text-neutral-500 dark:text-neutral-400">
-                День
-              </div>
-              <div className="text-lg xl:text-[1.15rem] 2xl:text-[1.2rem] font-semibold text-neutral-900 dark:text-neutral-100">
-                {dayjs(date).format('DD MMMM YYYY')}
-              </div>
+        <header
+          className="flex items-center justify-between gap-4 px-4 py-3 border-b"
+          style={{ borderColor: 'var(--surface-panel-border)' }}
+          aria-label={t('day_details_header')}
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col">
+              <span className="text-sm xl:text-[0.95rem] 2xl:text-base text-neutral-500 dark:text-neutral-400">
+                {t('day')}
+              </span>
+              <h3 className="text-lg xl:text-[1.15rem] 2xl:text-[1.2rem] font-semibold text-neutral-900 dark:text-neutral-100">
+                {formattedDate}
+              </h3>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              className="text-sm xl:text-[0.95rem] 2xl:text-base px-3 py-1 xl:px-4 xl:py-1.5 2xl:px-5 2xl:py-2 rounded-md bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="modal-button text-sm xl:text-[0.95rem] 2xl:text-base"
               onClick={() => onAdd && onAdd(date)}
               disabled={isPastDay}
-              title={isPastDay ? 'Past events can only be edited or deleted' : undefined}
+              title={isPastDay ? t('past_events_only_edit_delete') : undefined}
             >
-              Додати подію
+              {t('add_event')}
             </button>
           </div>
-        </div>
+        </header>
 
         {/* body */}
         <div className="flex">
           {/* left: animated content for selected day */}
-          <div className="w-2/3 p-4 xl:p-5 2xl:p-6 border-r border-neutral-100 dark:border-neutral-800">
+          <div
+            className="w-2/3 p-4 xl:p-5 2xl:p-6 border-r"
+            style={{ borderColor: 'var(--surface-panel-border)' }}
+          >
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={date}
@@ -93,7 +100,7 @@ export const DayEventsModal: React.FC<Props> = ({
                   {holidays.length > 0 && (
                     <div>
                       <div className="text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
-                        Свята
+                        {t('holidays')}
                       </div>
                       <div className="space-y-2">
                         {holidays.map((h) => (
@@ -120,26 +127,27 @@ export const DayEventsModal: React.FC<Props> = ({
                   {tasks.length > 0 && (
                     <div>
                       <div className="text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-2">
-                        Задачи
+                        {t('tasks')}
                       </div>
                       <div className="space-y-2">
-                        {tasks.map((t) => (
+                        {tasks.map((task) => (
                           <div
-                            key={t.id}
-                            className="flex items-center justify-between p-2 rounded-md bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800"
+                            key={task.id}
+                            className="flex items-center justify-between p-2 rounded-md bg-white dark:bg-neutral-900 border"
+                            style={{ borderColor: 'var(--surface-panel-inset)' }}
                           >
                             <div className="flex items-center gap-3">
                               <div
-                                className={`w-2.5 h-2 rounded-sm ${getColorClass(t.colors && t.colors[0])}`}
+                                className={`w-2.5 h-2 rounded-sm ${getColorClass(task.colors && task.colors[0])}`}
                               />
                               <div>
-                                <div className="text-sm font-medium">{t.title}</div>
-                                {t.description && (
+                                <div className="text-sm font-medium">{task.title}</div>
+                                {task.description && (
                                   <div
                                     className="text-xs text-neutral-500 dark:text-neutral-400 truncate"
                                     style={{ maxWidth: 240 }}
                                   >
-                                    {String(t.description).split('\n')[0]}
+                                    {String(task.description).split('\n')[0]}
                                   </div>
                                 )}
                               </div>
@@ -147,10 +155,10 @@ export const DayEventsModal: React.FC<Props> = ({
 
                             <div>
                               <button
-                                className="text-sm px-2 py-1 rounded-md bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-neutral-900 dark:text-neutral-100"
-                                onClick={() => onEditTask(t)}
+                                className="modal-button text-sm px-2 py-1"
+                                onClick={() => onEditTask(task)}
                               >
-                                Редактировать
+                                {t('edit')}
                               </button>
                             </div>
                           </div>
@@ -160,7 +168,7 @@ export const DayEventsModal: React.FC<Props> = ({
                   )}
 
                   {tasks.length === 0 && holidays.length === 0 && (
-                    <div className="text-sm text-neutral-500">Нет событий на этот день.</div>
+                    <div className="text-sm text-neutral-500">{t('no_events_on_day')}</div>
                   )}
                 </div>
               </motion.div>
@@ -170,11 +178,11 @@ export const DayEventsModal: React.FC<Props> = ({
           {/* right: other days list */}
           <div className="w-1/3 p-4 xl:p-5 2xl:p-6">
             <div className="text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-3">
-              Другие дни с событиями
+              {t('other_days_with_events')}
             </div>
             <div className="space-y-2 xl:space-y-2.5 2xl:space-y-3 max-h-64 xl:max-h-72 2xl:max-h-80 overflow-auto">
               {otherDays.length === 0 && (
-                <div className="text-sm text-neutral-500">Нет других дней</div>
+                <div className="text-sm text-neutral-500">{t('no_other_days')}</div>
               )}
               {otherDays.map((d) => {
                 const isSelected = d.date === date;
@@ -187,9 +195,9 @@ export const DayEventsModal: React.FC<Props> = ({
                         ? {
                             scale: [1, 1.02, 1],
                             boxShadow: [
-                              '0 0 0 rgba(0,0,0,0)',
-                              '0 10px 30px rgba(59,130,246,0.08)',
-                              '0 0 0 rgba(0,0,0,0)',
+                              '0 0 0 transparent',
+                              '0 10px 30px color-mix(in srgb, var(--color-accent) 8%, transparent)',
+                              '0 0 0 transparent',
                             ],
                           }
                         : { scale: 1 }
@@ -199,14 +207,17 @@ export const DayEventsModal: React.FC<Props> = ({
                         ? { duration: 1.0, repeat: Infinity, repeatDelay: 0.6 }
                         : { duration: 0.18 }
                     }
-                    className={`w-full text-left p-2 xl:p-2.5 2xl:p-3 rounded-md flex items-center justify-between ${isSelected ? 'bg-neutral-100 dark:bg-neutral-800 border-l-2 border-primary-500 dark:border-primary-400' : 'hover:bg-neutral-50 dark:hover:bg-neutral-800'}`}
+                    className={`modal-button modal-other-day w-full text-left p-2 xl:p-2.5 2xl:p-3 rounded-md flex items-center justify-between ${isSelected ? 'selected-day' : 'hoverable-day'}`}
                   >
                     <div>
                       <div className="text-sm xl:text-[0.95rem] 2xl:text-base font-medium">
                         {dayjs(d.date).format('DD MMM')}
                       </div>
                       <div className="text-xs xl:text-sm text-neutral-500 dark:text-neutral-400">
-                        {d.tasks} задач · {d.holidays} праздников
+                        {t('tasks_count_holidays_count', {
+                          tasks: d.tasks,
+                          holidays: d.holidays,
+                        })}
                       </div>
                     </div>
                     <div className="text-sm xl:text-base text-neutral-400 dark:text-neutral-400">
