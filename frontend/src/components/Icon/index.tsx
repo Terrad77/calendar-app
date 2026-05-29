@@ -19,7 +19,6 @@ import {
   Calendar as MdCalendarMonth,
   Question,
 } from 'lucide-react';
-import { TbCalendarSad } from 'react-icons/tb';
 
 // mapping for icons
 const iconComponents = {
@@ -28,7 +27,7 @@ const iconComponents = {
   calendar: MdCalendarMonth,
   search: Search,
   'question-mark': Question, // icon for fallback
-  'calendar-sad': TbCalendarSad, // custom icon (kept from react-icons)
+  'calendar-sad': MdCalendarMonth, // use lucide calendar as fallback for calendar-sad
   eye: Eye,
   eyeOff: EyeOff,
   sun: Sun,
