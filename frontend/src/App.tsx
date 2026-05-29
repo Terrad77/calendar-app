@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import WelcomeSection from './components/WelcomeSection/WelcomeSection';
 import SignUpPage from './pages/SignUpPage/SignUpPage';
 import SignInPage from './pages/SignInPage/SignInPage';
@@ -10,7 +10,11 @@ import ContactsPage from './pages/ContactsPage/ContactsPage';
 import NotificationsPage from './pages/NotificationsPage/NotificationsPage';
 import SettingsPage from './pages/SettingsPage/SettingsPage';
 // import { authenticationService } from './services/authService';
-import { AIAssistantDrawer } from './components/AIAssistant/AIAssistantDrawer';
+const AIAssistantDrawer = React.lazy(() =>
+  import('./components/AIAssistant/AIAssistantDrawer').then((m) => ({
+    default: m.AIAssistantDrawer,
+  }))
+);
 import { Layout } from './components/Layout/Layout';
 import type { CalendarEvent } from './types/types';
 import { useSelector } from 'react-redux';

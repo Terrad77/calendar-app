@@ -1,49 +1,44 @@
 import { type FC } from 'react';
 import { styled } from '@stitches/react';
 import { IconProps } from '../../types/types';
-
-// -----  import react-icons
-import { TbCalendarSad } from 'react-icons/tb';
-
-// Font Awesome Icons(Fa)
+// Use lucide-react icons (ESM, tree-shakeable)
 import {
-  FaChevronUp,
-  FaChevronDown,
-  FaQuestionCircle,
-  FaSearch,
-  FaEye,
-  FaEyeSlash,
-  FaSun,
-  FaMoon,
-  FaTimes,
-  FaPlus,
-  FaEdit,
-  FaTrash,
-  FaCheck,
-  FaClock,
-} from 'react-icons/fa';
-
-// Material Design Icons (Md)
-import { MdCalendarMonth } from 'react-icons/md';
+  ChevronUp,
+  ChevronDown,
+  Search,
+  Eye,
+  EyeOff,
+  Sun,
+  Moon,
+  X,
+  Plus,
+  Edit,
+  Trash,
+  Check,
+  Clock,
+  Calendar as MdCalendarMonth,
+  Question,
+} from 'lucide-react';
+import { TbCalendarSad } from 'react-icons/tb';
 
 // mapping for icons
 const iconComponents = {
-  'chevron-up': FaChevronUp,
-  'chevron-down': FaChevronDown,
+  'chevron-up': ChevronUp,
+  'chevron-down': ChevronDown,
   calendar: MdCalendarMonth,
-  search: FaSearch,
-  'question-mark': FaQuestionCircle, // icon for fallback
-  'calendar-sad': TbCalendarSad, // custom icon
-  eye: FaEye,
-  eyeOff: FaEyeSlash,
-  sun: FaSun,
-  moon: FaMoon,
-  'x-close': FaTimes,
-  plus: FaPlus,
-  edit: FaEdit,
-  trash: FaTrash,
-  check: FaCheck,
-  clock: FaClock,
+  search: Search,
+  'question-mark': Question, // icon for fallback
+  'calendar-sad': TbCalendarSad, // custom icon (kept from react-icons)
+  eye: Eye,
+  eyeOff: EyeOff,
+  sun: Sun,
+  moon: Moon,
+  'x-close': X,
+  plus: Plus,
+  edit: Edit,
+  trash: Trash,
+  check: Check,
+  clock: Clock,
 };
 
 // styled component for the icon wrapper
