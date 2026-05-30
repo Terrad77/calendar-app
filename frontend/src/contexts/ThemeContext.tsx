@@ -1,6 +1,8 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+
+import { resolveInitialTheme, updateThemeColorMeta } from './themeUtils';
 
 type Theme = 'light' | 'dark';
 
@@ -12,29 +14,6 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
-
-const resolveInitialTheme = (): Theme => {
-  if (typeof window === 'undefined') return 'light';
-
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme === 'light' || savedTheme === 'dark') {
-    return savedTheme;
-  }
-
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-};
-
-const updateThemeColorMeta = (theme: Theme) => {
-  let metaThemeColor = document.querySelector('meta[name="theme-color"]');
-
-  if (!metaThemeColor) {
-    metaThemeColor = document.createElement('meta');
-    metaThemeColor.setAttribute('name', 'theme-color');
-    document.head.appendChild(metaThemeColor);
-  }
-
-  metaThemeColor.setAttribute('content', theme === 'dark' ? '#1a1a1a' : '#ffffff');
-};
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setTheme] = useState<Theme>(resolveInitialTheme);
@@ -60,11 +39,13 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  const toggleTheme = () => {
-    const nextTheme: Theme = theme === 'light' ? 'dark' : 'light';
-    setTheme(nextTheme);
-    toast.success(nextTheme === 'dark' ? t('theme_changed_dark') : t('theme_changed_light'));
-  };
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const nextTheme: Theme = prev === 'light' ? 'dark' : 'light';
+      toast.success(nextTheme === 'dark' ? t('theme_changed_dark') : t('theme_changed_light'));
+      return nextTheme;
+    });
+  }, [t]);
 
   const value = useMemo(
     () => ({
@@ -73,7 +54,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       isDark: theme === 'dark',
       isLight: theme === 'light',
     }),
-    [theme]
+    [theme, toggleTheme]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
