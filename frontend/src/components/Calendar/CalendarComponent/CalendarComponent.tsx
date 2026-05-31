@@ -46,7 +46,15 @@ type CalendarProps = {
 const LOCAL_STORAGE_KEY = 'calendarTasks';
 
 // --- BASE URL for backend ---
-const BACKEND_API_BASE_URL = 'http://localhost:3001';
+const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:3001';
+
+// Warn in production when falling back to localhost — avoids silent wrong-origin requests
+if (!import.meta.env.VITE_BACKEND_API_BASE_URL && import.meta.env.PROD) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    'VITE_BACKEND_API_BASE_URL is not set in environment. Using localhost fallback — production requests may be blocked by CORS.'
+  );
+}
 
 type RawHoliday = {
   id: string;
