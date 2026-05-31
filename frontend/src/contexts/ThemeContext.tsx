@@ -40,11 +40,10 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme((prev) => {
-      const nextTheme: Theme = prev === 'light' ? 'dark' : 'light';
-      toast.success(nextTheme === 'dark' ? t('theme_changed_dark') : t('theme_changed_light'));
-      return nextTheme;
-    });
+    const nextTheme: Theme = theme === 'light' ? 'dark' : 'light';
+    setTheme(nextTheme);
+    // side-effect (toast) outside of state updater to avoid render-phase updates
+    toast.success(nextTheme === 'dark' ? t('theme_changed_dark') : t('theme_changed_light'));
   }, [t]);
 
   const value = useMemo(
