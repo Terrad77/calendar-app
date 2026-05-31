@@ -31,6 +31,7 @@ export interface BaseCalendarEvent {
   id: string;
   date: string; // YYYY-MM-DD
   title: string;
+  ownerId?: string;
   eventType: EventType;
   description?: string;
   createdAt?: string;

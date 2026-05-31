@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import Modal from '../../Modal/Modal';
+import DotLoader from '../../DotLoader/DotLoader';
 import type { CalendarEvent } from '../../../types/types';
 import { useLanguage } from '../../../hooks/useLanguage';
 
@@ -10,6 +11,7 @@ type Props = {
   tasks: CalendarEvent[];
   holidays: CalendarEvent[];
   isOpen: boolean;
+  isLoading?: boolean;
   onClose: () => void;
   onEditTask: (task: CalendarEvent) => void;
   onAdd?: (date: string) => void;
@@ -22,6 +24,7 @@ export const DayEventsModal: React.FC<Props> = ({
   tasks,
   holidays,
   isOpen,
+  isLoading = false,
   onClose,
   onEditTask,
   onAdd,
@@ -69,14 +72,16 @@ export const DayEventsModal: React.FC<Props> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              className="modal-button text-sm xl:text-[0.95rem] 2xl:text-base"
-              onClick={() => onAdd && onAdd(date)}
-              disabled={isPastDay}
-              title={isPastDay ? t('past_events_only_edit_delete') : undefined}
-            >
-              {t('add_event')}
-            </button>
+            {onAdd && (
+              <button
+                className="modal-button text-sm xl:text-[0.95rem] 2xl:text-base"
+                onClick={() => onAdd(date)}
+                disabled={isPastDay}
+                title={isPastDay ? t('past_events_only_edit_delete') : undefined}
+              >
+                {t('add_event')}
+              </button>
+            )}
           </div>
         </header>
 
@@ -167,7 +172,9 @@ export const DayEventsModal: React.FC<Props> = ({
                     </div>
                   )}
 
-                  {tasks.length === 0 && holidays.length === 0 && (
+                  {isLoading && <DotLoader text={t('loading')} />}
+
+                  {!isLoading && tasks.length === 0 && holidays.length === 0 && (
                     <div className="text-sm text-neutral-500">{t('no_events_on_day')}</div>
                   )}
                 </div>
@@ -180,7 +187,10 @@ export const DayEventsModal: React.FC<Props> = ({
             <div className="text-sm font-medium text-neutral-600 dark:text-neutral-300 mb-3">
               {t('other_days_with_events')}
             </div>
-            <div className="space-y-2 xl:space-y-2.5 2xl:space-y-3 max-h-64 xl:max-h-72 2xl:max-h-80 overflow-auto">
+            <div
+              className="space-y-2 xl:space-y-2.5 2xl:space-y-3 max-h-64 xl:max-h-72 2xl:max-h-80 overflow-y-auto overflow-x-hidden"
+              style={{ scrollbarGutter: 'stable' }}
+            >
               {otherDays.length === 0 && (
                 <div className="text-sm text-neutral-500">{t('no_other_days')}</div>
               )}
@@ -190,23 +200,8 @@ export const DayEventsModal: React.FC<Props> = ({
                   <motion.button
                     key={d.date}
                     onClick={() => onSelectDay && onSelectDay(d.date)}
-                    animate={
-                      isSelected
-                        ? {
-                            scale: [1, 1.02, 1],
-                            boxShadow: [
-                              '0 0 0 transparent',
-                              '0 10px 30px color-mix(in srgb, var(--color-accent) 8%, transparent)',
-                              '0 0 0 transparent',
-                            ],
-                          }
-                        : { scale: 1 }
-                    }
-                    transition={
-                      isSelected
-                        ? { duration: 1.0, repeat: Infinity, repeatDelay: 0.6 }
-                        : { duration: 0.18 }
-                    }
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 0.18 }}
                     className={`modal-button modal-other-day w-full text-left p-2 xl:p-2.5 2xl:p-3 rounded-md flex items-center justify-between ${isSelected ? 'selected-day' : 'hoverable-day'}`}
                   >
                     <div>

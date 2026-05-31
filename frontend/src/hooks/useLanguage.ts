@@ -2,8 +2,13 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { useEffect } from 'react';
 import dayjs from 'dayjs';
+import updateLocale from 'dayjs/plugin/updateLocale';
 import 'dayjs/locale/uk';
 import 'dayjs/locale/en';
+
+dayjs.extend(updateLocale);
+dayjs.updateLocale('en', { weekStart: 1 });
+dayjs.updateLocale('uk', { weekStart: 1 });
 
 export const useLanguage = () => {
   const { i18n, t } = useTranslation('common');

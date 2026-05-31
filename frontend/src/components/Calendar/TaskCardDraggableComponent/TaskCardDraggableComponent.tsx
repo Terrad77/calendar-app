@@ -3,6 +3,7 @@ import { styled } from '@stitches/react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { CalendarEvent } from '../../../types/types';
+import { authenticationService } from '../../../services/authService';
 
 const TaskMarker = styled('span', {
   width: '12px',
@@ -20,6 +21,7 @@ const TaskMarker = styled('span', {
 });
 
 const TaskCard = styled('div', {
+  position: 'relative',
   backgroundColor: 'var(--surface-calendar-cell)',
   borderRadius: '8px',
   padding: '6px 8px',
@@ -142,6 +144,26 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
     return propCustomCursor || 'pointer';
   }, [event.eventType, renderIsDragging, propCustomCursor]);
 
+  // try to determine current user id: from loaded user or from JWT access token
+  const currentUserId = useMemo(() => {
+    const loaded = authenticationService.getUser && authenticationService.getUser();
+    if (loaded && loaded.id) return loaded.id;
+
+    const token = authenticationService.getAccessToken && authenticationService.getAccessToken();
+    if (!token) return null;
+
+    try {
+      const payload = token.split('.')[1];
+      // add padding if necessary
+      const pad = payload.length % 4;
+      const normalized = payload + (pad === 2 ? '==' : pad === 3 ? '=' : pad === 1 ? '===' : '');
+      const json = JSON.parse(atob(normalized));
+      return json.userId || json.userID || json.user || null;
+    } catch (e) {
+      return null;
+    }
+  }, []);
+
   return (
     <TaskCard
       ref={setNodeRef}
@@ -156,6 +178,21 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
       onClick={onCardClick !== undefined ? (e) => onCardClick(e, event) : undefined}
       data-compact={compact ? 'true' : 'false'}
     >
+      {event.ownerId && currentUserId && currentUserId !== event.ownerId ? (
+        <span
+          className="foreignBadge"
+          style={{
+            fontSize: '0.6rem',
+            color: 'var(--surface-calendar-subtle)',
+            position: 'absolute',
+            right: '8px',
+            top: '6px',
+            background: 'transparent',
+          }}
+        >
+          Чужое
+        </span>
+      ) : null}
       {event.eventType === 'task' ? (
         <div style={{ display: 'flex', gap: '4px' }}>
           {/* event.colors undefined for tasks, if has no color */}

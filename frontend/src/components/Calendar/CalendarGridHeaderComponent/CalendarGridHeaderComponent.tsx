@@ -32,7 +32,7 @@ const WeekdayHeaderCell = styled('div', {
 
 export const CalendarGridHeader: React.FC = () => {
   const { t } = useTranslation('calendar');
-  const daysOfWeek = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const daysOfWeek = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
   return (
     <WeekdayHeaderContainer>

@@ -57,6 +57,7 @@ const mapBackendEventToCalendarEvent = (event: BackendCalendarEvent): CalendarEv
     updatedAt: event.updatedAt,
     colors: event.colors,
     location: event.location ?? undefined,
+    ownerId: event.userId,
   };
 
   switch (event.eventType) {

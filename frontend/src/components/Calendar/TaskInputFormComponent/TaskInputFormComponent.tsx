@@ -401,6 +401,7 @@ interface TaskInputFormProps {
   onCancel: () => void; // callback for canceling
   onDelete?: (taskId: string) => void; // callback for delete
   initialDate?: string; // date for new task, if no exist initialTask
+  isSubmitting?: boolean;
 }
 
 export const TaskInputForm: React.FC<TaskInputFormProps> = ({
@@ -410,6 +411,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
   onCancel,
   onDelete,
   initialDate,
+  isSubmitting,
 }) => {
   const [title, setTitle] = useState(initialTask?.title || '');
   const [description, setDescription] = useState(initialTask?.description || '');
@@ -626,7 +628,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
         <TaskInputButton type="button" onClick={onCancel}>
           {t('common:cancel')}
         </TaskInputButton>
-        <TaskInputButton type="button" primary onClick={handleSaveClick}>
+        <TaskInputButton type="button" primary onClick={handleSaveClick} disabled={isSubmitting}>
           {initialTask
             ? t('save_changes')
             : isCreatingInPast
