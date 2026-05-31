@@ -374,6 +374,14 @@
   padding: 0;
 }
 
+/* Override toast animation to remove delayed slide-out */
+[data-rht-toaster] > * {
+  transition-duration: 0ms !important;
+  transition-property: none !important;
+}
+
+[data-rht-toaster] > * { transform: none !important; }
+
 /* Base styles */
 html {
   height: 100%;
