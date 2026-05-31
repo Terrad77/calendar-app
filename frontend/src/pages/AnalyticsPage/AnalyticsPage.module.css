@@ -168,6 +168,13 @@
   font-size: 0.95rem;
 }
 
+/* Make the no-data message span the full chart grid and center */
+.noData {
+  grid-column: 1 / -1;
+  align-self: center;
+  justify-self: center;
+}
+
 .focusItem {
   display: flex;
   justify-content: space-between;
