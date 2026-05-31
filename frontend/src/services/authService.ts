@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:3001';
 
 export interface User {
   id: string;

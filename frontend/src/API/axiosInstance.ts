@@ -2,7 +2,7 @@ import axios from 'axios';
 import { authenticationService } from '../services/authService';
 
 // Используйте import.meta.env вместо process.env для Vite
-const API_URL = import.meta.env.VITE_AI_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:3001';
 
 const instance = axios.create({
   baseURL: API_URL,

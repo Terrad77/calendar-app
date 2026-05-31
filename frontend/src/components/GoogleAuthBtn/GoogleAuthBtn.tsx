@@ -5,7 +5,7 @@ import styles from './GoogleAuthBtn.module.css';
 
 export default function GoogleAuthBtn() {
   const { t } = useTranslation(['auth']);
-  const apiUrl = import.meta.env.VITE_AI_API_URL || 'http://localhost:3001';
+  const apiUrl = import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:3001';
 
   return (
     <div className={styles.wrapper}>
