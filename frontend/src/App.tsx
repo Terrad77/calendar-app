@@ -39,8 +39,6 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const isAuthenticated = useSelector(selectIsLoggedIn);
-  const dispatch = useDispatch();
-  const [authChecked, setAuthChecked] = useState(false);
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -66,6 +64,8 @@ const PublicRoute = ({ children }: PublicRouteProps) => {
 
 function App() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const dispatch = useDispatch();
+  const [authChecked, setAuthChecked] = useState(false);
   const [aiServiceStatus, setAiServiceStatus] = useState<{
     status: string;
     available: boolean;
