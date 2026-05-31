@@ -5,6 +5,7 @@ import cors from 'cors';
 import passport from './config/passport.js';
 import authRoutes from './routes/authRoutes.js';
 import eventsRoutes from './routes/eventsRoutes.js';
+import analyticsRoutes from './routes/analyticsRoutes.js';
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.use(
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventsRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'Calendar AI Assistant' });

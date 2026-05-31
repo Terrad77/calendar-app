@@ -1,56 +1,77 @@
 import { useTranslation } from 'react-i18next';
 import { NavigationPageShell } from '../../components/NavigationPageShell/NavigationPageShell';
 import styles from './AnalyticsPage.module.css';
+import { useEffect, useState } from 'react';
+
+type TrendPoint = { date: string; value: number };
 
 export default function AnalyticsPage() {
   const { t } = useTranslation('navigation');
+  const [overview, setOverview] = useState<{
+    activeEvents: number;
+    avgPerDay: number;
+    recurringRate: number;
+  } | null>(null);
+  const [trends, setTrends] = useState<TrendPoint[]>([]);
+  const API = import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:3001';
 
-  const trendData = [
-    { label: t('mon'), value: 52 },
-    { label: t('tue'), value: 81 },
-    { label: t('wed'), value: 68 },
-    { label: t('thu'), value: 92 },
-    { label: t('fri'), value: 61 },
-    { label: t('sat'), value: 28 },
-    { label: t('sun'), value: 18 },
-  ];
+  useEffect(() => {
+    const fetchOverview = async () => {
+      try {
+        const res = await fetch(`${API}/api/analytics/overview`);
+        if (res.ok) setOverview(await res.json());
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to load analytics overview', e);
+      }
+    };
 
-  const focusWindows = [
-    { time: '08:30 - 10:00', label: t('deep_work') },
-    { time: '11:00 - 12:30', label: t('team_syncs') },
-    { time: '15:00 - 16:30', label: t('review_window') },
-  ];
+    const fetchTrends = async () => {
+      try {
+        const res = await fetch(`${API}/api/analytics/trends?days=14`);
+        if (res.ok) setTrends(await res.json());
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to load analytics trends', e);
+      }
+    };
+
+    fetchOverview();
+    fetchTrends();
+  }, [API]);
+
+  const maxValue = trends.length ? Math.max(...trends.map((p) => p.value)) : 0;
 
   return (
     <NavigationPageShell
       badge={t('analytics')}
       title={t('analytics_title')}
       description={t('analytics_description')}
-      stats={[
-        { label: t('active_events'), value: '42', detail: t('active_events_detail') },
-        { label: t('focus_rate'), value: '87%', detail: t('focus_rate_detail') },
-        {
-          label: t('recurring_plans'),
-          value: '12',
-          detail: t('recurring_plans_detail'),
-        },
-      ]}
+      stats={
+        overview
+          ? [
+              {
+                label: t('active_events'),
+                value: String(overview.activeEvents),
+                detail: t('active_events_detail'),
+              },
+              {
+                label: t('avg_per_day'),
+                value: String(overview.avgPerDay),
+                detail: t('avg_per_day_detail'),
+              },
+              {
+                label: t('recurring_rate'),
+                value: `${overview.recurringRate}%`,
+                detail: t('recurring_plans_detail'),
+              },
+            ]
+          : []
+      }
       panels={[
         {
           title: t('weekly_pattern'),
-          items: [
-            t('weekly_pattern_item_1'),
-            t('weekly_pattern_item_2'),
-            t('weekly_pattern_item_3'),
-          ],
-        },
-        {
-          title: t('suggested_actions'),
-          items: [
-            t('suggested_actions_item_1'),
-            t('suggested_actions_item_2'),
-            t('suggested_actions_item_3'),
-          ],
+          items: [t('weekly_pattern_item_1'), t('weekly_pattern_item_2')],
         },
       ]}
     >
@@ -65,32 +86,19 @@ export default function AnalyticsPage() {
           </div>
 
           <div className={styles.barChart}>
-            {trendData.map((item) => (
-              <div key={item.label} className={styles.barItem}>
-                <div className={styles.barTrack} aria-hidden="true">
-                  <div className={styles.barFill} style={{ height: `${item.value}%` }} />
+            {trends.length === 0 && <div>{t('loading')}</div>}
+            {trends.map((point) => {
+              const height = maxValue ? Math.round((point.value / maxValue) * 100) : 0;
+              const label = new Date(point.date).toLocaleDateString();
+              return (
+                <div key={point.date} className={styles.barItem} title={`${label}: ${point.value}`}>
+                  <div className={styles.barTrack} aria-hidden="true">
+                    <div className={styles.barFill} style={{ height: `${height}%` }} />
+                  </div>
+                  <span className={styles.barLabel}>{label}</span>
                 </div>
-                <span className={styles.barLabel}>{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className={styles.insightCard}>
-          <div className={styles.sectionHeader}>
-            <div>
-              <p className={styles.sectionLabel}>{t('best_windows')}</p>
-              <h2 className={styles.sectionTitle}>{t('calendar_stays_calm')}</h2>
-            </div>
-          </div>
-
-          <div className={styles.focusList}>
-            {focusWindows.map((window) => (
-              <article key={window.time} className={styles.focusItem}>
-                <strong>{window.time}</strong>
-                <span>{window.label}</span>
-              </article>
-            ))}
+              );
+            })}
           </div>
         </section>
       </div>
