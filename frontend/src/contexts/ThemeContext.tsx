@@ -44,7 +44,7 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     setTheme(nextTheme);
     // side-effect (toast) outside of state updater to avoid render-phase updates
     toast.success(nextTheme === 'dark' ? t('theme_changed_dark') : t('theme_changed_light'));
-  }, [t]);
+  }, [t, theme]);
 
   const value = useMemo(
     () => ({
