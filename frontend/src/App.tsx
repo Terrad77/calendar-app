@@ -350,6 +350,18 @@ function App() {
           }
         />
 
+        {/* Temporary preview route for analytics (no auth) - remove after design review */}
+        <Route
+          path="/analytics-preview"
+          element={
+            <Layout>
+              <Suspense fallback={null}>
+                <AnalyticsPage />
+              </Suspense>
+            </Layout>
+          }
+        />
+
         <Route
           path="/contacts"
           element={
