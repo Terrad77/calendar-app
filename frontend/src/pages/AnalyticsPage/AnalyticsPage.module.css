@@ -175,6 +175,32 @@
   justify-self: center;
 }
 
+/* Variants for preview */
+.noDataSubtle {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.noDataStrong {
+  color: var(--color-text-primary);
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.noDataAccent {
+  color: var(--color-accent);
+  font-weight: 700;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+  padding: 0.6rem 1rem; /* Keep existing padding */
+  border-radius: 0.6rem; /* Keep existing border-radius */
+  /* Make accent variant span full width of the chart */
+  justify-self: stretch; /* Stretch to full width */
+  width: 100%; /* Full width */
+  display: flex; /* Use flexbox */
+  align-items: center; /* Center content vertically */
+  justify-content: center; /* Center content horizontally */
+}
+
 .focusItem {
   display: flex;
   justify-content: space-between;

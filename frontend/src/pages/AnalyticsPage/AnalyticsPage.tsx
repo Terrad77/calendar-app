@@ -255,11 +255,14 @@ export default function AnalyticsPage() {
     [selectedDayEvents]
   );
   const todayDate = dayjs().format('YYYY-MM-DD');
-  const urlParams =
-    typeof window !== 'undefined'
-      ? new URLSearchParams(window.location.search)
-      : new URLSearchParams('');
-  const forceNoData = urlParams.get('forceNoData') === '1';
+  // Production: no dev preview flags
+  const previewVariant = (urlParams.get('variant') || 'A').toUpperCase();
+  const variantClass =
+    previewVariant === 'B'
+      ? styles.noDataStrong
+      : previewVariant === 'C'
+        ? styles.noDataAccent
+        : styles.noDataSubtle;
 
   return (
     <NavigationPageShell
@@ -311,12 +314,12 @@ export default function AnalyticsPage() {
               </div>
             )}
 
-            {!trendsLoading && (trends.length === 0 || forceNoData) && (
-              <div className={styles.noData}>
+            {!trendsLoading && trends.length === 0 && (
+              <div className={`${styles.noData} ${styles.noDataAccent}`}>
                 {t('no_data_week') !== 'no_data_week' ? t('no_data_week') : 'Нет данных за неделю'}
               </div>
             )}
-            {(forceNoData ? [] : trends).map((point) => {
+            {trends.map((point) => {
               const height = maxValue ? Math.round((point.value / maxValue) * 100) : 0;
               const isToday = point.date === todayDate;
               const weekday = dayjs(point.date)
