@@ -20,6 +20,8 @@ import type { CalendarEvent } from './types/types';
 import { useSelector } from 'react-redux';
 import { selectIsLoggedIn } from './redux/user/selectors';
 import { aiService } from './services/aiService';
+import { useDispatch } from 'react-redux';
+import { refreshUserToken } from './redux/user/operations';
 import {
   createCalendarEvent,
   deleteCalendarEvent,
@@ -37,6 +39,8 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const isAuthenticated = useSelector(selectIsLoggedIn);
+  const dispatch = useDispatch();
+  const [authChecked, setAuthChecked] = useState(false);
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;
@@ -207,6 +211,8 @@ function App() {
 
   useEffect(() => {
     const loadEvents = async () => {
+      if (!authChecked) return;
+
       if (!isAuthenticated) {
         setEvents([]);
         return;
@@ -222,6 +228,23 @@ function App() {
 
     void loadEvents();
   }, [isAuthenticated]);
+
+  // On app mount, try to refresh token if a refresh token exists
+  useEffect(() => {
+    const tryRefresh = async () => {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (refreshToken) {
+        try {
+          await dispatch(refreshUserToken() as any);
+        } catch (e) {
+          // ignore - reducer handles failures
+        }
+      }
+      setAuthChecked(true);
+    };
+
+    void tryRefresh();
+  }, [dispatch]);
 
   // Handlers for AI Assistant events
   const handleEventCreate = (event: CalendarEvent) => {
