@@ -33,8 +33,10 @@ const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 if (SENTRY_DSN) {
   void (async () => {
     try {
-      const sentryModule: unknown = await import('@sentry/react');
-      const tracingModule: unknown = await import('@sentry/tracing');
+      const sentryPkg = '@sentry/react';
+      const tracingPkg = '@sentry/tracing';
+      const sentryModule: unknown = await import(sentryPkg);
+      const tracingModule: unknown = await import(tracingPkg);
       const Sentry = sentryModule as SentryModule;
       const { BrowserTracing } = tracingModule as BrowserTracingModule;
 
