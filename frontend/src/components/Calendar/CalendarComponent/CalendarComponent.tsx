@@ -50,7 +50,6 @@ const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL || 'http:
 
 // Warn in production when falling back to localhost — avoids silent wrong-origin requests
 if (!import.meta.env.VITE_BACKEND_API_BASE_URL && import.meta.env.PROD) {
-  // eslint-disable-next-line no-console
   console.warn(
     'VITE_BACKEND_API_BASE_URL is not set in environment. Using localhost fallback — production requests may be blocked by CORS.'
   );

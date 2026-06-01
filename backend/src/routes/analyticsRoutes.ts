@@ -93,7 +93,6 @@ router.get('/overview', authenticateToken, async (req: Request, res: Response) =
       recurringRate,
     });
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Analytics overview error:', error);
     res.status(500).json({ error: 'Failed to get analytics overview' });
   }
@@ -147,7 +146,6 @@ router.get('/trends', authenticateToken, async (req: Request, res: Response) => 
 
     res.json(fullSeries);
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Analytics trends error:', error);
     res.status(500).json({ error: 'Failed to get analytics trends' });
   }
@@ -182,7 +180,6 @@ router.get('/events', authenticateToken, async (req: Request, res: Response) => 
     const result = (rows as any).rows || rows;
     res.json(result);
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Analytics events error:', error);
     res.status(500).json({ error: 'Failed to get events' });
   }
@@ -246,7 +243,6 @@ router.get('/export', authenticateToken, async (req: Request, res: Response) => 
     res.setHeader('Content-Disposition', `attachment; filename="events-${date}.csv"`);
     res.send(csv);
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Analytics export error:', error);
     res.status(500).json({ error: 'Failed to export events' });
   }
@@ -264,7 +260,6 @@ if (process.env.NODE_ENV !== 'production' || process.env.DEBUG_API === '1') {
       const data = (rows as any).rows || rows;
       res.json({ total: data.length, rows: data });
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Analytics debug all error:', error);
       res.status(500).json({ error: 'Failed to dump events' });
     }
@@ -280,7 +275,6 @@ if (process.env.NODE_ENV !== 'production' || process.env.DEBUG_API === '1') {
       const data = (rows as any).rows || rows;
       res.json({ rows: data });
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Analytics debug counts error:', error);
       res.status(500).json({ error: 'Failed to get counts' });
     }

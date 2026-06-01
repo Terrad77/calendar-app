@@ -11,7 +11,7 @@ vi.mock('../db', () => ({
 // Mock authService to allow optionalAuthentication / verifyAccessToken usage
 vi.mock('../services/authService', () => ({
   authService: {
-    verifyAccessToken: (token: string) => ({ userId: 'test-user', email: 'test@example.com' }),
+    verifyAccessToken: (_token: string) => ({ userId: 'test-user', email: 'test@example.com' }),
   },
 }));
 

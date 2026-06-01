@@ -159,7 +159,7 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
       const normalized = payload + (pad === 2 ? '==' : pad === 3 ? '=' : pad === 1 ? '===' : '');
       const json = JSON.parse(atob(normalized));
       return json.userId || json.userID || json.user || null;
-    } catch (e) {
+    } catch (_e) {
       return null;
     }
   }, []);
