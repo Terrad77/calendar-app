@@ -1,0 +1,38 @@
+name: Build and upload Sentry release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*', 'release-*']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_BACKEND_API_BASE_URL: ${{ secrets.BACKEND_URL }}
+        run: |
+          npm run build
+
+      - name: Create Sentry release
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          SENTRY_RELEASE=$(git rev-parse --short HEAD)
+          npx sentry-cli releases new $SENTRY_RELEASE || true
+          npx sentry-cli releases files $SENTRY_RELEASE upload-sourcemaps frontend/dist --rewrite --validate
+          npx sentry-cli releases finalize $SENTRY_RELEASE

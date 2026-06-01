@@ -1,0 +1,71 @@
+name: Build and upload Sentry releases (mono-repo)
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*', 'release-*']
+
+env:
+  # SENTRY_ORG must be provided as repo secret
+  SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+jobs:
+  build-and-upload-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Create and upload frontend release to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT_FRONTEND }}
+          SENTRY_RELEASE: ${{ github.sha }}
+        working-directory: frontend
+        run: |
+          npx sentry-cli releases -o $SENTRY_ORG new $SENTRY_RELEASE || true
+          npx sentry-cli releases -o $SENTRY_ORG files $SENTRY_RELEASE upload-sourcemaps dist --rewrite --validate || true
+          npx sentry-cli releases -o $SENTRY_ORG finalize $SENTRY_RELEASE || true
+
+  build-and-upload-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install backend deps
+        working-directory: backend
+        run: npm ci
+
+      - name: Build backend
+        working-directory: backend
+        run: npm run build
+
+      - name: Create and upload backend release to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT_BACKEND }}
+          SENTRY_RELEASE: ${{ github.sha }}
+        working-directory: backend
+        run: |
+          npx sentry-cli releases -o $SENTRY_ORG new $SENTRY_RELEASE || true
+          # adjust path if backend build outputs to different folder
+          npx sentry-cli releases -o $SENTRY_ORG files $SENTRY_RELEASE upload-sourcemaps dist --rewrite --validate || true
+          npx sentry-cli releases -o $SENTRY_ORG finalize $SENTRY_RELEASE || true

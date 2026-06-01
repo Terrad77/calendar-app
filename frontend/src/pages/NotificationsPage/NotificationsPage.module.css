@@ -63,7 +63,8 @@
   margin-top: 0.4rem;
   flex-shrink: 0;
   border-radius: 9999px;
-  background: rgba(148, 163, 184, 0.35);
+  background: linear-gradient(180deg, var(--bullet-dot-start), var(--bullet-dot-end));
+  box-shadow: 0 0 0 4px var(--bullet-dot-shadow);
 }
 
 .notificationDot[data-unread='true'] {

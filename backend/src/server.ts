@@ -1,6 +1,7 @@
 // Ensure environment variables are loaded before any other module imports that
 // may read process.env at module-evaluation time. Use the side-effect import
 // so the loader evaluates dotenv before other ESM modules.
+import './sentry.js';
 import app from './app.js';
 import { Request, Response, NextFunction } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';

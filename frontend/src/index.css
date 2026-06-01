@@ -71,6 +71,11 @@
   --surface-button-text: #2c2418;
   --surface-button-shadow: rgba(44, 36, 24, 0.07);
 
+  /* Bullet / dot labels (contrast to theme) */
+  --bullet-dot-start: rgba(44, 36, 24, 0.95);
+  --bullet-dot-end: rgba(44, 36, 24, 0.75);
+  --bullet-dot-shadow: rgba(44, 36, 24, 0.08);
+
   --surface-calendar-shell: rgba(255, 255, 255, 0.64);
   --surface-calendar-shell-border: rgba(140, 126, 106, 0.16);
   --surface-calendar-shell-shadow: rgba(44, 36, 24, 0.08);
@@ -208,6 +213,11 @@
   --surface-button-border: rgba(138, 155, 181, 0.22);
   --surface-button-text: #e8ecf2;
   --surface-button-shadow: rgba(2, 8, 20, 0.3);
+
+  /* Bullet / dot labels (contrast to theme) */
+  --bullet-dot-start: rgba(232, 236, 242, 0.95);
+  --bullet-dot-end: rgba(232, 236, 242, 0.85);
+  --bullet-dot-shadow: rgba(2, 8, 20, 0.48);
 
   --surface-calendar-shell: rgba(30, 45, 70, 0.56);
   --surface-calendar-shell-border: rgba(138, 155, 181, 0.18);
@@ -380,7 +390,9 @@
   transition-property: none !important;
 }
 
-[data-rht-toaster] > * { transform: none !important; }
+[data-rht-toaster] > * {
+  transform: none !important;
+}
 
 /* Base styles */
 html {

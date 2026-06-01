@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { NavigationPageShell } from '../../components/NavigationPageShell/NavigationPageShell';
 import styles from './AnalyticsPage.module.css';
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { authenticationService } from '../../services/authService';
 import dayjs from 'dayjs';
 import type { CalendarEvent } from '../../types/types';
@@ -9,6 +10,7 @@ import Modal from '../../components/Modal/Modal';
 import DotLoader from '../../components/DotLoader/DotLoader';
 import { TaskInputForm } from '../../components/Calendar/TaskInputFormComponent/TaskInputFormComponent';
 import { updateCalendarEvent } from '../../API/apiOperations';
+import toastMaker from '../../utils/toastMaker/toastMaker';
 
 const DayEventsModal = lazy(
   () => import('../../components/Calendar/DayEventsModalComponent/DayEventsModalComponent')
@@ -70,8 +72,8 @@ export default function AnalyticsPage() {
         const res = await fetch(`${API}/api/analytics/overview`, { headers });
         if (res.ok) setOverview(await res.json());
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to load analytics overview', e);
+        if (import.meta.env.DEV) console.error('Failed to load analytics overview', e);
+        toastMaker(t('analytics_error_overview', { ns: 'common' }), 'error');
       }
     };
 
@@ -85,8 +87,8 @@ export default function AnalyticsPage() {
         const res = await fetch(`${API}/api/analytics/trends?days=7`, { headers });
         if (res.ok) setTrends(await res.json());
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to load analytics trends', e);
+        if (import.meta.env.DEV) console.error('Failed to load analytics trends', e);
+        toastMaker(t('analytics_error_trends', { ns: 'common' }), 'error');
       } finally {
         setTrendsLoading(false);
       }
@@ -115,8 +117,8 @@ export default function AnalyticsPage() {
           setSelectedDayEvents(data);
         }
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to load analytics day events', e);
+        if (import.meta.env.DEV) console.error('Failed to load analytics day events', e);
+        toastMaker(t('analytics_error_day_events', { ns: 'common' }), 'error');
       } finally {
         setSelectedDayLoading(false);
       }
@@ -139,8 +141,8 @@ export default function AnalyticsPage() {
       if (overviewRes.ok) setOverview(await overviewRes.json());
       if (trendsRes.ok) setTrends(await trendsRes.json());
     } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('Failed to refresh analytics after edit', e);
+      if (import.meta.env.DEV) console.error('Failed to refresh analytics after edit', e);
+      toastMaker(t('analytics_error_refresh', { ns: 'common' }), 'error');
     } finally {
       setTrendsLoading(false);
     }
@@ -196,8 +198,8 @@ export default function AnalyticsPage() {
         setEditError(null);
         setEditingEvent(detailedEvent);
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to load event for editing', e);
+        if (import.meta.env.DEV) console.error('Failed to load event for editing', e);
+        toastMaker(t('analytics_error_load_event', { ns: 'common' }), 'error');
         closeDay();
         setEditError(null);
         setEditingEvent(event);
@@ -228,8 +230,8 @@ export default function AnalyticsPage() {
         await refetchAnalytics();
         await openDay(task.date);
       } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('Failed to save analytics event edit', e);
+        if (import.meta.env.DEV) console.error('Failed to save analytics event edit', e);
+        toastMaker(t('analytics_error_save_event', { ns: 'common' }), 'error');
         setEditError('Не вдалося зберегти зміни');
       } finally {
         setEditSaving(false);
@@ -256,13 +258,7 @@ export default function AnalyticsPage() {
   );
   const todayDate = dayjs().format('YYYY-MM-DD');
   // Production: no dev preview flags
-  const previewVariant = (urlParams.get('variant') || 'A').toUpperCase();
-  const variantClass =
-    previewVariant === 'B'
-      ? styles.noDataStrong
-      : previewVariant === 'C'
-        ? styles.noDataAccent
-        : styles.noDataSubtle;
+  // previewVariant via query params is intentionally unused in production
 
   return (
     <NavigationPageShell

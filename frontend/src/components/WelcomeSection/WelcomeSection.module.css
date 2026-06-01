@@ -359,8 +359,8 @@
   height: 0.9rem;
   flex-shrink: 0;
   border-radius: 9999px;
-  background: linear-gradient(180deg, var(--surface-button-start), var(--surface-button-end));
-  box-shadow: 0 0 0 6px var(--surface-button-shadow);
+  background: linear-gradient(180deg, var(--bullet-dot-start), var(--bullet-dot-end));
+  box-shadow: 0 0 0 6px var(--bullet-dot-shadow);
 }
 
 @media (max-width: 767px) {

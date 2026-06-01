@@ -1,14 +1,53 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, type ConfigEnv, type UserConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+// Note: we import @sentry/vite dynamically later to avoid failing when dev-deps
+// are not installed (pre-commit hooks / CI). Do not use a static import here.
 import path from 'path';
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(async ({ mode }: ConfigEnv): Promise<UserConfig> => {
   // Load env variables for the current mode (development/production/staging)
   const env = loadEnv(mode, process.cwd(), '');
 
+  const isProd = mode === 'production';
+  const enableSentry =
+    Boolean(env.SENTRY_AUTH_TOKEN) &&
+    Boolean(env.SENTRY_ORG) &&
+    Boolean(env.SENTRY_PROJECT) &&
+    isProd;
+
+  // Try dynamic import of @sentry/vite. If it's not installed, skip plugin.
+  let sentryPluginFactory: any = null;
+  if (enableSentry) {
+    try {
+      // @ts-ignore - optional dev dependency, may not be installed in some environments
+      const mod: any = await import('@sentry/vite');
+      sentryPluginFactory = mod?.sentryVitePlugin ?? mod?.default?.sentryVitePlugin ?? null;
+    } catch (err: any) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        'Sentry Vite plugin not available, skipping sourcemap upload:',
+        err?.message ?? err
+      );
+      sentryPluginFactory = null;
+    }
+  }
+
+  const plugins: any[] = [react()];
+  if (sentryPluginFactory) {
+    plugins.push(
+      sentryPluginFactory({
+        org: env.SENTRY_ORG,
+        project: env.SENTRY_PROJECT,
+        authToken: env.SENTRY_AUTH_TOKEN,
+        include: path.resolve(__dirname, 'dist'),
+        url: env.SENTRY_URL || undefined,
+      })
+    );
+  }
+
   return {
-    plugins: [react()],
+    plugins,
 
     resolve: {
       alias: {
@@ -22,23 +61,21 @@ export default defineConfig(({ mode }) => {
       host: 'localhost', // Explicitly set host to localhost for development
       port: 5173,
       strictPort: true,
-      clearScreen: false, // Prevent terminal clearing on restart
+      // `clearScreen` removed — keep server options minimal for compatibility
 
       proxy: {
         // Proxy API calls to backend — avoids CORS in development
         '/api': {
           target: env.VITE_BACKEND_API_BASE_URL || 'http://localhost:3000',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
+          rewrite: (p: string) => p.replace(/^\/api/, ''),
         },
       },
     },
 
     build: {
-      // Use inline sourcemaps to ensure `source-map-explorer` can parse mappings
-      // (workaround for tools that report "generated column Infinity").
-      // Revert to `true` or adjust for CI as needed.
-      sourcemap: 'inline',
+      // Use inline sourcemaps for development, full sourcemaps for production
+      sourcemap: isProd ? true : 'inline',
 
       // Raise chunk size warning threshold (default 500kb is too aggressive)
       chunkSizeWarningLimit: 1000,

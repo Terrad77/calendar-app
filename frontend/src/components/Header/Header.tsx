@@ -104,31 +104,26 @@ export const Header: React.FC<HeaderProps> = ({
           <LanguageSwitcher />
         </div>
       </div>
-      <div className={css.toastLayer}>
-        <Toaster
-          position="top-center"
-          gutter={10}
-          reverseOrder={false}
-          toastOptions={{
-            duration: 2500,
-            style: {
-              background: 'transparent',
-              color: 'var(--color-text-primary)',
-              boxShadow: 'none',
-              padding: '0',
-            },
-          }}
-          containerStyle={{
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: 'min(420px, calc(100vw - 32px))',
-            zIndex: 9999,
-            pointerEvents: 'none',
-          }}
-        />
-      </div>
+      <Toaster
+        position="top-center"
+        gutter={10}
+        reverseOrder={false}
+        toastOptions={{
+          duration: 2500,
+          removeDelay: 0,
+          style: {
+            background: 'transparent',
+            color: 'var(--color-text-primary)',
+            boxShadow: 'none',
+            padding: '0',
+          },
+        }}
+        containerStyle={{
+          width: 'min(420px, calc(100vw - 32px))',
+          zIndex: 9999,
+          pointerEvents: 'none',
+        }}
+      />
     </header>
   );
 };

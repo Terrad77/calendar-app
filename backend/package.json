@@ -32,7 +32,8 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "postgres": "^3.4.9",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "@sentry/node": "^7.58.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
