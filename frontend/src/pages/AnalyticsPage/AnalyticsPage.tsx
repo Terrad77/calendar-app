@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 import { NavigationPageShell } from '../../components/NavigationPageShell/NavigationPageShell';
 import styles from './AnalyticsPage.module.css';
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 import { authenticationService } from '../../services/authService';
 import dayjs from 'dayjs';
 import type { CalendarEvent } from '../../types/types';
@@ -96,7 +95,7 @@ export default function AnalyticsPage() {
 
     fetchOverview();
     fetchTrends();
-  }, [API]);
+  }, [API, t]);
 
   const maxValue = trends.length ? Math.max(...trends.map((p) => p.value)) : 0;
 
@@ -123,7 +122,7 @@ export default function AnalyticsPage() {
         setSelectedDayLoading(false);
       }
     },
-    [API]
+    [API, t]
   );
 
   const refetchAnalytics = useCallback(async () => {
@@ -146,7 +145,7 @@ export default function AnalyticsPage() {
     } finally {
       setTrendsLoading(false);
     }
-  }, [API]);
+  }, [API, t]);
 
   const closeDay = useCallback(() => {
     setSelectedDate(null);
@@ -205,7 +204,7 @@ export default function AnalyticsPage() {
         setEditingEvent(event);
       }
     },
-    [API, closeDay]
+    [API, closeDay, t]
   );
 
   const closeEdit = useCallback(() => {
@@ -237,7 +236,7 @@ export default function AnalyticsPage() {
         setEditSaving(false);
       }
     },
-    [closeEdit, editSaving, openDay, refetchAnalytics]
+    [closeEdit, editSaving, openDay, refetchAnalytics, t]
   );
 
   const modalTasks = useMemo<CalendarEvent[]>(

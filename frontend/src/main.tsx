@@ -10,6 +10,22 @@ import { store, persistor } from './redux/store';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './locales';
 
+type SentryInitOptions = {
+  dsn: string;
+  integrations: unknown[];
+  tracesSampleRate: number;
+  environment: string;
+  release?: string;
+};
+
+type SentryModule = {
+  init: (options: SentryInitOptions) => void;
+};
+
+type BrowserTracingModule = {
+  BrowserTracing: new () => unknown;
+};
+
 // Initialize Sentry dynamically only when DSN is provided. This keeps
 // local development and pre-commit hooks working when @sentry/* packages
 // are not installed (they are optional dev-deps for release builds).
@@ -17,10 +33,12 @@ const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 if (SENTRY_DSN) {
   void (async () => {
     try {
-      // @ts-ignore optional dependency
-      const Sentry: any = await import('@sentry/react');
-      // @ts-ignore optional dependency
-      const { BrowserTracing } = await import('@sentry/tracing');
+      // @ts-expect-error optional dependency
+      const sentryModule: unknown = await import('@sentry/react');
+      // @ts-expect-error optional dependency
+      const tracingModule: unknown = await import('@sentry/tracing');
+      const Sentry = sentryModule as SentryModule;
+      const { BrowserTracing } = tracingModule as BrowserTracingModule;
 
       Sentry.init({
         dsn: SENTRY_DSN,
@@ -29,9 +47,11 @@ if (SENTRY_DSN) {
         environment: import.meta.env.MODE,
         release: import.meta.env.VITE_SENTRY_RELEASE || undefined,
       });
-    } catch (err: any) {
-      // eslint-disable-next-line no-console
-      console.warn('Sentry init skipped (package missing or error):', err?.message ?? err);
+    } catch (err: unknown) {
+      console.warn(
+        'Sentry init skipped (package missing or error):',
+        err instanceof Error ? err.message : String(err)
+      );
     }
   })();
 }

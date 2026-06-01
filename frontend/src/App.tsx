@@ -22,6 +22,7 @@ import { selectIsLoggedIn } from './redux/user/selectors';
 import { aiService } from './services/aiService';
 import { useDispatch } from 'react-redux';
 import { refreshUserToken } from './redux/user/operations';
+import type { AppDispatch } from './redux/store';
 import {
   createCalendarEvent,
   deleteCalendarEvent,
@@ -64,7 +65,7 @@ const PublicRoute = ({ children }: PublicRouteProps) => {
 
 function App() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [authChecked, setAuthChecked] = useState(false);
   const [aiServiceStatus, setAiServiceStatus] = useState<{
     status: string;
@@ -227,7 +228,7 @@ function App() {
     };
 
     void loadEvents();
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authChecked]);
 
   // On app mount, try to refresh token if a refresh token exists
   useEffect(() => {
@@ -235,8 +236,8 @@ function App() {
       const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         try {
-          await dispatch(refreshUserToken() as any);
-        } catch (e) {
+          await dispatch(refreshUserToken());
+        } catch (_e) {
           // ignore - reducer handles failures
         }
       }
