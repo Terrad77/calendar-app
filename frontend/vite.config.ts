@@ -1,8 +1,23 @@
-import { defineConfig, loadEnv, type ConfigEnv, type UserConfig } from 'vite';
+import { defineConfig, loadEnv, type ConfigEnv, type PluginOption, type UserConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 // Note: we import @sentry/vite dynamically later to avoid failing when dev-deps
 // are not installed (pre-commit hooks / CI). Do not use a static import here.
 import path from 'path';
+
+type SentryVitePluginFactory = (options: {
+  org?: string;
+  project?: string;
+  authToken?: string;
+  include?: string;
+  url?: string;
+}) => PluginOption;
+
+type SentryViteModule = {
+  sentryVitePlugin?: SentryVitePluginFactory;
+  default?: {
+    sentryVitePlugin?: SentryVitePluginFactory;
+  };
+};
 
 // https://vite.dev/config/
 export default defineConfig(async ({ mode }: ConfigEnv): Promise<UserConfig> => {
@@ -17,23 +32,22 @@ export default defineConfig(async ({ mode }: ConfigEnv): Promise<UserConfig> => 
     isProd;
 
   // Try dynamic import of @sentry/vite. If it's not installed, skip plugin.
-  let sentryPluginFactory: any = null;
+  let sentryPluginFactory: SentryVitePluginFactory | null = null;
   if (enableSentry) {
     try {
       // @ts-expect-error - optional dev dependency, may not be installed in some environments
-      const mod: any = await import('@sentry/vite');
+      const mod: SentryViteModule = await import('@sentry/vite');
       sentryPluginFactory = mod?.sentryVitePlugin ?? mod?.default?.sentryVitePlugin ?? null;
-    } catch (err: any) {
-      // eslint-disable-next-line no-console
+    } catch (err: unknown) {
       console.warn(
         'Sentry Vite plugin not available, skipping sourcemap upload:',
-        err?.message ?? err
+        err instanceof Error ? err.message : String(err)
       );
       sentryPluginFactory = null;
     }
   }
 
-  const plugins: any[] = [react()];
+  const plugins: PluginOption[] = [react()];
   if (sentryPluginFactory) {
     plugins.push(
       sentryPluginFactory({
