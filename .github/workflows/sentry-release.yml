@@ -9,8 +9,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      BACKEND_URL: ${{ secrets.BACKEND_URL }}
-      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+      BACKEND_URL: ${{ vars.BACKEND_URL }}
+      SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT_FRONTEND }}
     steps:
       - uses: actions/checkout@v4
       - name: Use Node.js
@@ -33,7 +33,7 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SENTRY_PROJECT: ${{ env.SENTRY_PROJECT }}
         run: |
           SENTRY_RELEASE=$(git rev-parse --short HEAD)
           npx sentry-cli releases new $SENTRY_RELEASE || true
