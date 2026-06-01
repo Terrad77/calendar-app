@@ -20,7 +20,7 @@ export default defineConfig(async ({ mode }: ConfigEnv): Promise<UserConfig> => 
   let sentryPluginFactory: any = null;
   if (enableSentry) {
     try {
-      // @ts-ignore - optional dev dependency, may not be installed in some environments
+      // @ts-expect-error - optional dev dependency, may not be installed in some environments
       const mod: any = await import('@sentry/vite');
       sentryPluginFactory = mod?.sentryVitePlugin ?? mod?.default?.sentryVitePlugin ?? null;
     } catch (err: any) {
