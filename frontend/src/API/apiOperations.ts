@@ -1,5 +1,10 @@
 import instance from './axiosInstance';
-import type { CalendarEvent, ColorType, EventType } from '../types/types';
+import type {
+  CalendarEvent,
+  CalendarEventPayload,
+  ColorType,
+  EventType,
+} from '../types/calendar.types';
 
 interface BackendCalendarEvent {
   id: string;
@@ -23,28 +28,14 @@ interface BackendCalendarEvent {
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
+  accessRole?: 'owner' | 'participant';
+  participantStatus?: 'pending' | 'accepted' | 'declined' | null;
 }
 
-interface CalendarEventPayload {
-  id?: string;
-  title: string;
-  description?: string;
-  startDate: string;
-  endDate: string;
-  startTime?: string;
-  endTime?: string;
-  location?: string;
-  countryCode?: string;
-  reminderTime?: string;
-  isRecurring?: boolean;
-  isPublic?: boolean;
-  completed?: boolean;
-  priority?: 'low' | 'medium' | 'high';
-  color?: ColorType;
-  colors?: ColorType[];
-  participants?: string[];
-  metadata?: Record<string, unknown>;
-  eventType?: EventType;
+interface ApiEnvelope<T> {
+  data: T;
+  meta?: Record<string, unknown>;
+  error?: string;
 }
 
 const mapBackendEventToCalendarEvent = (event: BackendCalendarEvent): CalendarEvent => {
@@ -58,6 +49,9 @@ const mapBackendEventToCalendarEvent = (event: BackendCalendarEvent): CalendarEv
     colors: event.colors,
     location: event.location ?? undefined,
     ownerId: event.userId,
+    isRecurring: event.isRecurring,
+    accessRole: event.accessRole,
+    participantStatus: event.participantStatus ?? null,
   };
 
   switch (event.eventType) {
@@ -120,9 +114,17 @@ const toBackendPayload = (event: CalendarEvent): CalendarEventPayload => ({
   eventType: event.eventType,
 });
 
-export const getCalendarEvents = async () => {
-  const { data } = await instance.get('/api/events');
+export const getCalendarEvents = async (userId?: string) => {
+  const { data } = await instance.get('/api/events', { params: userId ? { userId } : {} });
   const events = Array.isArray(data?.events) ? data.events : [];
+
+  return events.map(mapBackendEventToCalendarEvent) as CalendarEvent[];
+};
+
+export const getMyCalendarEvents = async () => {
+  const { data } =
+    await instance.get<ApiEnvelope<{ events: BackendCalendarEvent[] }>>('/api/calendar/my-events');
+  const events = Array.isArray(data?.data?.events) ? data.data.events : [];
 
   return events.map(mapBackendEventToCalendarEvent) as CalendarEvent[];
 };
@@ -140,6 +142,48 @@ export const updateCalendarEvent = async (event: CalendarEvent) => {
 export const deleteCalendarEvent = async (eventId: string) => {
   const { data } = await instance.delete(`/api/events/${eventId}`);
   return data;
+};
+
+export interface InvitationApiItem {
+  id: string;
+  eventId: string;
+  userId: string;
+  title: string;
+  startDate: string;
+  startTime: string | null;
+  organizerEmail: string;
+  status: 'pending' | 'accepted' | 'declined';
+  invitedAt: string;
+  updatedAt: string;
+}
+
+export const inviteUserToEvent = async (eventId: string, email: string) => {
+  const { data } = await instance.post<ApiEnvelope<{ invitation: InvitationApiItem | null }>>(
+    `/api/calendar/${eventId}/invite`,
+    { email }
+  );
+
+  return data.data.invitation;
+};
+
+export const getPendingInvitations = async () => {
+  const { data } = await instance.get<ApiEnvelope<{ invitations: InvitationApiItem[] }>>(
+    '/api/calendar/invitations/pending'
+  );
+
+  return Array.isArray(data.data?.invitations) ? data.data.invitations : [];
+};
+
+export const respondToInvitation = async (
+  invitationId: string,
+  status: 'accepted' | 'declined'
+) => {
+  const { data } = await instance.put<ApiEnvelope<{ invitation: InvitationApiItem | null }>>(
+    `/api/calendar/invitations/${invitationId}/respond`,
+    { status }
+  );
+
+  return data.data.invitation;
 };
 
 export const getUsers = async () => {
@@ -162,6 +206,14 @@ export const getUsers = async () => {
 
     return response;
   }
+};
+
+export const updateUser = async (
+  id: string,
+  payload: { name?: string; email?: string; role?: string }
+) => {
+  const { data } = await instance.put(`/api/users/${id}`, payload);
+  return data;
 };
 
 // Profile Management

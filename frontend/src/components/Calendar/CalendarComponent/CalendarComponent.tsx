@@ -16,8 +16,8 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core'; // dnd-kit for D&D functionality
 import { arrayMove } from '@dnd-kit/sortable';
-import type { CalendarEvent, ColorType } from '../../../types/types';
-import { TASK_MARKER_COLORS } from '../../../types/types';
+import type { CalendarEvent, ColorType } from '../../../types/calendar.types';
+import { TASK_MARKER_COLORS } from '../../../types/calendar.types';
 import { CalendarDayCell } from '../CalendarDayCellComponent/CalendarDayCellComponent';
 const DayEventsModal = lazy(() => import('../DayEventsModalComponent/DayEventsModalComponent'));
 import { TaskCardDraggable } from '../TaskCardDraggableComponent/TaskCardDraggableComponent';
@@ -255,12 +255,15 @@ export const Calendar = ({
     setEditingTask(null);
   }, []);
 
+  // Stabilize the dependency for preferred country to avoid dynamic optional-chaining
+  const userPreferredCountry = user?.preferredCountry ?? null;
+
   useEffect(() => {
-    const savedCountry = user?.preferredCountry || localStorage.getItem('preferredCountry');
+    const savedCountry = userPreferredCountry || localStorage.getItem('preferredCountry');
     if (savedCountry && savedCountry !== selectedCountry) {
       setSelectedCountry(savedCountry);
     }
-  }, [user?.preferredCountry, selectedCountry]);
+  }, [userPreferredCountry, selectedCountry]);
 
   const handleCountryChange = useCallback(
     (countryCode: string) => {

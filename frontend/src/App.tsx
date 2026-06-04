@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import React, { useEffect, useState, Suspense } from 'react';
 import WelcomeSection from './components/WelcomeSection/WelcomeSection';
 import SignUpPage from './pages/SignUpPage/SignUpPage';
@@ -9,64 +9,38 @@ const AnalyticsPage = React.lazy(() => import('./pages/AnalyticsPage/AnalyticsPa
 const ContactsPage = React.lazy(() => import('./pages/ContactsPage/ContactsPage'));
 const NotificationsPage = React.lazy(() => import('./pages/NotificationsPage/NotificationsPage'));
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage/SettingsPage'));
-// import { authenticationService } from './services/authService';
+import { useTranslation } from 'react-i18next';
 const AIAssistantDrawer = React.lazy(() =>
   import('./components/AIAssistant/AIAssistantDrawer').then((m) => ({
     default: m.AIAssistantDrawer,
   }))
 );
 import { Layout } from './components/Layout/Layout';
-import type { CalendarEvent } from './types/types';
+import type { CalendarEvent } from './types/calendar.types';
 import { useSelector } from 'react-redux';
-import { selectIsLoggedIn } from './redux/user/selectors';
+import { selectIsLoggedIn, selectIsRefreshing, selectUserId } from './redux/user/selectors';
 import { aiService } from './services/aiService';
 import { useDispatch } from 'react-redux';
-import { refreshUserToken } from './redux/user/operations';
+import { fetchUser, refreshUserToken } from './redux/user/operations';
 import type { AppDispatch } from './redux/store';
 import {
   createCalendarEvent,
   deleteCalendarEvent,
-  getCalendarEvents,
+  getMyCalendarEvents,
   updateCalendarEvent,
 } from './API/apiOperations';
+import { setTokens } from './redux/user/userSlice';
 import './App.css';
+import DotLoader from './components/DotLoader/DotLoader';
 
 const syncInFlightOperations = new Set<string>();
 
-// Protected Route wrapper component
-interface ProtectedRouteProps {
-  children: React.ReactNode;
-}
-
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const isAuthenticated = useSelector(selectIsLoggedIn);
-
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
-  }
-
-  return <>{children}</>;
-};
-
-interface PublicRouteProps {
-  children: React.ReactNode;
-}
-
-// Public Route wrapper - redirects authenticated users to calendar
-const PublicRoute = ({ children }: PublicRouteProps) => {
-  const isAuthenticated = useSelector(selectIsLoggedIn);
-
-  if (isAuthenticated) {
-    return <Navigate to="/calendar" replace />;
-  }
-
-  return <>{children}</>;
-};
-
 function App() {
+  const { t } = useTranslation();
+  const [authChecked, setAuthChecked] = useState(false);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const dispatch = useDispatch<AppDispatch>();
-  const [authChecked, setAuthChecked] = useState(false);
+  const location = useLocation();
   const [aiServiceStatus, setAiServiceStatus] = useState<{
     status: string;
     available: boolean;
@@ -75,6 +49,49 @@ function App() {
 
   const [aiError, setAiError] = useState<string | null>(null);
   const isAuthenticated = useSelector(selectIsLoggedIn);
+  const currentUserId = useSelector(selectUserId);
+  const isAnalyticsRoute = location.pathname.startsWith('/analytics');
+
+  // Protected Route wrapper - redirect to /signin if not authenticated, but wait for auth check to complete first
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    const authed = useSelector(selectIsLoggedIn);
+    const refreshing = useSelector(selectIsRefreshing);
+
+    // while we are checking auth status, don't redirect (avoid flashing to /signin)
+    if (!authChecked || refreshing) {
+      return (
+        <div className="flex h-screen w-full items-center justify-center">
+          <DotLoader text={t('verifying_session')} />
+        </div>
+      );
+    }
+    // only after authChecked === true
+    if (!authed) {
+      return <Navigate to="/signin" replace />;
+    }
+
+    return <>{children}</>;
+  };
+
+  // Public Route wrapper — avoid redirecting authenticated users before authChecked
+  const PublicRoute = ({ children }: { children: React.ReactNode }) => {
+    const authed = useSelector(selectIsLoggedIn);
+
+    // waiting to complete cheking auth status
+    if (!authChecked) {
+      return (
+        <div className="flex h-screen w-full items-center justify-center">
+          <DotLoader text={t('verifying_session')} />
+        </div>
+      );
+    }
+
+    if (authed) {
+      return <Navigate to="/calendar" replace />;
+    }
+
+    return <>{children}</>;
+  };
 
   const eventsEqual = (left: CalendarEvent, right: CalendarEvent) => {
     const leftParticipants = 'participants' in left ? left.participants : undefined;
@@ -112,13 +129,16 @@ function App() {
   };
 
   const syncEventChanges = async (previousEvents: CalendarEvent[], nextEvents: CalendarEvent[]) => {
-    const previousById = new Map(previousEvents.map((event) => [event.id, event]));
-    const nextById = new Map(nextEvents.map((event) => [event.id, event]));
+    const ownedPreviousEvents = previousEvents.filter((event) => event.ownerId === currentUserId);
+    const ownedNextEvents = nextEvents.filter((event) => event.ownerId === currentUserId);
 
-    const createdEvents = nextEvents.filter((event) => !previousById.has(event.id));
-    const deletedEvents = previousEvents.filter((event) => !nextById.has(event.id));
-    const updatedEvents = nextEvents.filter((event) => {
-      const previousEvent = previousById.get(event.id);
+    const ownedPreviousById = new Map(ownedPreviousEvents.map((event) => [event.id, event]));
+    const ownedNextById = new Map(ownedNextEvents.map((event) => [event.id, event]));
+
+    const createdEvents = ownedNextEvents.filter((event) => !ownedPreviousById.has(event.id));
+    const deletedEvents = ownedPreviousEvents.filter((event) => !ownedNextById.has(event.id));
+    const updatedEvents = ownedNextEvents.filter((event) => {
+      const previousEvent = ownedPreviousById.get(event.id);
       return previousEvent ? !eventsEqual(previousEvent, event) : false;
     });
 
@@ -165,8 +185,10 @@ function App() {
     });
   };
 
-  // AI Service health check
+  // AI Service health check — run only after initial auth check completes
   useEffect(() => {
+    if (!authChecked || !isAuthenticated || isAnalyticsRoute) return;
+
     const checkAIService = async () => {
       try {
         const health = await aiService.healthCheck();
@@ -194,11 +216,11 @@ function App() {
     const interval = setInterval(checkAIService, 5 * 60 * 1000); // 5 minutes
 
     return () => clearInterval(interval);
-  }, []);
+  }, [authChecked, isAnalyticsRoute, isAuthenticated]);
 
   // Check AI service on authentication change
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isAnalyticsRoute) {
       const checkAIOnAuth = async () => {
         const health = await aiService.healthCheck();
         setAiServiceStatus(health);
@@ -208,7 +230,7 @@ function App() {
       };
       checkAIOnAuth();
     }
-  }, [isAuthenticated]);
+  }, [isAnalyticsRoute, isAuthenticated]);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -220,7 +242,7 @@ function App() {
       }
 
       try {
-        const loadedEvents = await getCalendarEvents();
+        const loadedEvents = await getMyCalendarEvents();
         setEvents(loadedEvents);
       } catch (error) {
         console.error('Failed to load calendar events:', error);
@@ -228,15 +250,27 @@ function App() {
     };
 
     void loadEvents();
-  }, [isAuthenticated, authChecked]);
+  }, [isAuthenticated, authChecked, currentUserId]);
 
   // On app mount, try to refresh token if a refresh token exists
   useEffect(() => {
     const tryRefresh = async () => {
+      const accessToken = localStorage.getItem('accessToken');
       const refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
+
+      if (accessToken && refreshToken) {
+        dispatch(setTokens({ accessToken, refreshToken }));
+      }
+
+      if (accessToken) {
         try {
-          await dispatch(refreshUserToken());
+          await dispatch(fetchUser()).unwrap();
+        } catch (_e) {
+          // ignore - reducer handles failures
+        }
+      } else if (refreshToken) {
+        try {
+          await dispatch(refreshUserToken()).unwrap();
         } catch (_e) {
           // ignore - reducer handles failures
         }
@@ -265,6 +299,10 @@ function App() {
 
   // Notification component for AI service status
   const AIServiceNotification = () => {
+    if (isAnalyticsRoute) {
+      return null;
+    }
+
     if (!aiError && (!aiServiceStatus || aiServiceStatus.available)) {
       return null;
     }
@@ -285,7 +323,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <AIServiceNotification />
+      {isAuthenticated && !isAnalyticsRoute && <AIServiceNotification />}
       <Routes>
         {/* Home route with conditional rendering */}
         <Route

@@ -6,7 +6,7 @@ import { selectIsLoading } from '../../redux/user/selectors';
 import DotLoader from '../DotLoader/DotLoader';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
-import { ModalProps } from '../../types/types';
+import type { ModalProps } from '../../types/auth.types';
 import type { AppDispatch } from '../../redux/types';
 
 export default function LogOutModal({ isOpen, onClose }: ModalProps) {

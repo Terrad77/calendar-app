@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { styled } from '@stitches/react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import type { CalendarEvent } from '../../../types/types';
+import type { CalendarEvent } from '../../../types/calendar.types';
 import { authenticationService } from '../../../services/authService';
 
 const TaskMarker = styled('span', {
@@ -44,6 +44,17 @@ const TaskCard = styled('div', {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  },
+  '&[data-compact="true"]': {
+    padding: '3px 6px',
+    marginBottom: '4px',
+    borderRadius: '6px',
+    fontSize: '0.64rem',
+    lineHeight: '1.1',
+
+    '& .task-title': {
+      lineHeight: '1.1',
+    },
   },
   variants: {
     eventType: {

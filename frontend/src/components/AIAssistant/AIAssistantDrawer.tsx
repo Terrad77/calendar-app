@@ -11,8 +11,8 @@ import type {
   ChatMessage,
   ColorType,
   MeetingEvent,
-} from '../../types/types';
-import { convertToCalendarColor } from '../../types/types';
+} from '../../types/calendar.types';
+import { convertToCalendarColor } from '../../types/calendar.types';
 import { aiService } from '../../services/aiService';
 import { generateUniqueId } from '../../utils/idGenerator';
 import Logo from '../Logo/Logo';
@@ -93,6 +93,31 @@ export const AIAssistantDrawer = ({
     if (isOpen && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 300);
     }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || typeof document === 'undefined') {
+      return;
+    }
+
+    const { body, documentElement } = document;
+    const previousBodyOverflow = body.style.overflow;
+    const previousDocumentOverflow = documentElement.style.overflow;
+    const previousBodyPaddingRight = body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - documentElement.clientWidth;
+
+    body.style.overflow = 'hidden';
+    documentElement.style.overflow = 'hidden';
+
+    if (scrollbarWidth > 0) {
+      body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
+    return () => {
+      body.style.overflow = previousBodyOverflow;
+      documentElement.style.overflow = previousDocumentOverflow;
+      body.style.paddingRight = previousBodyPaddingRight;
+    };
   }, [isOpen]);
 
   useEffect(() => {

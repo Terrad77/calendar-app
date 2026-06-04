@@ -6,7 +6,7 @@ import {
   TASK_MARKER_COLORS,
   type CalendarEvent,
   TaskEvent,
-} from '../../../types/types';
+} from '../../../types/calendar.types';
 import { generateUniqueId } from '../../../utils/idGenerator';
 
 const isPastDate = (date?: string | null) => {
@@ -391,6 +391,44 @@ const InputStack = styled('div', {
   gap: '14px',
 });
 
+const RecurringToggle = styled('label', {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  padding: '12px 14px',
+  borderRadius: '14px',
+  border: '1px solid var(--surface-calendar-control-border)',
+  backgroundColor: 'var(--surface-calendar-control-bg)',
+  color: 'var(--surface-calendar-control-text)',
+  cursor: 'pointer',
+});
+
+const RecurringCheckbox = styled('input', {
+  width: '16px',
+  height: '16px',
+  accentColor: 'var(--color-accent)',
+  margin: 0,
+  flexShrink: 0,
+});
+
+const RecurringText = styled('span', {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2px',
+});
+
+const RecurringTitle = styled('span', {
+  fontSize: '0.9rem',
+  fontWeight: 600,
+  lineHeight: 1.2,
+});
+
+const RecurringHint = styled('span', {
+  fontSize: '0.78rem',
+  color: 'var(--surface-calendar-muted)',
+  lineHeight: 1.35,
+});
+
 // Note: label text and button copy are produced via i18n `t()` calls in the component.
 // Removed unused local label helpers to satisfy TypeScript no-unused-vars checks.
 
@@ -415,6 +453,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
 }) => {
   const [title, setTitle] = useState(initialTask?.title || '');
   const [description, setDescription] = useState(initialTask?.description || '');
+  const [isRecurring, setIsRecurring] = useState(Boolean(initialTask?.isRecurring));
   const [selectedColors, setSelectedColors] = useState<ColorType[]>(
     initialTask?.colors && initialTask.colors.length > 0 ? initialTask.colors : ['default']
   );
@@ -422,6 +461,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
   useEffect(() => {
     setTitle(initialTask?.title || '');
     setDescription(initialTask?.description || '');
+    setIsRecurring(Boolean(initialTask?.isRecurring));
     setSelectedColors(
       initialTask?.colors && initialTask.colors.length > 0 ? initialTask.colors : ['default']
     );
@@ -462,6 +502,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       date: taskDate,
       eventType: 'task',
       colors: selectedColors.length > 0 ? selectedColors : ['default'],
+      isRecurring,
       completed: initialTask && 'completed' in initialTask ? initialTask.completed : false,
       priority: initialTask && 'priority' in initialTask ? initialTask.priority : 'medium',
       createdAt: initialTask?.createdAt || new Date().toISOString(),
@@ -469,7 +510,16 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     };
 
     onSave(taskToSave);
-  }, [title, description, selectedColors, initialTask, initialDate, onSave, isCreatingInPast]);
+  }, [
+    title,
+    description,
+    selectedColors,
+    isRecurring,
+    initialTask,
+    initialDate,
+    onSave,
+    isCreatingInPast,
+  ]);
 
   // --- logic for btn "Delete"---
   const handleDeleteClick = useCallback(() => {
@@ -495,6 +545,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       date: initialTask.date,
       eventType: 'task',
       colors: selectedColors.length > 0 ? selectedColors : ['default'],
+      isRecurring,
       completed: initialTask && 'completed' in initialTask ? initialTask.completed : false,
       priority: initialTask && 'priority' in initialTask ? initialTask.priority : 'medium',
       createdAt: new Date().toISOString(),
@@ -502,7 +553,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     };
 
     onDuplicate(copiedTask);
-  }, [initialTask, onDuplicate, title, description, selectedColors]);
+  }, [initialTask, onDuplicate, title, description, selectedColors, isRecurring]);
 
   // --- logic for color selector ---
   const handleColorToggle = useCallback((color: ColorType) => {
@@ -576,6 +627,19 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
             aria-label="Task description input"
           />
         </FieldGroup>
+
+        <RecurringToggle htmlFor="task-recurring">
+          <RecurringCheckbox
+            id="task-recurring"
+            type="checkbox"
+            checked={isRecurring}
+            onChange={(e) => setIsRecurring(e.target.checked)}
+          />
+          <RecurringText>
+            <RecurringTitle>{t('label_recurring')}</RecurringTitle>
+            <RecurringHint>{t('label_recurring_hint')}</RecurringHint>
+          </RecurringText>
+        </RecurringToggle>
       </InputStack>
 
       <FieldGroup>

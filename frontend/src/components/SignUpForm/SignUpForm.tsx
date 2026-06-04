@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next';
 import SignUpModal from '../SignUpModal/SignUpModal';
 import Modal from '../Modal/Modal.js';
 import { signUpSchema } from '../../schemas/validationSchemas';
-import { SignUpFormData, RegisterError } from '../../types/types';
+import type { RegisterError, SignUpFormData } from '../../types/auth.types';
 import toast from 'react-hot-toast';
 import toastMaker from '../../utils/toastMaker/toastMaker';
 import { AppDispatch } from '../../redux/types';

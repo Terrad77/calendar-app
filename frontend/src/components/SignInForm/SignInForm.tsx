@@ -7,7 +7,7 @@ import GoogleAuthBtn from '../GoogleAuthBtn/GoogleAuthBtn';
 import { selectIsLoading } from '../../redux/user/selectors';
 import DotLoader from '../DotLoader/DotLoader';
 import { signInSchema } from '../../schemas/validationSchemas';
-import { SignInFormData } from '../../types/types';
+import type { SignInFormData } from '../../types/auth.types';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import toastMaker from '../../utils/toastMaker/toastMaker';

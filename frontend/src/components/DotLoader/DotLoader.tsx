@@ -1,5 +1,5 @@
 import css from '../DotLoader/DotLoader.module.css';
-import type { DotLoaderProps } from '../../types/types';
+import type { DotLoaderProps } from '../../types/calendar.types';
 
 export default function DotLoader({ text }: DotLoaderProps) {
   return (

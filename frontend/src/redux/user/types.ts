@@ -1,20 +1,5 @@
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatarURL?: string;
-  theme?: string;
-  language?: string;
-  preferredCountry?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  token: string;
-  refreshToken: string;
-}
+export type { AuthPayload, User } from '../../types/auth.types';
+export type { UserState } from './user.types';
 
 export interface UserInfo {
   email: string;

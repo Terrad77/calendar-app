@@ -7,7 +7,7 @@ import Logo from '../Logo/Logo';
 import DotLoader from '../DotLoader/DotLoader';
 import { useSelector } from 'react-redux';
 import { selectIsLoading } from '../../redux/user/selectors';
-import { ModalProps } from '../../types/types';
+import type { ModalProps } from '../../types/auth.types';
 import { useTranslation } from 'react-i18next';
 
 export default function Modal({ children, isOpen, onClose, btnClassName, showLogo }: ModalProps) {
@@ -44,7 +44,7 @@ export default function Modal({ children, isOpen, onClose, btnClassName, showLog
     <div className={css.backdrop} onClick={onClose}>
       {isLoading && <DotLoader text={t('loading')} />}
       <div className={css.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={css.modalHeader}>
+        <div className={clsx(css.modalHeader, !showLogo && css.modalHeaderNoLogo)}>
           {showLogo && (
             <div className={css.logoContainer}>
               <Logo />

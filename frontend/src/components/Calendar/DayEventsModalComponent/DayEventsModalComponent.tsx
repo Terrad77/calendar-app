@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import Modal from '../../Modal/Modal';
 import DotLoader from '../../DotLoader/DotLoader';
-import type { CalendarEvent } from '../../../types/types';
+import type { CalendarEvent } from '../../../types/calendar.types';
 import { useLanguage } from '../../../hooks/useLanguage';
 
 type Props = {

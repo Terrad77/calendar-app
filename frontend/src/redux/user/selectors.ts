@@ -1,5 +1,5 @@
 import { RootState } from '../store';
-import type { UserState } from './userSlice';
+import type { UserState } from './user.types';
 
 const selectUserState = (state: RootState): UserState => state.user as unknown as UserState;
 
@@ -22,3 +22,6 @@ export const selectIsLoading = (state: RootState): boolean => selectUserState(st
 export const selectError = (state: RootState): string | null => selectUserState(state).error;
 
 export const selectAccessToken = (state: RootState): string | null => selectUserState(state).token;
+
+export const selectIsRefreshing = (state: RootState): boolean =>
+  selectUserState(state).isRefreshing;

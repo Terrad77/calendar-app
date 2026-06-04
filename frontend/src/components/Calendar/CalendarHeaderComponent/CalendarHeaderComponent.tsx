@@ -2,7 +2,7 @@ import { styled } from '@stitches/react';
 import { useTranslation } from 'react-i18next';
 import 'dayjs/locale/uk';
 import 'dayjs/locale/en';
-import { type CalendarHeaderProps } from '../../../types/types';
+import type { CalendarHeaderProps } from '../../../types/calendar.types';
 import Icon from '../../Icon';
 import SearchInput from '../SearchInputComponent/SearchInputComponent';
 import { useMemo } from 'react';

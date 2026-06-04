@@ -1,4 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import type { AuthPayload, User } from '../../types/auth.types';
+import type { UserState } from './user.types';
 import {
   registerUser,
   logIn,
@@ -10,54 +12,15 @@ import {
   saveLanguageAndCountry,
 } from './operations';
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatarURL?: string;
-  theme?: string;
-  language?: string;
-  preferredCountry?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface UserState {
-  user: User | null;
-  token: string | null;
-  refreshToken: string | null;
-  isLoggedIn: boolean;
-  isRefreshing: boolean;
-  isLoading: boolean;
-  error: string | null;
-}
-
 const initialState: UserState = {
   user: null,
   token: localStorage.getItem('accessToken'),
   refreshToken: localStorage.getItem('refreshToken'),
-  isLoggedIn: !!localStorage.getItem('accessToken'),
-  isRefreshing: false,
+  isLoggedIn: false,
+  isRefreshing: !!(localStorage.getItem('accessToken') || localStorage.getItem('refreshToken')), // Изменено
   isLoading: false,
   error: null,
 };
-
-type AuthPayload = {
-  user: User;
-  token: string;
-  refreshToken: string;
-};
-
-// --- Helpers ---
-// const handlePending = (state: UserState) => {
-//   state.isLoading = true;
-//   state.error = null;
-// };
-
-// const handleRejected = (state: UserState, action: any) => {
-//   state.isLoading = false;
-//   state.error = action.payload || 'An error occurred';
-// };
 
 // --- Slice ---
 const userSlice = createSlice({
@@ -78,7 +41,7 @@ const userSlice = createSlice({
     setTokens: (state, action: { payload: { accessToken: string; refreshToken: string } }) => {
       state.token = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
-      state.isLoggedIn = true;
+      // state.isLoggedIn = true; // Удалено
       localStorage.setItem('accessToken', action.payload.accessToken);
       localStorage.setItem('refreshToken', action.payload.refreshToken);
     },
@@ -182,14 +145,14 @@ const userSlice = createSlice({
       // Fetch User
       .addCase(fetchUser.pending, (state) => {
         state.isLoading = true;
+        state.isRefreshing = true;
         state.error = null;
       })
       .addCase(fetchUser.fulfilled, (state, action: PayloadAction<User>) => {
         state.user = action.payload;
         state.isLoading = false;
-        state.isRefreshing = false;
+        state.isRefreshing = false; // if success delete flag waiting
         state.isLoggedIn = true;
-
         // Save user preferences to localStorage
         if (action.payload.language) {
           localStorage.setItem('language', action.payload.language);
@@ -200,7 +163,14 @@ const userSlice = createSlice({
       })
       .addCase(fetchUser.rejected, (state, action: PayloadAction<string | undefined>) => {
         state.isLoading = false;
+        state.isRefreshing = false; // if error delete flag waiting
+        state.isLoggedIn = false;
+        state.user = null;
+        state.token = null;
+        state.refreshToken = null;
         state.error = action.payload || 'Failed to fetch user';
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
       })
 
       // Change Password

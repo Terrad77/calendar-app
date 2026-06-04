@@ -8,8 +8,8 @@ import type {
   MeetingEvent,
   ColorType,
   AIResponse,
-} from '../../types/types';
-import { convertToCalendarColor } from '../../types/types';
+} from '../../types/calendar.types';
+import { convertToCalendarColor } from '../../types/calendar.types';
 import { aiService } from '../../services/aiService';
 import { generateUniqueId } from '../../utils/idGenerator';
 import { useTranslation } from 'react-i18next';

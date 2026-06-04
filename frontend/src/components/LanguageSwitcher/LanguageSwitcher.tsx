@@ -11,7 +11,7 @@ export const LanguageSwitcher = () => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useAppDispatch();
 
-  const handleLanguageChange = (languageCode: string) => {
+  const handleLanguageChange = (languageCode: 'en' | 'uk') => {
     changeLanguage(languageCode);
 
     // If user is logged in, save to profile

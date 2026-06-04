@@ -1,7 +1,7 @@
 import toast from 'react-hot-toast';
 import css from '../toastMaker/toastMaker.module.css';
 import Icon from '../../components/Icon';
-import type { IconName } from '../../types/types';
+import type { IconName } from '../../types/calendar.types';
 
 type ToastStatus = 'success' | 'error';
 

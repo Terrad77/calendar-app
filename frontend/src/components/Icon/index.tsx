@@ -1,6 +1,6 @@
 import { type FC } from 'react';
 import { styled } from '@stitches/react';
-import { IconProps } from '../../types/types';
+import type { IconProps } from '../../types/calendar.types';
 // Use lucide-react icons (ESM, tree-shakeable)
 import {
   ChevronUp,

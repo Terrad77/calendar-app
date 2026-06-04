@@ -1,12 +1,8 @@
+import type { User } from '../types/auth.types';
+
 const API_URL = import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:3001';
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type { User };
 
 export interface AuthTokens {
   accessToken: string;
@@ -208,13 +204,15 @@ class AuthenticationService {
    * Make authenticated request
    */
   async authenticatedFetch(endpoint: string, options: RequestInit = {}): Promise<Response> {
-    if (!this.accessToken) {
+    const accessToken = this.getAccessToken();
+
+    if (!accessToken) {
       throw new Error('Not authenticated');
     }
 
     const headers = {
       ...options.headers,
-      Authorization: `Bearer ${this.accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     };
 
@@ -228,7 +226,8 @@ class AuthenticationService {
       const refreshed = await this.refreshAccessToken();
 
       if (refreshed) {
-        headers.Authorization = `Bearer ${this.accessToken}`;
+        const refreshedAccessToken = this.getAccessToken();
+        headers.Authorization = `Bearer ${refreshedAccessToken}`;
         response = await fetch(`${API_URL}${endpoint}`, {
           ...options,
           headers,
@@ -245,14 +244,14 @@ class AuthenticationService {
    * Check if user is authenticated
    */
   isAuthenticated(): boolean {
-    return !!this.accessToken && !!this.user;
+    return !!this.getAccessToken();
   }
 
   /**
    * Get access token
    */
   getAccessToken(): string | null {
-    return this.accessToken;
+    return this.accessToken || localStorage.getItem('accessToken');
   }
 
   /**
@@ -287,6 +286,14 @@ class AuthenticationService {
    */
   clearAccessToken(): void {
     this.clearAuth();
+  }
+
+  /**
+   * Set user in memory and persist to storage. Useful after profile updates.
+   */
+  setUser(user: User): void {
+    this.user = user;
+    this.saveToStorage();
   }
 
   /**

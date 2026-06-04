@@ -1,4 +1,4 @@
-import type { CalendarEvent, AIResponse, ConversationMessage } from '../types/types';
+import type { AIResponse, CalendarEvent, ConversationMessage } from '../types/calendar.types';
 import { authenticationService } from './authService';
 import { getAppLanguage } from '../helpers/appLanguage';
 
@@ -278,7 +278,9 @@ class AIService {
         message: data.message,
       };
     } catch (error) {
-      console.error('AI service health check failed:', error);
+      // Use debug-level logging for health check failures to avoid noisy error logs
+      // during normal dev flows when the backend may be offline.
+      console.debug('AI service health check failed:', error);
       this.isCheckingHealth = false;
       return {
         status: 'error',
