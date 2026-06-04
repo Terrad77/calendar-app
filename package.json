@@ -13,7 +13,8 @@
     "test:watch": "cross-env FORCE_COLOR=1 concurrently --names \"FRONT,BACK\" --prefix-colors \"cyan,magenta\" \"npm run test:watch --prefix frontend\" \"npm run test:watch --prefix backend\"",
     "test:frontend": "npm run test --prefix frontend",
     "test:backend": "npm run test --prefix backend",
-    "build": "npm run build --prefix frontend && npm run build --prefix backend"
+    "build": "npm run build --prefix frontend && npm run build --prefix backend",
+    "prepare": "husky"
   },
   "repository": {
     "type": "git",
