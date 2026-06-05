@@ -67,8 +67,31 @@ npm run build --prefix frontend
 # Сборка backend
 npm run build --prefix backend
 
+# Применить миграции БД
+npm run db:migrate --prefix backend
+
 # Запуск backend из production-сборки
 npm run start --prefix backend
+```
+
+## Render deployment
+
+Для Render лучше запускать миграции до старта сервера, например через Build Command:
+
+```bash
+npm run db:migrate --prefix backend && npm run build
+```
+
+Если сервис деплоится только из `backend`, можно использовать:
+
+```bash
+npm run db:migrate && npm run build
+```
+
+Если Render начинает приложение раньше миграций, вынесите `npm run db:migrate` в начало start command через `&&`:
+
+```bash
+npm run db:migrate && node dist/server.js
 ```
 
 ## Настройка Google OAuth (локально и для продакшн)

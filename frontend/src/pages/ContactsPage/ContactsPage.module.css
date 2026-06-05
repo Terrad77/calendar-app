@@ -44,6 +44,45 @@
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 14%, transparent);
 }
 
+.eventPicker {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.eventPickerLabel {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.eventSelect {
+  width: 100%;
+  border: 1px solid var(--color-border-input);
+  border-radius: 1rem;
+  background: var(--color-bg-input);
+  padding: 0.95rem 1rem;
+  font-size: 0.95rem;
+  color: var(--color-text-input);
+  outline: none;
+}
+
+.eventSelect:focus {
+  border-color: color-mix(in srgb, var(--color-accent) 34%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 14%, transparent);
+}
+
+.eventSelect:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.eventPickerHint {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
 .contactsGrid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));

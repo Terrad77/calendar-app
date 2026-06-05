@@ -3,7 +3,6 @@ import { styled } from '@stitches/react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { CalendarEvent } from '../../../types/calendar.types';
-import { authenticationService } from '../../../services/authService';
 
 const TaskMarker = styled('span', {
   width: '12px',
@@ -120,6 +119,8 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
   isDragging: propIsDragging,
   compact,
 }) => {
+  const isBusy = event.isPrivate === true && event.accessRole === 'shared';
+
   const {
     attributes,
     listeners,
@@ -135,7 +136,7 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
       description: event.description,
       countryCode: event.countryCode,
     },
-    disabled: event.eventType === 'holiday', // off D&D for Holidays
+    disabled: isBusy || event.eventType === 'holiday',
   });
 
   const style = {
@@ -146,103 +147,116 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
   const renderIsDragging = propIsDragging !== undefined ? propIsDragging : dndIsDragging;
 
   const finalCustomCursor = useMemo(() => {
-    if (event.eventType === 'holiday') {
+    if (isBusy || event.eventType === 'holiday') {
       return 'default';
     }
     if (renderIsDragging) {
       return 'grabbing';
     }
     return propCustomCursor || 'pointer';
-  }, [event.eventType, renderIsDragging, propCustomCursor]);
+  }, [isBusy, event.eventType, renderIsDragging, propCustomCursor]);
 
-  // try to determine current user id: from loaded user or from JWT access token
-  const currentUserId = useMemo(() => {
-    const loaded = authenticationService.getUser && authenticationService.getUser();
-    if (loaded && loaded.id) return loaded.id;
-
-    const token = authenticationService.getAccessToken && authenticationService.getAccessToken();
-    if (!token) return null;
-
-    try {
-      const payload = token.split('.')[1];
-      // add padding if necessary
-      const pad = payload.length % 4;
-      const normalized = payload + (pad === 2 ? '==' : pad === 3 ? '=' : pad === 1 ? '===' : '');
-      const json = JSON.parse(atob(normalized));
-      return json.userId || json.userID || json.user || null;
-    } catch (_e) {
-      return null;
-    }
-  }, []);
+  const busyStyle: React.CSSProperties = isBusy
+    ? {
+        backgroundColor: 'var(--surface-calendar-outside-bg)',
+        borderColor: '#9ca3af',
+        color: 'var(--surface-calendar-muted)',
+        fontStyle: 'italic',
+        opacity: 0.9,
+      }
+    : {};
 
   return (
     <TaskCard
       ref={setNodeRef}
-      style={style}
-      {...listeners}
+      style={{ ...style, ...busyStyle }}
+      {...(isBusy ? {} : listeners)}
       {...attributes}
       eventType={
         event.eventType === 'meeting' || event.eventType === 'reminder' ? 'task' : event.eventType
       }
       isDragging={renderIsDragging}
       customCursor={finalCustomCursor}
-      onClick={onCardClick !== undefined ? (e) => onCardClick(e, event) : undefined}
+      onClick={!isBusy && onCardClick !== undefined ? (e) => onCardClick(e, event) : undefined}
       data-compact={compact ? 'true' : 'false'}
     >
-      {event.ownerId && currentUserId && currentUserId !== event.ownerId ? (
-        <span
-          className="foreignBadge"
-          style={{
-            fontSize: '0.6rem',
-            color: 'var(--surface-calendar-subtle)',
-            position: 'absolute',
-            right: '8px',
-            top: '6px',
-            background: 'transparent',
-          }}
-        >
-          Чужое
+      {isBusy ? (
+        <span className="task-title" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ flexShrink: 0 }}
+          >
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          Busy
         </span>
-      ) : null}
-      {event.eventType === 'task' ? (
-        <div style={{ display: 'flex', gap: '4px' }}>
-          {/* event.colors undefined for tasks, if has no color */}
-          {(event.colors || ['default']).slice(0, 3).map((color, idx) => (
-            <TaskMarker key={idx} color={color} />
-          ))}
-        </div>
-      ) : null}
+      ) : (
+        <>
+          {event.eventType === 'task' ? (
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {(event.colors || ['default']).slice(0, 3).map((color, idx) => (
+                <TaskMarker key={idx} color={color} />
+              ))}
+            </div>
+          ) : null}
 
-      <span className="task-title">{event.title}</span>
+          <span className="task-title">{event.title}</span>
 
-      {/* description preview (single line) only for tasks when not in compact mode */}
-      {event.eventType === 'task' && !compact && event.description && (
-        <p
-          style={{
-            fontSize: '0.66rem',
-            color: 'var(--surface-calendar-subtle)',
-            marginTop: '4px',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            marginBottom: 0,
-          }}
-        >
-          {String(event.description).split('\n')[0]}
-        </p>
-      )}
+          {/* description preview (single line) only for tasks when not in compact mode */}
+          {event.eventType === 'task' && !compact && event.description && (
+            <p
+              style={{
+                fontSize: '0.66rem',
+                color: 'var(--surface-calendar-subtle)',
+                marginTop: '4px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                marginBottom: 0,
+              }}
+            >
+              {String(event.description).split('\n')[0]}
+            </p>
+          )}
 
-      {/*country code only for holidays */}
-      {event.eventType === 'holiday' && event.countryCode && (
-        <p
-          style={{
-            fontSize: '0.66rem',
-            color: 'var(--surface-calendar-holiday-text)',
-            marginTop: '4px',
-          }}
-        >
-          ({event.countryCode})
-        </p>
+          {/* country code only for holidays */}
+          {event.eventType === 'holiday' && event.countryCode && (
+            <p
+              style={{
+                fontSize: '0.66rem',
+                color: 'var(--surface-calendar-holiday-text)',
+                marginTop: '4px',
+              }}
+            >
+              ({event.countryCode})
+            </p>
+          )}
+
+          {/* owner name for shared non-private events (non-compact only) */}
+          {!compact && event.accessRole === 'shared' && event.ownerInfo?.name && (
+            <p
+              style={{
+                fontSize: '0.6rem',
+                color: 'var(--surface-calendar-muted)',
+                marginTop: '2px',
+                marginBottom: 0,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {event.ownerInfo.name}
+            </p>
+          )}
+        </>
       )}
     </TaskCard>
   );

@@ -1,8 +1,15 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import instance from '../../API/axiosInstance';
 import toastMaker from '../../utils/toastMaker/toastMaker';
+import { authenticationService } from '../../services/authService';
 import type { RootState, AppDispatch } from '../types/storeTypes';
 import type { User, UserInfo, RegisterInfo, UserData, AxiosError } from './types';
+
+export type AuthErrorPayload = {
+  message: string;
+  shouldLogout: boolean;
+  status?: number;
+};
 
 // --- Helpers to manage auth headers ---
 const setAuthHeader = (token: string) => {
@@ -22,6 +29,8 @@ export const logIn = createAsyncThunk<
     const { data } = await instance.post('/api/auth/login', userInfo);
 
     setAuthHeader(data.tokens.accessToken);
+    localStorage.setItem('accessToken', data.tokens.accessToken);
+    localStorage.setItem('refreshToken', data.tokens.refreshToken);
     return {
       user: data.user,
       token: data.tokens.accessToken,
@@ -45,6 +54,8 @@ export const registerUser = createAsyncThunk<
   try {
     const { data } = await instance.post('/api/auth/register', userInfo);
     setAuthHeader(data.tokens.accessToken);
+    localStorage.setItem('accessToken', data.tokens.accessToken);
+    localStorage.setItem('refreshToken', data.tokens.refreshToken);
     return {
       user: data.user,
       token: data.tokens.accessToken,
@@ -80,8 +91,10 @@ export const logOut = createAsyncThunk<
       await instance.post('/api/auth/logout', { refreshToken });
     }
     clearAuthHeader();
+    authenticationService.clearAccessToken();
   } catch (error: unknown) {
     clearAuthHeader();
+    authenticationService.clearAccessToken();
     const msg = (error as AxiosError).message || 'Logout failed';
     return thunkAPI.rejectWithValue(msg);
   }
@@ -105,6 +118,8 @@ export const refreshUserToken = createAsyncThunk<
   try {
     const { data } = await instance.post('/api/auth/refresh', { refreshToken });
     setAuthHeader(data.tokens.accessToken);
+    localStorage.setItem('accessToken', data.tokens.accessToken);
+    localStorage.setItem('refreshToken', data.tokens.refreshToken);
 
     const userResponse = await instance.get('/api/auth/me');
     return {
@@ -125,17 +140,72 @@ export const refreshUserToken = createAsyncThunk<
 export const fetchUser = createAsyncThunk<
   User,
   void,
-  { state: RootState; dispatch: AppDispatch; rejectValue: string }
+  { state: RootState; dispatch: AppDispatch; rejectValue: AuthErrorPayload }
 >('user/fetchUser', async (_, thunkAPI) => {
   try {
     const { data } = await instance.get('/api/auth/me');
     return data.user;
   } catch (error: unknown) {
-    const msg =
-      (error as AxiosError).response?.data?.message ||
-      (error as AxiosError).message ||
-      'Failed to fetch user';
-    return thunkAPI.rejectWithValue(msg);
+    const axiosError = error as AxiosError;
+    const status = axiosError.response?.status;
+    const message =
+      axiosError.response?.data?.message || axiosError.message || 'Failed to fetch user';
+
+    if (status === 403) {
+      toastMaker(message || 'Account not verified. Please verify your email.', 'error');
+      return thunkAPI.rejectWithValue({ message, shouldLogout: true, status });
+    }
+
+    if (status === 401) {
+      return thunkAPI.rejectWithValue({ message, shouldLogout: false, status });
+    }
+
+    return thunkAPI.rejectWithValue({ message, shouldLogout: false, status });
+  }
+});
+
+export const restoreSession = createAsyncThunk<
+  void,
+  void,
+  { state: RootState; dispatch: AppDispatch }
+>('user/restoreSession', async (_, thunkAPI) => {
+  const accessToken = localStorage.getItem('accessToken');
+  const refreshToken = localStorage.getItem('refreshToken');
+
+  if (!accessToken && !refreshToken) {
+    return;
+  }
+
+  if (accessToken && refreshToken) {
+    thunkAPI.dispatch({
+      type: 'user/setTokens',
+      payload: { accessToken, refreshToken },
+    });
+    setAuthHeader(accessToken);
+  }
+
+  if (accessToken) {
+    try {
+      await thunkAPI.dispatch(fetchUser()).unwrap();
+      return;
+    } catch (error) {
+      const payload = error as AuthErrorPayload | undefined;
+
+      if (payload?.shouldLogout || (payload?.status && payload.status !== 401)) {
+        return;
+      }
+    }
+  }
+
+  if (refreshToken) {
+    try {
+      await thunkAPI.dispatch(refreshUserToken()).unwrap();
+      return;
+    } catch {
+      thunkAPI.dispatch({ type: 'user/clearCredentials' });
+      clearAuthHeader();
+      authenticationService.clearAccessToken();
+    }
   }
 });
 

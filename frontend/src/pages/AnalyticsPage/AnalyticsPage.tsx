@@ -2,9 +2,10 @@ import { useTranslation } from 'react-i18next';
 import { NavigationPageShell } from '../../components/NavigationPageShell/NavigationPageShell';
 import styles from './AnalyticsPage.module.css';
 import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authenticationService } from '../../services/authService';
 import dayjs from 'dayjs';
-import type { CalendarEvent } from '../../types/types';
+import type { CalendarEvent } from '../../types/calendar.types';
 import Modal from '../../components/Modal/Modal';
 import DotLoader from '../../components/DotLoader/DotLoader';
 import { TaskInputForm } from '../../components/Calendar/TaskInputFormComponent/TaskInputFormComponent';
@@ -59,17 +60,18 @@ export default function AnalyticsPage() {
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
-  const API = import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:3001';
+  const navigate = useNavigate();
+  const isAuth = authenticationService.isAuthenticated();
 
   useEffect(() => {
     const fetchOverview = async () => {
       try {
-        const headers: Record<string, string> = {};
-        const token = authenticationService.getAccessToken();
-        if (token) headers.Authorization = `Bearer ${token}`;
+        const res = await authenticationService.authenticatedFetch('/api/analytics/overview', {
+          method: 'GET',
+        });
 
-        const res = await fetch(`${API}/api/analytics/overview`, { headers });
         if (res.ok) setOverview(await res.json());
+        else throw new Error(`HTTP ${res.status}`);
       } catch (e) {
         if (import.meta.env.DEV) console.error('Failed to load analytics overview', e);
         toastMaker(t('analytics_error_overview', { ns: 'common' }), 'error');
@@ -79,12 +81,12 @@ export default function AnalyticsPage() {
     const fetchTrends = async () => {
       setTrendsLoading(true);
       try {
-        const headers: Record<string, string> = {};
-        const token = authenticationService.getAccessToken();
-        if (token) headers.Authorization = `Bearer ${token}`;
+        const res = await authenticationService.authenticatedFetch('/api/analytics/trends?days=7', {
+          method: 'GET',
+        });
 
-        const res = await fetch(`${API}/api/analytics/trends?days=7`, { headers });
         if (res.ok) setTrends(await res.json());
+        else throw new Error(`HTTP ${res.status}`);
       } catch (e) {
         if (import.meta.env.DEV) console.error('Failed to load analytics trends', e);
         toastMaker(t('analytics_error_trends', { ns: 'common' }), 'error');
@@ -93,9 +95,14 @@ export default function AnalyticsPage() {
       }
     };
 
-    fetchOverview();
-    fetchTrends();
-  }, [API, t]);
+    // Only fetch analytics when the authentication service reports a fully
+    // authenticated user (has token + loaded user). This avoids noisy "Not
+    // authenticated" errors when tokens exist but user profile isn't initialized.
+    if (isAuth) {
+      fetchOverview();
+      fetchTrends();
+    }
+  }, [t, isAuth]);
 
   const maxValue = trends.length ? Math.max(...trends.map((p) => p.value)) : 0;
 
@@ -106,11 +113,11 @@ export default function AnalyticsPage() {
       setSelectedDayEvents([]);
 
       try {
-        const headers: Record<string, string> = {};
-        const token = authenticationService.getAccessToken();
-        if (token) headers.Authorization = `Bearer ${token}`;
+        const res = await authenticationService.authenticatedFetch(
+          `/api/analytics/events?date=${date}`,
+          { method: 'GET' }
+        );
 
-        const res = await fetch(`${API}/api/analytics/events?date=${date}`, { headers });
         if (res.ok) {
           const data = (await res.json()) as AnalyticsEvent[];
           setSelectedDayEvents(data);
@@ -122,7 +129,7 @@ export default function AnalyticsPage() {
         setSelectedDayLoading(false);
       }
     },
-    [API, t]
+    [t]
   );
 
   const refetchAnalytics = useCallback(async () => {
@@ -133,8 +140,8 @@ export default function AnalyticsPage() {
       if (token) headers.Authorization = `Bearer ${token}`;
 
       const [overviewRes, trendsRes] = await Promise.all([
-        fetch(`${API}/api/analytics/overview`, { headers }),
-        fetch(`${API}/api/analytics/trends?days=7`, { headers }),
+        authenticationService.authenticatedFetch('/api/analytics/overview'),
+        authenticationService.authenticatedFetch('/api/analytics/trends?days=7'),
       ]);
 
       if (overviewRes.ok) setOverview(await overviewRes.json());
@@ -145,7 +152,7 @@ export default function AnalyticsPage() {
     } finally {
       setTrendsLoading(false);
     }
-  }, [API, t]);
+  }, [t]);
 
   const closeDay = useCallback(() => {
     setSelectedDate(null);
@@ -156,11 +163,9 @@ export default function AnalyticsPage() {
   const openEditEvent = useCallback(
     async (event: CalendarEvent) => {
       try {
-        const headers: Record<string, string> = {};
-        const token = authenticationService.getAccessToken();
-        if (token) headers.Authorization = `Bearer ${token}`;
-
-        const res = await fetch(`${API}/api/events/${event.id}`, { headers });
+        const res = await authenticationService.authenticatedFetch(`/api/events/${event.id}`, {
+          method: 'GET',
+        });
         let detailedEvent = event;
 
         if (res.ok) {
@@ -204,7 +209,7 @@ export default function AnalyticsPage() {
         setEditingEvent(event);
       }
     },
-    [API, closeDay, t]
+    [closeDay, t]
   );
 
   const closeEdit = useCallback(() => {
@@ -256,8 +261,25 @@ export default function AnalyticsPage() {
     [selectedDayEvents]
   );
   const todayDate = dayjs().format('YYYY-MM-DD');
-  // Production: no dev preview flags
-  // previewVariant via query params is intentionally unused in production
+
+  const exportCsv = async () => {
+    try {
+      const res = await authenticationService.authenticatedFetch('/api/analytics/export', {
+        method: 'GET',
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `analytics-${dayjs().format('YYYY-MM-DD')}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toastMaker('Failed to export CSV', 'error');
+      if (import.meta.env.DEV) console.error('CSV export failed', e);
+    }
+  };
 
   return (
     <NavigationPageShell
@@ -293,13 +315,34 @@ export default function AnalyticsPage() {
       ]}
     >
       <div className={styles.grid}>
+        {!isAuth && (
+          <div className={styles.authPrompt}>
+            <p>
+              {t('analytics_signin_prompt') || 'Пожалуйста, войдите чтобы просмотреть аналитику.'}
+            </p>
+            <button type="button" onClick={() => navigate('/signin')}>
+              {t('sign_in') || 'Войти'}
+            </button>
+          </div>
+        )}
         <section className={styles.chartCard}>
           <div className={styles.sectionHeader}>
             <div>
               <p className={styles.sectionLabel}>{t('weekly_rhythm')}</p>
               <h2 className={styles.sectionTitle}>{t('meeting_density_by_day')}</h2>
             </div>
-            <span className={styles.sectionPill}>{t('live_snapshot')}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => void exportCsv()}
+                className={styles.sectionPill}
+                style={{ cursor: 'pointer', border: 'none', background: 'none' }}
+                title="Export CSV"
+              >
+                Export CSV
+              </button>
+              <span className={styles.sectionPill}>{t('live_snapshot')}</span>
+            </div>
           </div>
 
           <div className={styles.barChart}>

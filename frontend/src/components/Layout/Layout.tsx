@@ -39,7 +39,7 @@ export const Layout = ({ children, headerVariant }: LayoutProps) => {
         className={clsx(
           'relative flex min-h-0 flex-col transition-[padding-left] duration-300 ease-in-out',
           css.layout,
-          isAuthenticated && sidebarOpen && 'lg:pl-[18rem]'
+          isAuthenticated && 'lg:pl-[260px]'
         )}
       >
         <Header

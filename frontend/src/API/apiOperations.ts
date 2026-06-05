@@ -21,6 +21,7 @@ interface BackendCalendarEvent {
   reminderTime?: string | null;
   isRecurring: boolean;
   isPublic: boolean;
+  isPrivate?: boolean;
   completed: boolean;
   priority?: 'low' | 'medium' | 'high' | null;
   colors: ColorType[];
@@ -28,8 +29,9 @@ interface BackendCalendarEvent {
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
-  accessRole?: 'owner' | 'participant';
+  accessRole?: 'owner' | 'participant' | 'shared';
   participantStatus?: 'pending' | 'accepted' | 'declined' | null;
+  ownerInfo?: { id: string; name: string } | null;
 }
 
 interface ApiEnvelope<T> {
@@ -50,8 +52,10 @@ const mapBackendEventToCalendarEvent = (event: BackendCalendarEvent): CalendarEv
     location: event.location ?? undefined,
     ownerId: event.userId,
     isRecurring: event.isRecurring,
+    isPrivate: event.isPrivate ?? false,
     accessRole: event.accessRole,
     participantStatus: event.participantStatus ?? null,
+    ownerInfo: event.ownerInfo ?? null,
   };
 
   switch (event.eventType) {
@@ -107,6 +111,7 @@ const toBackendPayload = (event: CalendarEvent): CalendarEventPayload => ({
   reminderTime: 'reminderTime' in event ? event.reminderTime : undefined,
   isRecurring: 'isRecurring' in event ? event.isRecurring : undefined,
   isPublic: 'isPublic' in event ? event.isPublic : undefined,
+  isPrivate: event.isPrivate,
   completed: 'completed' in event ? event.completed : undefined,
   priority: 'priority' in event ? event.priority : undefined,
   colors: event.colors,
@@ -235,4 +240,86 @@ export const deleteAccount = async (password: string) => {
     data: { password },
   });
   return response.data;
+};
+
+export interface NotificationApiItem {
+  id: string;
+  userId: string;
+  type: 'INVITATION' | 'REMINDER' | 'SYSTEM';
+  title: string;
+  message: string;
+  referenceId: string | null;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export const getNotifications = async (unreadOnly = false): Promise<NotificationApiItem[]> => {
+  const { data } = await instance.get<ApiEnvelope<{ notifications: NotificationApiItem[] }>>(
+    '/api/notifications',
+    { params: unreadOnly ? { unread: 'true' } : {} }
+  );
+  return Array.isArray(data.data?.notifications) ? data.data.notifications : [];
+};
+
+export const markNotificationRead = async (id: string): Promise<void> => {
+  await instance.patch(`/api/notifications/${id}/read`);
+};
+
+// --- Settings ---
+
+export const saveSettings = async (settings: {
+  startOfWeek?: string;
+  timeZone?: string;
+  workingHours?: string;
+  compactDensity?: boolean;
+  emailDigest?: boolean;
+}): Promise<void> => {
+  await instance.put('/api/auth/settings', settings);
+};
+
+// --- Calendar Sharing ---
+
+export interface CalendarShareItem {
+  id: string;
+  permission: 'read' | 'write';
+  createdAt: string;
+}
+
+export interface ShareByMe extends CalendarShareItem {
+  sharedWithId: string;
+  sharedWithName: string | null;
+}
+
+export interface ShareWithMe extends CalendarShareItem {
+  ownerId: string;
+  ownerName: string | null;
+}
+
+export const getCalendarShares = async (): Promise<{
+  sharedByMe: ShareByMe[];
+  sharedWithMe: ShareWithMe[];
+}> => {
+  const { data } =
+    await instance.get<ApiEnvelope<{ sharedByMe: ShareByMe[]; sharedWithMe: ShareWithMe[] }>>(
+      '/api/calendar/shares'
+    );
+  return {
+    sharedByMe: data.data?.sharedByMe ?? [],
+    sharedWithMe: data.data?.sharedWithMe ?? [],
+  };
+};
+
+export const createCalendarShare = async (
+  targetUserId: string,
+  permissionLevel: 'read' | 'write' = 'read'
+): Promise<CalendarShareItem> => {
+  const { data } = await instance.post<ApiEnvelope<{ share: CalendarShareItem }>>(
+    '/api/calendar/shares',
+    { targetUserId, permissionLevel }
+  );
+  return data.data.share;
+};
+
+export const deleteCalendarShare = async (shareId: string): Promise<void> => {
+  await instance.delete(`/api/calendar/shares/${shareId}`);
 };

@@ -42,6 +42,25 @@
   gap: var(--space-md);
 }
 
+.notifBadge {
+  position: absolute;
+  top: 0.2rem;
+  right: 0.2rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.22rem;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  color: #ffffff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
 .toastLayer {
   position: absolute;
   inset: 0;

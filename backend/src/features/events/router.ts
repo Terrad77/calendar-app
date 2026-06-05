@@ -1,9 +1,16 @@
 import { Router, Request, Response } from 'express';
-import { and, eq, gte, lte } from 'drizzle-orm';
+import { and, eq, gte, lte, sql, ne, or, getTableColumns } from 'drizzle-orm';
 import { randomUUID } from 'crypto';
-import { authenticateToken } from '../middleware/authMiddleware.js';
-import { getDb } from '../db.js';
-import { calendarEvents } from '../schema.js';
+import { authenticateToken } from '../../middleware/authMiddleware.js';
+import { checkEventAccess } from '../../middleware/checkEventAccess.js';
+import { getDb } from '../../db.js';
+import { calendarEvents, calendarShares, eventParticipants, users } from '../../schema.js';
+import {
+  inviteUser,
+  listPendingInvitations,
+  respondToInvitation,
+} from '../../controllers/invitationController.js';
+import { sendApiError, sendApiResponse } from '../../utils/apiResponse.js';
 
 const router = Router();
 
@@ -26,6 +33,7 @@ interface EventPayload {
   reminderTime?: string;
   isRecurring?: boolean;
   isPublic?: boolean;
+  isPrivate?: boolean;
   completed?: boolean;
   priority?: 'low' | 'medium' | 'high';
   color?: EventColor;
@@ -40,8 +48,12 @@ interface EventResponse extends Omit<EventPayload, 'color'> {
   userId: string;
   color?: EventColor;
   colors: EventColor[];
+  isPrivate?: boolean;
   createdAt: Date;
   updatedAt: Date;
+  accessRole?: 'owner' | 'participant' | 'shared';
+  participantStatus?: 'pending' | 'accepted' | 'declined' | null;
+  ownerInfo?: { id: string; name: string } | null;
 }
 
 const DEFAULT_EVENT_TYPE: EventType = 'task';
@@ -60,6 +72,7 @@ const toEventResponse = (row: EventRow): EventResponse => ({
   reminderTime: row.reminderTime ?? undefined,
   isRecurring: row.isRecurring,
   isPublic: row.isPublic,
+  isPrivate: row.isPrivate,
   completed: row.completed,
   priority: row.priority ?? undefined,
   eventType: row.eventType,
@@ -98,6 +111,7 @@ const buildEventInsert = (payload: EventPayload, userId: string): EventInsert =>
   reminderTime: payload.reminderTime ?? null,
   isRecurring: payload.isRecurring ?? false,
   isPublic: payload.isPublic ?? false,
+  isPrivate: payload.isPrivate ?? false,
   completed: payload.completed ?? false,
   priority: payload.priority ?? null,
   colors: normalizeColors(payload),
@@ -115,6 +129,95 @@ const isPastDate = (value: string): boolean => {
   return eventDate < today;
 };
 
+router.get('/my-events', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      sendApiError(res, 401, 'User not authenticated');
+      return;
+    }
+
+    const database = getDb();
+    const userId = req.user.userId;
+
+    // Get all columns of table as object
+    const calendarEventColumns = getTableColumns(calendarEvents);
+
+    // typesafe query to get events where the user is either the owner or a participant (not declined)
+    const rows = await database
+      .select({
+        ...calendarEventColumns,
+        accessRole:
+          sql<string>`CASE WHEN ${calendarEvents.userId} = ${userId}::uuid THEN 'owner' ELSE 'participant' END`.as(
+            'accessRole'
+          ),
+        participantStatus: eventParticipants.status,
+      })
+      .from(calendarEvents)
+      .leftJoin(
+        eventParticipants,
+        and(eq(eventParticipants.eventId, calendarEvents.id), eq(eventParticipants.userId, userId))
+      )
+      .where(
+        or(
+          eq(calendarEvents.userId, userId),
+          and(eq(eventParticipants.userId, userId), ne(eventParticipants.status, 'declined'))
+        )
+      )
+      .orderBy(calendarEvents.startDate, calendarEvents.startTime);
+
+    const ownEvents = rows.map((row) => ({
+      ...toEventResponse(row),
+      accessRole: row.accessRole as 'owner' | 'participant',
+      participantStatus: row.participantStatus as 'pending' | 'accepted' | 'declined' | null,
+    }));
+
+    // Append events from calendars that have been shared with the current user
+    const shares = await database
+      .select({ ownerId: calendarShares.ownerId, ownerName: users.name })
+      .from(calendarShares)
+      .leftJoin(users, eq(users.id, calendarShares.ownerId))
+      .where(eq(calendarShares.sharedWithId, userId));
+
+    const sharedEventArrays = await Promise.all(
+      shares.map(async ({ ownerId, ownerName }) => {
+        const ownerEvents = await database
+          .select()
+          .from(calendarEvents)
+          .where(eq(calendarEvents.userId, ownerId))
+          .orderBy(calendarEvents.startDate, calendarEvents.startTime);
+
+        return ownerEvents.map((ev) => {
+          const base = toEventResponse(ev);
+          if (ev.isPrivate) {
+            return {
+              ...base,
+              title: 'Busy',
+              description: undefined,
+              location: undefined,
+              participants: [],
+              metadata: {},
+              accessRole: 'shared' as const,
+              ownerInfo: { id: ownerId, name: ownerName ?? '' },
+            };
+          }
+          return {
+            ...base,
+            accessRole: 'shared' as const,
+            ownerInfo: { id: ownerId, name: ownerName ?? '' },
+          };
+        });
+      })
+    );
+
+    const events = [...ownEvents, ...sharedEventArrays.flat()];
+
+    sendApiResponse(res, 200, { events }, { total: events.length });
+  } catch (error) {
+    console.error('Database Error:', error);
+    sendApiError(res, 500, 'Failed to load calendar events');
+  }
+});
+
 router.get('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -123,8 +226,15 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
     }
 
     const database = getDb();
-    const { from, to, eventType } = req.query;
-    const conditions = [eq(calendarEvents.userId, req.user.userId)];
+    const { from, to, eventType, userId } = req.query;
+
+    const targetUserId = typeof userId === 'string' && userId ? userId : req.user.userId;
+
+    const conditions: any[] = [eq(calendarEvents.userId, targetUserId)];
+
+    if (typeof userId === 'string' && userId && userId !== req.user.userId) {
+      conditions.push(eq(calendarEvents.isPublic, true));
+    }
 
     if (typeof from === 'string' && from) {
       conditions.push(gte(calendarEvents.startDate, from));
@@ -138,15 +248,25 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
       conditions.push(eq(calendarEvents.eventType, eventType as EventType));
     }
 
-    const rows = await database
+    let rows = await database
       .select()
       .from(calendarEvents)
       .where(and(...conditions))
       .orderBy(calendarEvents.startDate, calendarEvents.startTime);
 
-    res.json({
-      events: rows.map(toEventResponse),
-    });
+    if (typeof userId === 'string' && userId && userId !== req.user.userId) {
+      rows = rows.filter((r) => {
+        try {
+          if (r.isPublic) return true;
+          const parts = Array.isArray(r.participants) ? r.participants : [];
+          return parts.includes(req.user!.userId);
+        } catch (_e) {
+          return false;
+        }
+      });
+    }
+
+    res.json({ events: rows.map(toEventResponse) });
   } catch (error) {
     res.status(500).json({
       error: 'Failed to fetch events',
@@ -155,33 +275,40 @@ router.get('/', authenticateToken, async (req: Request, res: Response): Promise<
   }
 });
 
-router.get('/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  try {
-    if (!req.user) {
-      res.status(401).json({ error: 'Authentication required', message: 'User not authenticated' });
-      return;
+router.get(
+  '/:id',
+  authenticateToken,
+  checkEventAccess,
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      if (!req.eventAccess) {
+        res
+          .status(500)
+          .json({ error: 'Failed to load event', message: 'Event access not initialized' });
+        return;
+      }
+
+      res.json({
+        event: {
+          ...toEventResponse(req.eventAccess.event),
+          accessRole: req.eventAccess.isOwner ? 'owner' : 'participant',
+          participantStatus: req.eventAccess.participantStatus,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        error: 'Failed to fetch event',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      });
     }
-
-    const database = getDb();
-    const rows = await database
-      .select()
-      .from(calendarEvents)
-      .where(and(eq(calendarEvents.id, req.params.id), eq(calendarEvents.userId, req.user.userId)))
-      .limit(1);
-
-    if (rows.length === 0) {
-      res.status(404).json({ error: 'Not found', message: 'Event not found' });
-      return;
-    }
-
-    res.json({ event: toEventResponse(rows[0]) });
-  } catch (error) {
-    res.status(500).json({
-      error: 'Failed to fetch event',
-      message: error instanceof Error ? error.message : 'Unknown error',
-    });
   }
-});
+);
+
+router.post('/:eventId/invite', authenticateToken, inviteUser);
+
+router.get('/invitations/pending', authenticateToken, listPendingInvitations);
+
+router.put('/invitations/:invitationId/respond', authenticateToken, respondToInvitation);
 
 router.post('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
@@ -267,6 +394,7 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response): Promi
         reminderTime: payload.reminderTime ?? existing.reminderTime,
         isRecurring: payload.isRecurring ?? existing.isRecurring,
         isPublic: payload.isPublic ?? existing.isPublic,
+        isPrivate: payload.isPrivate ?? existing.isPrivate,
         completed: payload.completed ?? existing.completed,
         priority: payload.priority ?? existing.priority,
         colors: payload.colors || (payload.color ? [payload.color] : existing.colors),
@@ -312,10 +440,7 @@ router.delete('/:id', authenticateToken, async (req: Request, res: Response): Pr
       return;
     }
 
-    res.json({
-      message: 'Event deleted successfully',
-      id: deletedRows[0].id,
-    });
+    res.json({ message: 'Event deleted successfully', id: deletedRows[0].id });
   } catch (error) {
     res.status(500).json({
       error: 'Failed to delete event',

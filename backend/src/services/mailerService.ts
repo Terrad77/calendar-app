@@ -17,6 +17,10 @@ const transporter = isSmtpConfigured
         user: SMTP_USER,
         pass: SMTP_PASS,
       },
+      // Allow self-signed certificates in non-production environments (local dev)
+      tls: {
+        rejectUnauthorized: process.env.NODE_ENV === 'production',
+      },
     })
   : null;
 

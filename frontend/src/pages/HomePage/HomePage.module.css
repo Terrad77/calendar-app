@@ -5,6 +5,24 @@
   background-color: transparent;
 }
 
+.banner {
+  padding: 0.6rem 1rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  color: var(--color-accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.bannerError {
+  padding: 0.6rem 1rem;
+  border-radius: 0.75rem;
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
 @media screen and (min-width: 768px) {
   .homeContainer {
     gap: 24px;

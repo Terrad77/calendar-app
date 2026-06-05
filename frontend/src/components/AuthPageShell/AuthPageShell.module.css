@@ -102,6 +102,7 @@
   font-size: clamp(2.2rem, 5vw, 4.2rem);
   line-height: 0.95;
   letter-spacing: -0.08em;
+  margin-bottom: 0.5rem;
   color: var(--color-text-primary);
 }
 
@@ -225,6 +226,7 @@
 
   .title {
     font-size: clamp(1.9rem, 9vw, 3rem);
+    margin-bottom: 0.4rem;
   }
 
   .description {

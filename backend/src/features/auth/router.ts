@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
-import { authService, AuthService } from '../services/authService.js';
-import { authenticateToken, rateLimitAuth } from '../middleware/authMiddleware.js';
-import { RegisterData, SocialUserData, UserCredentials } from '../types/auth.types.js';
-import { isGoogleOAuthConfigured } from '../config/passport.js';
+import { authService, AuthService } from '../../services/authService.js';
+import { authenticateToken, rateLimitAuth } from '../../middleware/authMiddleware.js';
+import { RegisterData, SocialUserData, UserCredentials } from '../../types/auth.types.js';
+import { isGoogleOAuthConfigured } from '../../config/passport.js';
 import passport from 'passport';
 
 const router = Router();
@@ -10,10 +10,6 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 const authRateLimitAttempts = isDevelopment ? 50 : 5;
 const authRateLimitWindowMs = 15 * 60 * 1000;
 
-/**
- * POST /api/auth/register
- * Register a new user
- */
 router.post(
   '/register',
   rateLimitAuth(authRateLimitAttempts, authRateLimitWindowMs),
@@ -21,7 +17,6 @@ router.post(
     try {
       const { email, password, name }: RegisterData = req.body;
 
-      // Validate input
       if (!email || !password || !name) {
         res.status(400).json({
           error: 'Validation error',
@@ -30,7 +25,6 @@ router.post(
         return;
       }
 
-      // Validate email format
       if (!AuthService.isValidEmail(email)) {
         res.status(400).json({
           error: 'Validation error',
@@ -39,7 +33,6 @@ router.post(
         return;
       }
 
-      // Validate password strength
       const passwordValidation = AuthService.isValidPassword(password);
       if (!passwordValidation.valid) {
         res.status(400).json({
@@ -49,7 +42,6 @@ router.post(
         return;
       }
 
-      // Register user
       const result = await authService.register({ email, password, name });
 
       res.status(201).json({
@@ -68,10 +60,6 @@ router.post(
   }
 );
 
-/**
- * POST /api/auth/login
- * Login user
- */
 router.post(
   '/login',
   rateLimitAuth(authRateLimitAttempts, authRateLimitWindowMs),
@@ -79,7 +67,6 @@ router.post(
     try {
       const { email, password }: UserCredentials = req.body;
 
-      // Validate input
       if (!email || !password) {
         res.status(400).json({
           error: 'Validation error',
@@ -88,7 +75,6 @@ router.post(
         return;
       }
 
-      // Login user
       const result = await authService.login({ email, password });
 
       res.status(200).json({
@@ -105,10 +91,6 @@ router.post(
   }
 );
 
-/**
- * POST /api/auth/refresh
- * Refresh access token
- */
 router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
   try {
     const { refreshToken } = req.body;
@@ -135,10 +117,6 @@ router.post('/refresh', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-/**
- * POST /api/auth/logout
- * Logout user
- */
 router.post('/logout', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     const { refreshToken } = req.body;
@@ -147,9 +125,7 @@ router.post('/logout', authenticateToken, async (req: Request, res: Response): P
       await authService.logout(refreshToken);
     }
 
-    res.status(200).json({
-      message: 'Logout successful',
-    });
+    res.status(200).json({ message: 'Logout successful' });
   } catch (error) {
     res.status(500).json({
       error: 'Logout failed',
@@ -158,10 +134,6 @@ router.post('/logout', authenticateToken, async (req: Request, res: Response): P
   }
 });
 
-/**
- * GET /api/auth/me
- * Get current user profile
- */
 router.get('/me', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -181,7 +153,7 @@ router.get('/me', authenticateToken, async (req: Request, res: Response): Promis
       });
       return;
     }
-    // Check if user is verified
+
     if (!user.isVerified) {
       res.status(403).json({
         error: 'Forbidden',
@@ -190,9 +162,7 @@ router.get('/me', authenticateToken, async (req: Request, res: Response): Promis
       return;
     }
 
-    res.status(200).json({
-      user,
-    });
+    res.status(200).json({ user });
   } catch (error) {
     res.status(500).json({
       error: 'Failed to get user profile',
@@ -201,23 +171,10 @@ router.get('/me', authenticateToken, async (req: Request, res: Response): Promis
   }
 });
 
-/**
- * GET /api/auth/verify
- * Verify if token is valid
- */
 router.get('/verify', authenticateToken, (req: Request, res: Response): void => {
-  res.status(200).json({
-    valid: true,
-    user: req.user,
-  });
+  res.status(200).json({ valid: true, user: req.user });
 });
 
-// --- NEW VERIFICATION AND SOCIAL AUTH ENDPOINTS ---
-
-/**
- * GET /api/auth/verify-email
- * Verifies the user's email using a token from the link sent via email.
- */
 router.get('/verify-email', async (req: Request, res: Response): Promise<void> => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
   try {
@@ -229,7 +186,6 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
     }
 
     const verifiedUser = await authService.verifyEmail(token);
-
     res.redirect(`${frontendUrl}/verification-success?user_id=${verifiedUser.id}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Verification failed';
@@ -237,10 +193,6 @@ router.get('/verify-email', async (req: Request, res: Response): Promise<void> =
   }
 });
 
-/**
- * GET /api/auth/google
- * Initiate Google OAuth authentication (Step 1)
- */
 router.get(
   '/google',
   (req: Request, res: Response, next): void => {
@@ -257,10 +209,6 @@ router.get(
   passport.authenticate('google', { scope: ['profile', 'email'], session: false })
 );
 
-/**
- * GET /api/auth/google/callback
- * Google OAuth callback (Step 2)
- */
 router.get(
   '/google/callback',
   (req: Request, res: Response, next): void => {
@@ -300,48 +248,79 @@ router.get(
   }
 );
 
-/**
- * PUT /api/auth/profile
- * Update user profile
- */
-router.put('/profile', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+const profileHandler = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user) {
-      res.status(401).json({
-        error: 'Authentication required',
-        message: 'User not authenticated',
-      });
+      res.status(401).json({ error: 'Authentication required', message: 'User not authenticated' });
       return;
     }
 
-    const { name, theme } = req.body;
+    const { name, theme, language, preferredCountry } = req.body;
 
-    if (!name && !theme) {
+    if (!name && !theme && !language && !preferredCountry) {
       res.status(400).json({
         error: 'Validation error',
-        message: 'At least one field (name or theme) is required',
+        message: 'At least one field (name, theme, language, preferredCountry) is required',
       });
       return;
     }
 
-    const updatedUser = await authService.updateProfile(req.user.userId, { name, theme });
-
-    res.status(200).json({
-      message: 'Profile updated successfully',
-      user: updatedUser,
+    const updatedUser = await authService.updateProfile(req.user.userId, {
+      name,
+      theme,
+      language,
+      preferredCountry,
     });
+
+    res.status(200).json({ message: 'Profile updated successfully', user: updatedUser });
   } catch (error) {
     res.status(400).json({
       error: 'Failed to update profile',
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
+};
+
+router.put('/profile', authenticateToken, profileHandler);
+router.patch('/profile', authenticateToken, profileHandler);
+
+router.put('/settings', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ error: 'Authentication required', message: 'User not authenticated' });
+      return;
+    }
+
+    const { startOfWeek, timeZone, workingHours, compactDensity, emailDigest } = req.body;
+
+    if (
+      startOfWeek === undefined &&
+      timeZone === undefined &&
+      workingHours === undefined &&
+      compactDensity === undefined &&
+      emailDigest === undefined
+    ) {
+      res.status(400).json({ error: 'Validation error', message: 'No settings fields provided' });
+      return;
+    }
+
+    const updatedUser = await authService.updateSettings(req.user.userId, {
+      startOfWeek,
+      timeZone,
+      workingHours,
+      compactDensity,
+      emailDigest,
+    });
+
+    res.status(200).json({ message: 'Settings saved successfully', user: updatedUser });
+  } catch (error) {
+    res.status(400).json({
+      error: 'Failed to save settings',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
 });
 
-/**
- * POST /api/auth/change-password
- * Change user password
- */
 router.post(
   '/change-password',
   authenticateToken,
@@ -375,9 +354,7 @@ router.post(
 
       await authService.changePassword(req.user.userId, oldPassword, newPassword);
 
-      res.status(200).json({
-        message: 'Password changed successfully',
-      });
+      res.status(200).json({ message: 'Password changed successfully' });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to change password';
       res.status(400).json({
@@ -388,10 +365,6 @@ router.post(
   }
 );
 
-/**
- * DELETE /api/auth/account
- * Delete user account
- */
 router.delete('/account', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.user) {
@@ -414,9 +387,7 @@ router.delete('/account', authenticateToken, async (req: Request, res: Response)
 
     await authService.deleteAccount(req.user.userId, password);
 
-    res.status(200).json({
-      message: 'Account deleted successfully',
-    });
+    res.status(200).json({ message: 'Account deleted successfully' });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to delete account';
     res.status(400).json({

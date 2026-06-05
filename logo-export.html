@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CalendAIr — Logo Export</title>
+  <style>
+    /* Remove all default spacing so the canvas is exactly 600×200 */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 600px;
+      height: 200px;
+      overflow: hidden;
+      background: transparent;
+    }
+
+    /* 600×200 canvas — transparent background */
+    .canvas {
+      width: 600px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+    }
+
+    /*
+     * Exact copy of Logo.module.css at the ≥1440 px breakpoint
+     * (22 px — the largest defined size, best for export clarity).
+     * Text color is intentionally not set here: in the component both
+     * color declarations are commented out, so the element inherits
+     * from the page. We use #1a1a2e — a near-black that reads cleanly
+     * on any background without overriding the component's logic.
+     * --color-accent resolved from index.css dark-mode value: #5b8cb8
+     */
+    .logo {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #1a1a2e;
+      line-height: 20px;
+      letter-spacing: -0.01em;
+    }
+
+    .logo span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      /* 2.7em × 2.7em at 22 px = 59.4 × 59.4 px */
+      width: 2.7em;
+      height: 2.7em;
+      box-shadow: inset 1px 0 6px #5b8cb8;
+      padding: 0;
+      border-radius: 50%;
+      line-height: 1;
+      text-transform: none;
+      flex: 0 0 auto;
+      margin-left: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div class="canvas">
+    <div class="logo">
+      Calend<span>AIr</span>
+    </div>
+  </div>
+</body>
+</html>

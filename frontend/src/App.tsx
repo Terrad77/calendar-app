@@ -4,6 +4,13 @@ import WelcomeSection from './components/WelcomeSection/WelcomeSection';
 import SignUpPage from './pages/SignUpPage/SignUpPage';
 import SignInPage from './pages/SignInPage/SignInPage';
 import AuthSuccessPage from './pages/AuthSuccessPage/AuthSuccessPage';
+import VerificationPage from './pages/VerificationPage/VerificationPage';
+const VerificationSuccessPage = React.lazy(
+  () => import('./pages/VerificationSuccessPage/VerificationSuccessPage')
+);
+const VerificationFailedPage = React.lazy(
+  () => import('./pages/VerificationFailedPage/VerificationFailedPage')
+);
 import HomePage from './pages/HomePage/HomePage'; // main calendar page
 const AnalyticsPage = React.lazy(() => import('./pages/AnalyticsPage/AnalyticsPage'));
 const ContactsPage = React.lazy(() => import('./pages/ContactsPage/ContactsPage'));
@@ -21,15 +28,14 @@ import { useSelector } from 'react-redux';
 import { selectIsLoggedIn, selectIsRefreshing, selectUserId } from './redux/user/selectors';
 import { aiService } from './services/aiService';
 import { useDispatch } from 'react-redux';
-import { fetchUser, refreshUserToken } from './redux/user/operations';
-import type { AppDispatch } from './redux/store';
+import { restoreSession } from './redux/user/operations';
+import { persistor, type AppDispatch } from './redux/store';
 import {
   createCalendarEvent,
   deleteCalendarEvent,
   getMyCalendarEvents,
   updateCalendarEvent,
 } from './API/apiOperations';
-import { setTokens } from './redux/user/userSlice';
 import './App.css';
 import DotLoader from './components/DotLoader/DotLoader';
 
@@ -252,33 +258,45 @@ function App() {
     void loadEvents();
   }, [isAuthenticated, authChecked, currentUserId]);
 
-  // On app mount, try to refresh token if a refresh token exists
+  // Restore session after redux-persist rehydration completes
   useEffect(() => {
-    const tryRefresh = async () => {
-      const accessToken = localStorage.getItem('accessToken');
-      const refreshToken = localStorage.getItem('refreshToken');
+    let cancelled = false;
 
-      if (accessToken && refreshToken) {
-        dispatch(setTokens({ accessToken, refreshToken }));
-      }
-
-      if (accessToken) {
-        try {
-          await dispatch(fetchUser()).unwrap();
-        } catch (_e) {
-          // ignore - reducer handles failures
-        }
-      } else if (refreshToken) {
-        try {
-          await dispatch(refreshUserToken()).unwrap();
-        } catch (_e) {
-          // ignore - reducer handles failures
+    const bootstrapAuth = async () => {
+      try {
+        await dispatch(restoreSession()).unwrap();
+      } catch {
+        // restoreSession handles auth cleanup internally
+      } finally {
+        if (!cancelled) {
+          setAuthChecked(true);
         }
       }
-      setAuthChecked(true);
     };
 
-    void tryRefresh();
+    const startBootstrap = () => {
+      if (cancelled) return;
+      void bootstrapAuth();
+    };
+
+    if (persistor.getState().bootstrapped) {
+      startBootstrap();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const unsubscribe = persistor.subscribe(() => {
+      if (persistor.getState().bootstrapped) {
+        unsubscribe();
+        startBootstrap();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [dispatch]);
 
   // Handlers for AI Assistant events
@@ -363,6 +381,26 @@ function App() {
         />
 
         <Route path="/auth/success" element={<AuthSuccessPage />} />
+
+        <Route path="/verify-email" element={<VerificationPage />} />
+
+        <Route
+          path="/verification-success"
+          element={
+            <Suspense fallback={null}>
+              <VerificationSuccessPage />
+            </Suspense>
+          }
+        />
+
+        <Route
+          path="/verification-failed"
+          element={
+            <Suspense fallback={null}>
+              <VerificationFailedPage />
+            </Suspense>
+          }
+        />
 
         {/* Main calendar route - protected */}
         <Route

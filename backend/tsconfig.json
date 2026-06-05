@@ -11,7 +11,11 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "outDir": "./dist",
-    "rootDir": "./",
+    "rootDir": ".",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"]
+    },
     "resolveJsonModule": true,
     "types": ["node"]
   },

@@ -30,6 +30,7 @@ import { useSelector } from 'react-redux';
 import { useAppDispatch } from '../../../redux/hooks';
 import { saveLanguageAndCountry } from '../../../redux/user/operations';
 import { selectUser } from '../../../redux/user/selectors';
+import { getCalendarShares } from '../../../API/apiOperations';
 
 // Extend dayjs with plugins for date comparison
 dayjs.extend(isSameOrBefore);
@@ -249,6 +250,11 @@ export const Calendar = ({
   const [searchInputValue, setSearchInputValue] = useState(''); // immediate update input field
   const [searchQuery, setSearchQuery] = useState(''); // Delayed search
 
+  const [sharedCalendars, setSharedCalendars] = useState<
+    Array<{ id: string; name: string; color: string }>
+  >([]);
+  const [hiddenOwners, setHiddenOwners] = useState<Set<string>>(new Set());
+
   // Close modal on component mount
   useEffect(() => {
     setActiveDayForInput(null);
@@ -276,6 +282,32 @@ export const Calendar = ({
     },
     [dispatch, user]
   );
+
+  const OWNER_COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
+
+  useEffect(() => {
+    if (!user) return;
+    getCalendarShares()
+      .then(({ sharedWithMe }) => {
+        setSharedCalendars(
+          sharedWithMe.map((s, i) => ({
+            id: s.ownerId,
+            name: s.ownerName ?? 'Unknown',
+            color: OWNER_COLORS[i % OWNER_COLORS.length],
+          }))
+        );
+      })
+      .catch(() => {});
+  }, [user]);
+
+  const toggleOwnerVisibility = useCallback((ownerId: string) => {
+    setHiddenOwners((prev) => {
+      const next = new Set(prev);
+      if (next.has(ownerId)) next.delete(ownerId);
+      else next.add(ownerId);
+      return next;
+    });
+  }, []);
 
   const visibleHolidays = useMemo(() => {
     if (selectedCountry === 'ALL') {
@@ -346,18 +378,22 @@ export const Calendar = ({
       currentDayInLoop = currentDayInLoop.add(1, 'day');
     }
 
-    // group filtered Tasks
-    tasks.forEach((task) => {
-      const matchesSearch = task.title.toLowerCase().includes(lowerCaseSearchQuery);
+    // group filtered Tasks (exclude events from hidden shared owners)
+    tasks
+      .filter(
+        (t) => !(t.accessRole === 'shared' && t.ownerInfo?.id && hiddenOwners.has(t.ownerInfo.id))
+      )
+      .forEach((task) => {
+        const matchesSearch = task.title.toLowerCase().includes(lowerCaseSearchQuery);
 
-      if (matchesSearch || lowerCaseSearchQuery === '') {
-        const taskDate = dayjs(task.date).format('YYYY-MM-DD');
-        if (!result[taskDate]) {
-          result[taskDate] = { tasks: [], holidays: [] };
+        if (matchesSearch || lowerCaseSearchQuery === '') {
+          const taskDate = dayjs(task.date).format('YYYY-MM-DD');
+          if (!result[taskDate]) {
+            result[taskDate] = { tasks: [], holidays: [] };
+          }
+          result[taskDate].tasks.push(task);
         }
-        result[taskDate].tasks.push(task);
-      }
-    });
+      });
 
     // group publicHolidays
     visibleHolidays.forEach((holiday) => {
@@ -375,7 +411,7 @@ export const Calendar = ({
     });
 
     return result;
-  }, [tasks, visibleHolidays, searchQuery, currentDate, viewMode]);
+  }, [tasks, visibleHolidays, searchQuery, currentDate, viewMode, hiddenOwners]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -614,6 +650,87 @@ export const Calendar = ({
             {holidayError}
           </div>
         )}
+
+        {sharedCalendars.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+            <span
+              style={{
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: 'var(--surface-calendar-muted)',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Shared:
+            </span>
+            {sharedCalendars.map((cal) => {
+              const hidden = hiddenOwners.has(cal.id);
+              return (
+                <button
+                  key={cal.id}
+                  onClick={() => toggleOwnerVisibility(cal.id)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    padding: '3px 10px',
+                    borderRadius: '999px',
+                    border: `1px solid ${hidden ? '#d1d5db' : cal.color}`,
+                    background: hidden ? 'transparent' : `${cal.color}1a`,
+                    color: hidden ? 'var(--surface-calendar-muted)' : cal.color,
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: hidden ? '#9ca3af' : cal.color,
+                      display: 'inline-block',
+                      flexShrink: 0,
+                      transition: 'background 0.15s ease',
+                    }}
+                  />
+                  {cal.name}
+                  {hidden ? (
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </svg>
+                  ) : (
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         <CalendarGridHeader />
 
         <div className="grid grid-cols-7 gap-px bg-neutral-200 dark:bg-neutral-800 rounded-lg overflow-hidden">
