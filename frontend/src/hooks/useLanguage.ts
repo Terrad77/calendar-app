@@ -10,45 +10,47 @@ dayjs.extend(updateLocale);
 dayjs.updateLocale('en', { weekStart: 1 });
 dayjs.updateLocale('uk', { weekStart: 1 });
 
+type LanguageCode = 'en' | 'uk';
+
+interface LanguageOption {
+  code: LanguageCode;
+  name: string;
+  flag: string;
+}
+
+const LANGUAGES: LanguageOption[] = [
+  { code: 'en', name: 'English', flag: '🇺🇸' },
+  { code: 'uk', name: 'Українська', flag: '🇺🇦' },
+];
+
 export const useLanguage = () => {
   const { i18n, t } = useTranslation('common');
 
-  // synchronization dayjs and language i18next
   useEffect(() => {
     const lang = i18n.language.startsWith('uk') ? 'uk' : 'en';
     dayjs.locale(lang);
   }, [i18n.language]);
 
-  // function to change language
-  const changeLanguage = (lng: string) => {
-    i18n
-      .changeLanguage(lng)
-      .then(() => {
-        // Save language to localStorage
-        localStorage.setItem('language', lng);
-        toast.success(lng === 'en' ? t('language_changed_en') : t('language_changed_uk'));
-      })
-      .catch(() => {
-        toast.error(t('error_changing_language'));
-      });
+  const changeLanguage = async (lng: LanguageCode): Promise<void> => {
+    try {
+      await i18n.changeLanguage(lng);
+      localStorage.setItem('language', lng);
+      toast.success(lng === 'en' ? t('language_changed_en') : t('language_changed_uk'));
+    } catch {
+      toast.error(t('error_changing_language'));
+    }
   };
 
-  // Load saved language on mount
   useEffect(() => {
-    const savedLanguage = localStorage.getItem('language');
-    if (savedLanguage && savedLanguage !== i18n.language) {
-      i18n.changeLanguage(savedLanguage);
+    const saved = localStorage.getItem('language') as LanguageCode;
+    if (saved && LANGUAGES.some((l) => l.code === saved) && saved !== i18n.language) {
+      i18n.changeLanguage(saved);
     }
   }, [i18n]);
 
-  const currentLanguage = i18n.language;
-
   return {
     changeLanguage,
-    currentLanguage,
-    languages: [
-      { code: 'en', name: 'English', flag: '🇺🇸' },
-      { code: 'uk', name: 'Українська', flag: '🇺🇦' },
-    ],
+    currentLanguage: i18n.language as LanguageCode,
+    languages: LANGUAGES,
   };
 };

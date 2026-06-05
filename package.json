@@ -14,7 +14,7 @@
     "test:frontend": "npm run test --prefix frontend",
     "test:backend": "npm run test --prefix backend",
     "build": "npm run build --prefix frontend && npm run build --prefix backend",
-    "prepare": "husky"
+    "prepare": "node -e \"if (process.env.CI !== 'true' && require('fs').existsSync('.git')) { require('child_process').execSync('npx husky', { stdio: 'inherit' }) }\""
   },
   "repository": {
     "type": "git",
