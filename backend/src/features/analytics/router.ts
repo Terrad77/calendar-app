@@ -1,15 +1,11 @@
 import { Router, Request, Response } from 'express';
-import { getDb } from '../db.js';
-import { calendarEvents } from '../schema.js';
+import { getDb } from '../../db.js';
+import { calendarEvents } from '../../schema.js';
 import { sql } from 'drizzle-orm';
-import { authenticateToken } from '../middleware/authMiddleware.js';
+import { authenticateToken } from '../../middleware/authMiddleware.js';
 
 const router = Router();
 
-/**
- * GET /api/analytics/overview
- * Returns simple aggregated metrics for the dashboard
- */
 router.get('/overview', authenticateToken, async (req: Request, res: Response) => {
   try {
     const db = getDb();
@@ -30,37 +26,37 @@ router.get('/overview', authenticateToken, async (req: Request, res: Response) =
     if (dedupe) {
       const totalRes = await db.execute(
         sql`
-          select count(*) as cnt from (
-            select lower(trim(title)) as t, date(start_date) as d
-            from ${calendarEvents}
-            where user_id = ${userId}
-            group by lower(trim(title)), date(start_date)
-          ) as sub
-        `
+					select count(*) as cnt from (
+						select lower(trim(title)) as t, date(start_date) as d
+						from ${calendarEvents}
+						where user_id = ${userId}
+						group by lower(trim(title)), date(start_date)
+					) as sub
+				`
       );
       total = Number((totalRes as any).rows?.[0]?.cnt ?? (totalRes as any)[0]?.cnt ?? 0);
 
       const last7Res = await db.execute(
         sql`
-          select count(*) as cnt from (
-            select lower(trim(title)) as t, date(start_date) as d
-            from ${calendarEvents}
-            where user_id = ${userId} and date(start_date) >= current_date - interval '7 days'
-            group by lower(trim(title)), date(start_date)
-          ) as sub
-        `
+					select count(*) as cnt from (
+						select lower(trim(title)) as t, date(start_date) as d
+						from ${calendarEvents}
+						where user_id = ${userId} and date(start_date) >= current_date - interval '7 days'
+						group by lower(trim(title)), date(start_date)
+					) as sub
+				`
       );
       countLast7 = Number((last7Res as any).rows?.[0]?.cnt ?? (last7Res as any)[0]?.cnt ?? 0);
 
       const recurringRes = await db.execute(
         sql`
-          select count(*) as cnt from (
-            select lower(trim(title)) as t, date(start_date) as d
-            from ${calendarEvents}
-            where user_id = ${userId} and is_recurring = true
-            group by lower(trim(title)), date(start_date)
-          ) as sub
-        `
+					select count(*) as cnt from (
+						select lower(trim(title)) as t, date(start_date) as d
+						from ${calendarEvents}
+						where user_id = ${userId} and is_recurring = true
+						group by lower(trim(title)), date(start_date)
+					) as sub
+				`
       );
       recurring = Number(
         (recurringRes as any).rows?.[0]?.cnt ?? (recurringRes as any)[0]?.cnt ?? 0
@@ -98,10 +94,6 @@ router.get('/overview', authenticateToken, async (req: Request, res: Response) =
   }
 });
 
-/**
- * GET /api/analytics/trends
- * Returns simple daily counts for a date range (default last 14 days)
- */
 router.get('/trends', authenticateToken, async (req: Request, res: Response) => {
   try {
     const db = getDb();
@@ -112,23 +104,28 @@ router.get('/trends', authenticateToken, async (req: Request, res: Response) => 
     }
     const days = Math.max(Number(req.query.days) || 14, 1);
 
-    // Compute an inclusive date window in UTC so the chart always has a full series.
     const end = new Date();
     end.setUTCHours(0, 0, 0, 0);
+
     const start = new Date(end);
-    start.setUTCDate(start.getUTCDate() - (days - 1));
+    if (days === 7) {
+      const currentWeekday = start.getUTCDay();
+      const mondayOffset = currentWeekday === 0 ? 6 : currentWeekday - 1;
+      start.setUTCDate(start.getUTCDate() - mondayOffset);
+    } else {
+      start.setUTCDate(start.getUTCDate() - (days - 1));
+    }
     const startDate = start.toISOString().slice(0, 10);
 
     const rows = await db.execute(sql`
-      select date(start_date) as date, count(*) as value
-      from ${calendarEvents}
-      where user_id = ${userId} and date(start_date) >= ${startDate}
-      group by date(start_date)
-      order by date(start_date) asc
-    `);
+			select date(start_date) as date, count(*) as value
+			from ${calendarEvents}
+			where user_id = ${userId} and date(start_date) >= ${startDate}
+			group by date(start_date)
+			order by date(start_date) asc
+		`);
 
     const result = (rows as any).rows || rows;
-
     const countsByDate = new Map<string, number>();
     for (const row of result as Array<{ date?: string; value?: number | string }>) {
       if (row?.date) {
@@ -151,10 +148,6 @@ router.get('/trends', authenticateToken, async (req: Request, res: Response) => 
   }
 });
 
-/**
- * GET /api/analytics/events
- * Drilldown: list events for a given date (YYYY-MM-DD)
- */
 router.get('/events', authenticateToken, async (req: Request, res: Response) => {
   try {
     const db = getDb();
@@ -170,12 +163,12 @@ router.get('/events', authenticateToken, async (req: Request, res: Response) => 
     }
 
     const rows = await db.execute(sql`
-      select id, user_id as "userId", event_type as "eventType", title, description, start_date as "startDate", end_date as "endDate", is_recurring as "isRecurring", created_at as "createdAt"
-      from ${calendarEvents}
-      where user_id = ${userId} and date(start_date) = ${date}
-      order by created_at desc
-      limit 200
-    `);
+			select id, user_id as "userId", event_type as "eventType", title, description, start_date as "startDate", end_date as "endDate", is_recurring as "isRecurring", created_at as "createdAt"
+			from ${calendarEvents}
+			where user_id = ${userId} and date(start_date) = ${date}
+			order by created_at desc
+			limit 200
+		`);
 
     const result = (rows as any).rows || rows;
     res.json(result);
@@ -185,10 +178,6 @@ router.get('/events', authenticateToken, async (req: Request, res: Response) => 
   }
 });
 
-/**
- * GET /api/analytics/export
- * Export events for a given date (CSV)
- */
 router.get('/export', authenticateToken, async (req: Request, res: Response) => {
   try {
     const db = getDb();
@@ -204,16 +193,14 @@ router.get('/export', authenticateToken, async (req: Request, res: Response) => 
     }
 
     const rows = await db.execute(sql`
-      select id, user_id as "userId", event_type as "eventType", title, description, start_date as "startDate", end_date as "endDate", is_recurring as "isRecurring", created_at as "createdAt"
-      from ${calendarEvents}
-      where user_id = ${userId} and date(start_date) = ${date}
-      order by created_at desc
-      limit 1000
-    `);
+			select id, user_id as "userId", event_type as "eventType", title, description, start_date as "startDate", end_date as "endDate", is_recurring as "isRecurring", created_at as "createdAt"
+			from ${calendarEvents}
+			where user_id = ${userId} and date(start_date) = ${date}
+			order by created_at desc
+			limit 1000
+		`);
 
     const data = (rows as any).rows || rows;
-
-    // Build CSV
     const header = [
       'id',
       'userId',
@@ -248,9 +235,7 @@ router.get('/export', authenticateToken, async (req: Request, res: Response) => 
   }
 });
 
-// DEBUG endpoints: register only in non-production or when DEBUG_API=1
 if (process.env.NODE_ENV !== 'production' || process.env.DEBUG_API === '1') {
-  // DEBUG: return all events (no auth) - for local development only
   router.get('/debug/all', async (_req: Request, res: Response) => {
     try {
       const db = getDb();
@@ -265,7 +250,6 @@ if (process.env.NODE_ENV !== 'production' || process.env.DEBUG_API === '1') {
     }
   });
 
-  // DEBUG: counts per user
   router.get('/debug/counts-by-user', async (_req: Request, res: Response) => {
     try {
       const db = getDb();
@@ -279,8 +263,6 @@ if (process.env.NODE_ENV !== 'production' || process.env.DEBUG_API === '1') {
       res.status(500).json({ error: 'Failed to get counts' });
     }
   });
-} else {
-  // In production these debug routes are not registered
 }
 
 export default router;

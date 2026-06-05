@@ -7,17 +7,19 @@ import {
   logOut,
   refreshUserToken,
   fetchUser,
+  restoreSession,
   changePassword,
   deleteAccount,
   saveLanguageAndCountry,
 } from './operations';
+import { resetAuthState } from './authHelpers';
 
 const initialState: UserState = {
   user: null,
   token: localStorage.getItem('accessToken'),
   refreshToken: localStorage.getItem('refreshToken'),
   isLoggedIn: false,
-  isRefreshing: !!(localStorage.getItem('accessToken') || localStorage.getItem('refreshToken')), // Изменено
+  isRefreshing: !!(localStorage.getItem('accessToken') || localStorage.getItem('refreshToken')),
   isLoading: false,
   error: null,
 };
@@ -41,7 +43,6 @@ const userSlice = createSlice({
     setTokens: (state, action: { payload: { accessToken: string; refreshToken: string } }) => {
       state.token = action.payload.accessToken;
       state.refreshToken = action.payload.refreshToken;
-      // state.isLoggedIn = true; // Удалено
       localStorage.setItem('accessToken', action.payload.accessToken);
       localStorage.setItem('refreshToken', action.payload.refreshToken);
     },
@@ -103,15 +104,8 @@ const userSlice = createSlice({
         localStorage.setItem('refreshToken', action.payload.refreshToken);
       })
       .addCase(refreshUserToken.rejected, (state, action: PayloadAction<string | undefined>) => {
-        state.isLoading = false;
-        state.isRefreshing = false;
-        state.user = null;
-        state.token = null;
-        state.refreshToken = null;
-        state.isLoggedIn = false;
+        resetAuthState(state);
         state.error = action.payload as string;
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
       })
 
       // Logout
@@ -161,16 +155,27 @@ const userSlice = createSlice({
           localStorage.setItem('preferredCountry', action.payload.preferredCountry);
         }
       })
-      .addCase(fetchUser.rejected, (state, action: PayloadAction<string | undefined>) => {
+      .addCase(fetchUser.rejected, (state, action) => {
         state.isLoading = false;
-        state.isRefreshing = false; // if error delete flag waiting
-        state.isLoggedIn = false;
-        state.user = null;
-        state.token = null;
-        state.refreshToken = null;
-        state.error = action.payload || 'Failed to fetch user';
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+        state.isRefreshing = false;
+        const payload = action.payload;
+        state.error = payload?.message || 'Failed to fetch user';
+
+        if (payload?.shouldLogout) {
+          resetAuthState(state);
+        }
+      })
+
+      // Restore session on app load
+      .addCase(restoreSession.pending, (state) => {
+        state.isRefreshing = true;
+        state.error = null;
+      })
+      .addCase(restoreSession.fulfilled, (state) => {
+        state.isRefreshing = false;
+      })
+      .addCase(restoreSession.rejected, (state) => {
+        state.isRefreshing = false;
       })
 
       // Change Password

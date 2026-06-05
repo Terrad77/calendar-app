@@ -11,6 +11,11 @@ export interface User {
   theme?: string;
   language?: string;
   preferredCountry?: string;
+  startOfWeek?: string;
+  timeZone?: string;
+  workingHours?: string;
+  compactDensity?: boolean;
+  emailDigest?: boolean;
 }
 export interface SocialUserData {
   email: string;

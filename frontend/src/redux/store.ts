@@ -17,7 +17,7 @@ import taskReducer from './task/taskSlice';
 const userPersistConfig = {
   key: 'user',
   storage,
-  whitelist: ['token', 'refreshToken'],
+  whitelist: ['token', 'refreshToken', 'user', 'isLoggedIn'],
 };
 
 const persistedUserReducer = persistReducer(userPersistConfig, userReducer);

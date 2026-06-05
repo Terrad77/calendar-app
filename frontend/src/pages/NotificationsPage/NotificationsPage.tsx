@@ -1,44 +1,86 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { NavigationPageShell } from '../../components/NavigationPageShell/NavigationPageShell';
+import toastMaker from '../../utils/toastMaker/toastMaker';
+import {
+  getNotifications,
+  markNotificationRead,
+  respondToInvitation,
+  type NotificationApiItem,
+} from '../../API/apiOperations';
 import styles from './NotificationsPage.module.css';
+
+dayjs.extend(relativeTime);
 
 export default function NotificationsPage() {
   const { t } = useTranslation('navigation');
   const [hideRead, setHideRead] = useState(false);
+  const [notifications, setNotifications] = useState<NotificationApiItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [responding, setResponding] = useState<string | null>(null); // notification id being responded to
+  const hasMarkedRead = useRef(false);
 
-  const notifications = [
-    {
-      id: 1,
-      title: t('team_planning_moved'),
-      detail: t('tomorrow_time_1430'),
-      group: t('urgent'),
-      unread: true,
-    },
-    {
-      id: 2,
-      title: t('invite_awaiting_response'),
-      detail: t('shared_workspace'),
-      group: t('attention'),
-      unread: true,
-    },
-    {
-      id: 3,
-      title: t('reminder_due_soon'),
-      detail: t('in_25_minutes'),
-      group: t('reminder'),
-      unread: false,
-    },
-    {
-      id: 4,
-      title: t('digest_is_ready'),
-      detail: t('six_updates_compiled'),
-      group: t('digest'),
-      unread: false,
-    },
-  ];
+  useEffect(() => {
+    let mounted = true;
 
-  const visibleNotifications = notifications.filter((item) => (hideRead ? item.unread : true));
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getNotifications();
+        if (!mounted) return;
+        setNotifications(data);
+      } catch (err) {
+        if (!mounted) return;
+        setError(err instanceof Error ? err.message : 'Failed to load notifications');
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    void load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Mark all unread notifications as read on page open (best-effort, fire-and-forget)
+  useEffect(() => {
+    if (hasMarkedRead.current || notifications.length === 0) return;
+    hasMarkedRead.current = true;
+
+    const unread = notifications.filter((n) => !n.isRead);
+    if (unread.length === 0) return;
+
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    unread.forEach((n) => markNotificationRead(n.id).catch(console.error));
+  }, [notifications]);
+
+  const handleRespond = async (
+    notificationId: string,
+    invitationId: string,
+    status: 'accepted' | 'declined'
+  ) => {
+    setResponding(notificationId);
+    try {
+      await respondToInvitation(invitationId, status);
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+      toastMaker(status === 'accepted' ? 'Invitation accepted' : 'Invitation declined');
+    } catch (err) {
+      toastMaker(err instanceof Error ? err.message : 'Failed to respond', 'error');
+    } finally {
+      setResponding(null);
+    }
+  };
+
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const invitationCount = notifications.filter((n) => n.type === 'INVITATION').length;
+  const reminderCount = notifications.filter((n) => n.type === 'REMINDER').length;
+
+  const visible = notifications.filter((n) => (hideRead ? !n.isRead : true));
 
   return (
     <NavigationPageShell
@@ -46,11 +88,11 @@ export default function NotificationsPage() {
       title={t('notifications_title')}
       description={t('notifications_description')}
       stats={[
-        { label: t('unread'), value: '3', detail: t('unread_detail') },
-        { label: t('reminders'), value: '2', detail: t('reminders_detail') },
+        { label: t('unread'), value: String(unreadCount), detail: t('unread_detail') },
+        { label: t('reminders'), value: String(reminderCount), detail: t('reminders_detail') },
         {
           label: t('digest_items'),
-          value: '11',
+          value: String(invitationCount),
           detail: t('digest_items_detail'),
         },
       ]}
@@ -90,18 +132,54 @@ export default function NotificationsPage() {
       </section>
 
       <div className={styles.notificationList}>
-        {visibleNotifications.map((notification) => (
-          <article key={notification.id} className={styles.notificationCard}>
-            <div className={styles.notificationDot} data-unread={notification.unread} />
-            <div className={styles.notificationBody}>
-              <div className={styles.notificationHeader}>
-                <h3 className={styles.notificationTitle}>{notification.title}</h3>
-                <span className={styles.group}>{notification.group}</span>
+        {loading ? (
+          <p className={styles.stateMessage}>Loading notifications…</p>
+        ) : error ? (
+          <p className={styles.stateMessage}>{error}</p>
+        ) : visible.length === 0 ? (
+          <p className={styles.stateMessage}>
+            {hideRead ? 'No unread notifications.' : 'No notifications yet.'}
+          </p>
+        ) : (
+          visible.map((notification) => (
+            <article key={notification.id} className={styles.notificationCard}>
+              <div className={styles.notificationDot} data-unread={String(!notification.isRead)} />
+              <div className={styles.notificationBody}>
+                <div className={styles.notificationHeader}>
+                  <h3 className={styles.notificationTitle}>{notification.title}</h3>
+                  <span className={styles.group}>{notification.type}</span>
+                </div>
+                <p className={styles.notificationDetail}>{notification.message}</p>
+                <p className={styles.notificationTime}>{dayjs(notification.createdAt).fromNow()}</p>
+
+                {notification.type === 'INVITATION' && notification.referenceId && (
+                  <div className={styles.notifActions}>
+                    <button
+                      type="button"
+                      className={styles.acceptBtn}
+                      disabled={responding === notification.id}
+                      onClick={() =>
+                        handleRespond(notification.id, notification.referenceId!, 'accepted')
+                      }
+                    >
+                      Accept
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.declineBtn}
+                      disabled={responding === notification.id}
+                      onClick={() =>
+                        handleRespond(notification.id, notification.referenceId!, 'declined')
+                      }
+                    >
+                      Decline
+                    </button>
+                  </div>
+                )}
               </div>
-              <p className={styles.notificationDetail}>{notification.detail}</p>
-            </div>
-          </article>
-        ))}
+            </article>
+          ))
+        )}
       </div>
     </NavigationPageShell>
   );

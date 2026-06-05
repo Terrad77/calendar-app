@@ -44,6 +44,10 @@
   padding: 0;
 }
 
+.modalHeaderNoLogo {
+  justify-content: flex-end;
+}
+
 .logoContainer {
   display: flex;
   align-items: center;

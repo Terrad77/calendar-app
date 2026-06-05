@@ -1,16 +1,20 @@
-import 'dotenv/config';
-
 import express from 'express';
 import cors from 'cors';
 import passport from './config/passport.js';
-import authRoutes from './routes/authRoutes.js';
-import eventsRoutes from './routes/eventsRoutes.js';
-import analyticsRoutes from './routes/analyticsRoutes.js';
+import authRoutes from './features/auth/router.js';
+import usersRoutes from './features/users/router.js';
+import eventsRoutes from './features/events/router.js';
+import sharesRoutes from './features/events/sharesRouter.js';
+import analyticsRoutes from './features/analytics/router.js';
+import systemRoutes from './features/system/router.js';
+import configRoutes from './features/config/router.js';
+import notificationsRoutes from './features/notifications/router.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
 
 app.use(express.json({ limit: '50kb' }));
-app.use(passport.initialize());
+
 app.use(
   cors({
     origin: [
@@ -20,57 +24,33 @@ app.use(
       'http://localhost:5173',
       'http://localhost:5174',
     ],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['X-Unread-Count'],
   })
 );
+app.use(passport.initialize());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventsRoutes);
+app.use('/api/calendar/shares', sharesRoutes);
+app.use('/api/calendar', eventsRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/notifications', notificationsRoutes);
+app.use(configRoutes);
+app.use(systemRoutes);
 
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'Calendar AI Assistant' });
-});
-
-app.get('/api/ai/health', (_req, res) => {
-  const googleAIAvailable = !!process.env.GOOGLE_AI_API_KEY;
-
-  res.json({
-    status: googleAIAvailable ? 'ok' : 'error',
-    service: 'AI Assistant(Google Gemini)',
-    available: googleAIAvailable,
-    googleAI: {
-      configured: googleAIAvailable,
-      keyLength: process.env.GOOGLE_AI_API_KEY?.length || 0,
-      keyPrefix: process.env.GOOGLE_AI_API_KEY?.substring(0, 10) + '...',
-    },
-    timestamp: new Date().toISOString(),
-    message: googleAIAvailable
-      ? 'AI service is ready (Gemini)'
-      : 'GOOGLE_AI_API_KEY not configured',
+app.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'NotFoundError',
+    message: 'Endpoint not found',
+    path: req.originalUrl,
+    method: req.method,
   });
 });
 
-app.get('/api/auth/google', (_req, res) => {
-  if (
-    process.env.GOOGLE_CLIENT_ID &&
-    process.env.GOOGLE_CLIENT_SECRET &&
-    process.env.GOOGLE_CALLBACK_URL
-  ) {
-    res.redirect(
-      `https://accounts.google.com/o/oauth2/v2/auth?response_type=code&redirect_uri=${encodeURIComponent(
-        process.env.GOOGLE_CALLBACK_URL
-      )}&scope=profile%20email&client_id=${encodeURIComponent(process.env.GOOGLE_CLIENT_ID)}`
-    );
-    return;
-  }
-
-  res.status(503).json({
-    error: 'Google OAuth is not configured',
-    message: 'Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_CALLBACK_URL in backend env.',
-  });
-});
+app.use(errorHandler);
 
 export default app;

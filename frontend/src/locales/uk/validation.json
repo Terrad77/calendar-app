@@ -2,6 +2,10 @@
   "email_required": "Електронна пошта обов'язкова",
   "email_invalid": "Невірний формат email",
   "password_required": "Пароль обов'язковий",
-  "password_min_length": "Пароль має містити щонайменше 6 символів",
-  "passwords_must_match": "Паролі мають співпадати"
+  "password_min_length": "Пароль має містити щонайменше 8 символів",
+  "password_uppercase_required": "Пароль має містити принаймні одну велику літеру",
+  "password_lowercase_required": "Пароль має містити принаймні одну малу літеру",
+  "password_number_required": "Пароль має містити принаймні одну цифру",
+  "passwords_must_match": "Паролі мають співпадати",
+  "Invalid email": "Невірний формат email"
 }

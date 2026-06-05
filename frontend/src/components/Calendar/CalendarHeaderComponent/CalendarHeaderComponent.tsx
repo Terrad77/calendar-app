@@ -179,6 +179,45 @@ const ViewButton = styled('button', {
   },
 });
 
+// Must stay in sync with COUNTRIES_TO_FETCH in backend/src/constants.ts
+const SUPPORTED_COUNTRY_CODES = [
+  'UA',
+  'US',
+  'GB',
+  'DE',
+  'FR',
+  'CA',
+  'AU',
+  'JP',
+  'IN',
+  'BR',
+  'MX',
+  'AR',
+  'ZA',
+  'PL',
+  'IT',
+  'ES',
+  'NL',
+  'BE',
+  'SE',
+  'NO',
+  'DK',
+  'FI',
+  'CH',
+  'AT',
+  'IE',
+  'PT',
+  'GR',
+  'KR',
+  'SG',
+  'MY',
+  'TH',
+  'NZ',
+  'TR',
+  'VN',
+  'PH',
+] as const;
+
 export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   currentDate,
   viewMode,
@@ -227,17 +266,11 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           aria-label={t('select_country')}
         >
           <option value="ALL">{t('all_countries')}</option>
-          <option value="UA">{t('country_ua')}</option>
-          <option value="US">{t('country_us')}</option>
-          <option value="GB">{t('country_gb')}</option>
-          <option value="DE">{t('country_de')}</option>
-          <option value="FR">{t('country_fr')}</option>
-          <option value="PL">{t('country_pl')}</option>
-          <option value="IT">{t('country_it')}</option>
-          <option value="ES">{t('country_es')}</option>
-          <option value="CA">{t('country_ca')}</option>
-          <option value="AU">{t('country_au')}</option>
-          <option value="JP">{t('country_jp')}</option>
+          {SUPPORTED_COUNTRY_CODES.map((code) => (
+            <option key={code} value={code}>
+              {t(`country_${code.toLowerCase()}`)}
+            </option>
+          ))}
         </CountrySelect>
       </MonthAndCountryContainer>
       <ButtonContainer gapSize="large">

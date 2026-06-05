@@ -23,6 +23,7 @@ export const getCache = <T>(key: string): T | undefined => {
   return entry.value as T;
 };
 
+// Helper function to get or set cache with in-flight request deduplication
 export const getOrSetCache = async <T>(
   key: string,
   ttlSeconds: number,
@@ -33,12 +34,17 @@ export const getOrSetCache = async <T>(
   if (cachedValue !== undefined) {
     return cachedValue;
   }
+  // Cache miss, check for in-flight request for development logging
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[Cache Miss] Key: ${key}`);
+  }
 
   const inFlightRequest = inFlightRequests.get(key) as Promise<T> | undefined;
 
   if (inFlightRequest) {
     return inFlightRequest;
   }
+  console.log(`[Cache Miss] Key: ${key}`);
 
   const requestPromise = factory().then((value) => {
     setCache(key, value, ttlSeconds);

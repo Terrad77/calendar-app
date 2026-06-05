@@ -106,3 +106,68 @@
   color: var(--color-text-secondary);
   white-space: nowrap;
 }
+
+.notificationTime {
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+  opacity: 0.7;
+}
+
+.notifActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+}
+
+.acceptBtn,
+.declineBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0.4rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.acceptBtn {
+  background: linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+  color: #ffffff;
+  border-color: color-mix(in srgb, var(--color-accent) 80%, transparent);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent) 28%, transparent);
+}
+
+.acceptBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-accent) 38%, transparent);
+}
+
+.declineBtn {
+  background: color-mix(in srgb, var(--color-bg-input) 85%, transparent);
+  color: var(--color-text-secondary);
+  border-color: color-mix(in srgb, var(--color-border-input) 70%, transparent);
+}
+
+.declineBtn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--color-bg-input) 100%, transparent);
+}
+
+.acceptBtn:disabled,
+.declineBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.stateMessage {
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}

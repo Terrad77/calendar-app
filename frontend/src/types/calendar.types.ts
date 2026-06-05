@@ -20,6 +20,7 @@ export interface CalendarEventPayload {
   reminderTime?: string;
   isRecurring?: boolean;
   isPublic?: boolean;
+  isPrivate?: boolean;
   completed?: boolean;
   priority?: 'low' | 'medium' | 'high';
   color?: ColorType;
@@ -34,8 +35,9 @@ export interface BaseCalendarEvent {
   date: string;
   title: string;
   ownerId?: string;
-  accessRole?: 'owner' | 'participant';
+  accessRole?: 'owner' | 'participant' | 'shared';
   participantStatus?: 'pending' | 'accepted' | 'declined' | null;
+  ownerInfo?: { id: string; name: string } | null;
   eventType: EventType;
   description?: string;
   createdAt?: string;
@@ -46,6 +48,7 @@ export interface BaseCalendarEvent {
   endTime?: string;
   location?: string;
   isRecurring?: boolean;
+  isPrivate?: boolean;
 }
 
 export interface TaskEvent extends BaseCalendarEvent {

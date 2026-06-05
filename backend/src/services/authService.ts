@@ -13,6 +13,7 @@ import {
 } from '../types/auth.types.js';
 import { getDb } from '../db.js';
 import { refreshTokens as refreshTokensTable, users as usersTable } from '../schema.js';
+import { env } from '../config/env.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key';
@@ -77,10 +78,13 @@ export class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-    const verificationToken = this.generateVerificationToken();
-    const verificationTokenExpiry = Date.now() + 24 * 60 * 60 * 1000;
     const userId = randomUUID();
     const now = new Date();
+
+    // In demo mode users are pre-verified so no email round-trip is needed.
+    const isVerifiedOnCreate = env.isDemoMode;
+    const verificationToken = isVerifiedOnCreate ? null : this.generateVerificationToken();
+    const verificationTokenExpiry = isVerifiedOnCreate ? null : Date.now() + 24 * 60 * 60 * 1000;
 
     const [createdUser] = await database
       .insert(usersTable)
@@ -90,7 +94,7 @@ export class AuthService {
         name,
         password: hashedPassword,
         googleId: null,
-        isVerified: false,
+        isVerified: isVerifiedOnCreate,
         verificationToken,
         verificationTokenExpiry,
         createdAt: now,
@@ -102,9 +106,10 @@ export class AuthService {
       throw new Error('Failed to create user');
     }
 
-    const backendUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3001}`;
-    const verificationLink = `${backendUrl}/api/auth/verify-email?token=${verificationToken}`;
-    await sendVerificationEmail(lowerEmail, verificationLink);
+    if (!env.isDemoMode) {
+      const verificationLink = `${env.backendUrl}/api/auth/verify-email?token=${verificationToken}`;
+      await sendVerificationEmail(lowerEmail, verificationLink);
+    }
 
     const tokens = this.generateTokens(userId, lowerEmail);
     await this.storeRefreshToken(userId, tokens.refreshToken);
@@ -328,18 +333,44 @@ export class AuthService {
       updatedAt: new Date(),
     };
 
-    if (data.name) {
-      updates.name = data.name;
+    if (data.name) updates.name = data.name;
+    if (data.theme) updates.theme = data.theme;
+    if (data.language) updates.language = data.language;
+    if (data.preferredCountry) updates.preferredCountry = data.preferredCountry;
+
+    const [updatedUser] = await database
+      .update(usersTable)
+      .set(updates)
+      .where(eq(usersTable.id, userId))
+      .returning();
+
+    if (!updatedUser) {
+      throw new Error('User not found');
     }
-    if (data.theme) {
-      updates.theme = data.theme;
+
+    return this.toPublicUser(updatedUser);
+  }
+
+  async updateSettings(
+    userId: string,
+    data: {
+      startOfWeek?: string;
+      timeZone?: string;
+      workingHours?: string;
+      compactDensity?: boolean;
+      emailDigest?: boolean;
     }
-    if (data.language) {
-      updates.language = data.language;
-    }
-    if (data.preferredCountry) {
-      updates.preferredCountry = data.preferredCountry;
-    }
+  ): Promise<User> {
+    const database = getDb();
+    const updates: Partial<typeof usersTable.$inferInsert> = {
+      updatedAt: new Date(),
+    };
+
+    if (data.startOfWeek !== undefined) updates.startOfWeek = data.startOfWeek;
+    if (data.timeZone !== undefined) updates.timeZone = data.timeZone;
+    if (data.workingHours !== undefined) updates.workingHours = data.workingHours;
+    if (data.compactDensity !== undefined) updates.compactDensity = data.compactDensity;
+    if (data.emailDigest !== undefined) updates.emailDigest = data.emailDigest;
 
     const [updatedUser] = await database
       .update(usersTable)

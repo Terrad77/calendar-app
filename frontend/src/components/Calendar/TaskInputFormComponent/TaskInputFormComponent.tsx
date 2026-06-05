@@ -454,6 +454,11 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
   const [title, setTitle] = useState(initialTask?.title || '');
   const [description, setDescription] = useState(initialTask?.description || '');
   const [isRecurring, setIsRecurring] = useState(Boolean(initialTask?.isRecurring));
+  const [isPrivate, setIsPrivate] = useState(
+    Boolean(
+      (initialTask as (typeof initialTask & { isPrivate?: boolean }) | null | undefined)?.isPrivate
+    )
+  );
   const [selectedColors, setSelectedColors] = useState<ColorType[]>(
     initialTask?.colors && initialTask.colors.length > 0 ? initialTask.colors : ['default']
   );
@@ -462,6 +467,12 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     setTitle(initialTask?.title || '');
     setDescription(initialTask?.description || '');
     setIsRecurring(Boolean(initialTask?.isRecurring));
+    setIsPrivate(
+      Boolean(
+        (initialTask as (typeof initialTask & { isPrivate?: boolean }) | null | undefined)
+          ?.isPrivate
+      )
+    );
     setSelectedColors(
       initialTask?.colors && initialTask.colors.length > 0 ? initialTask.colors : ['default']
     );
@@ -495,7 +506,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       return;
     }
 
-    const taskToSave: TaskEvent = {
+    const taskToSave: TaskEvent & { isPrivate?: boolean } = {
       id: taskId,
       title: title.trim(),
       description: description.trim(),
@@ -503,6 +514,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       eventType: 'task',
       colors: selectedColors.length > 0 ? selectedColors : ['default'],
       isRecurring,
+      isPrivate,
       completed: initialTask && 'completed' in initialTask ? initialTask.completed : false,
       priority: initialTask && 'priority' in initialTask ? initialTask.priority : 'medium',
       createdAt: initialTask?.createdAt || new Date().toISOString(),
@@ -538,7 +550,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       return;
     }
 
-    const copiedTask: TaskEvent = {
+    const copiedTask: TaskEvent & { isPrivate?: boolean } = {
       id: generateUniqueId('task'),
       title: title.trim(),
       description: description.trim(),
@@ -546,6 +558,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       eventType: 'task',
       colors: selectedColors.length > 0 ? selectedColors : ['default'],
       isRecurring,
+      isPrivate,
       completed: initialTask && 'completed' in initialTask ? initialTask.completed : false,
       priority: initialTask && 'priority' in initialTask ? initialTask.priority : 'medium',
       createdAt: new Date().toISOString(),
@@ -638,6 +651,19 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
           <RecurringText>
             <RecurringTitle>{t('label_recurring')}</RecurringTitle>
             <RecurringHint>{t('label_recurring_hint')}</RecurringHint>
+          </RecurringText>
+        </RecurringToggle>
+
+        <RecurringToggle htmlFor="task-private">
+          <RecurringCheckbox
+            id="task-private"
+            type="checkbox"
+            checked={isPrivate}
+            onChange={(e) => setIsPrivate(e.target.checked)}
+          />
+          <RecurringText>
+            <RecurringTitle>Private event</RecurringTitle>
+            <RecurringHint>Shows as "Busy" to people who view your shared calendar</RecurringHint>
           </RecurringText>
         </RecurringToggle>
       </InputStack>

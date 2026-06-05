@@ -1,0 +1,9 @@
+-- Add user preference/settings columns
+ALTER TABLE users ADD COLUMN IF NOT EXISTS start_of_week TEXT DEFAULT 'Monday';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS time_zone TEXT DEFAULT 'Europe/Kyiv';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS working_hours TEXT DEFAULT '08:30 - 18:00';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS compact_density BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_digest BOOLEAN NOT NULL DEFAULT TRUE;
+
+-- Add privacy flag to calendar events
+ALTER TABLE calendar_events ADD COLUMN IF NOT EXISTS is_private BOOLEAN NOT NULL DEFAULT FALSE;

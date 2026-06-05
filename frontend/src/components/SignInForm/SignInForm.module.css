@@ -114,9 +114,9 @@
   width: 100%;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(15, 23, 42, 0.9);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 80%, transparent);
   border-radius: 16px;
-  background: linear-gradient(180deg, #111827 0%, #0f172a 100%);
+  background: linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
   padding: 0.72rem 0.9rem;
   min-height: 44px;
   font-size: 16px;
@@ -128,13 +128,14 @@
     transform 0.18s ease,
     box-shadow 0.18s ease,
     opacity 0.18s ease,
-    background-color 0.18s ease;
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.16);
+    background 0.18s ease;
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--color-accent) 32%, transparent);
 }
 
 .submitButton:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 18px 32px rgba(15, 23, 42, 0.2);
+  background: linear-gradient(180deg, var(--color-accent-hover) 0%, var(--color-accent) 100%);
+  box-shadow: 0 18px 32px color-mix(in srgb, var(--color-accent) 42%, transparent);
 }
 
 .submitButton:active:not(:disabled) {

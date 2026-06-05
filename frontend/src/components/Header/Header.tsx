@@ -1,11 +1,14 @@
 import React, { useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Bell, Menu, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import { Toaster } from 'react-hot-toast';
 import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher';
 import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
+import { getNotifications } from '../../API/apiOperations';
 import css from './Header.module.css';
 import btnCss from './HeaderButton.module.css';
 
@@ -23,8 +26,18 @@ export const Header: React.FC<HeaderProps> = ({
   headerVariant = 'default',
 }: HeaderProps) => {
   const { t } = useTranslation('common');
+  const navigate = useNavigate();
   const sidebarToggleLabel = sidebarOpen ? t('close_sidebar') : t('toggle_sidebar');
   const isCompact = headerVariant === 'compact';
+
+  const { data: unreadNotifs } = useQuery({
+    queryKey: ['notifications-unread'],
+    queryFn: () => getNotifications(true),
+    enabled: isAuthenticated,
+    refetchInterval: 30_000,
+    staleTime: 15_000,
+  });
+  const unreadCount = unreadNotifs?.length ?? 0;
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -56,7 +69,7 @@ export const Header: React.FC<HeaderProps> = ({
         {isAuthenticated && (
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className={`${btnCss.headerControl} inline-flex z-50 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 ${
+            className={`${btnCss.headerControl} inline-flex lg:hidden z-50 items-center justify-center rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 ${
               isCompact
                 ? 'h-[2.75rem] w-[2.75rem] xl:h-[3rem] xl:w-[3rem]'
                 : 'h-[3.25rem] w-[3.25rem] xl:h-[3.5rem] xl:w-[3.5rem] 2xl:h-[3.75rem] 2xl:w-[3.75rem]'
@@ -100,6 +113,24 @@ export const Header: React.FC<HeaderProps> = ({
             isCompact ? 'w-full justify-center' : 'ml-auto'
           )}
         >
+          {isAuthenticated && (
+            <button
+              type="button"
+              onClick={() => navigate('/notifications')}
+              className={`${btnCss.headerControl} relative inline-flex items-center justify-center rounded-full ${
+                isCompact
+                  ? 'h-[2.75rem] w-[2.75rem] xl:h-[3rem] xl:w-[3rem]'
+                  : 'h-[3.25rem] w-[3.25rem] xl:h-[3.5rem] xl:w-[3.5rem] 2xl:h-[3.75rem] 2xl:w-[3.75rem]'
+              }`}
+              aria-label="Notifications"
+              title="Notifications"
+            >
+              <Bell className="block h-5 w-5 stroke-[2] text-current" />
+              {unreadCount > 0 && (
+                <span className={css.notifBadge}>{unreadCount > 9 ? '9+' : unreadCount}</span>
+              )}
+            </button>
+          )}
           <ThemeSwitcher />
           <LanguageSwitcher />
         </div>
