@@ -296,7 +296,9 @@ export const Sidebar = ({ className, isOpen = true, onClose }: SidebarProps) => 
                     if (result) {
                       try {
                         authenticationService.setUser(result);
-                      } catch (_e) {}
+                      } catch (_e) {
+                        // setUser is best-effort; ignore if unavailable
+                      }
                     }
                     try {
                       const { updateUser } = await import('../../API/apiOperations');
