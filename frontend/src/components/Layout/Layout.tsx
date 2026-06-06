@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import clsx from 'clsx';
 import { Sidebar } from '../Sidebar/Sidebar';
+import { Header } from '../Header/Header';
+import { ProfileModal } from '../ProfileModal/ProfileModal';
 import { selectIsLoggedIn } from '../../redux/user/selectors';
-import { Header } from '../Header/Header'; // Import the new Header component
 import css from './Layout.module.css';
 
 interface LayoutProps {
@@ -12,19 +13,20 @@ interface LayoutProps {
 }
 
 export const Layout = ({ children, headerVariant }: LayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const isAuthenticated = useSelector(selectIsLoggedIn);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && sidebarOpen) setSidebarOpen(false);
     };
-
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [sidebarOpen]);
+
+  const openProfile = () => setProfileOpen(true);
 
   return (
     <div
@@ -33,20 +35,21 @@ export const Layout = ({ children, headerVariant }: LayoutProps) => {
         'min-h-dvh overflow-hidden text-neutral-950 dark:text-neutral-50 [--app-header-height:4.5rem]'
       )}
     >
-      {isAuthenticated && <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
+      {isAuthenticated && (
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          onOpenProfile={openProfile}
+        />
+      )}
 
-      <div
-        className={clsx(
-          'relative flex min-h-0 flex-col transition-[padding-left] duration-300 ease-in-out',
-          css.layout,
-          isAuthenticated && 'lg:pl-[260px]'
-        )}
-      >
+      <div className={clsx('relative flex min-h-0 flex-col', css.layout)}>
         <Header
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           isAuthenticated={isAuthenticated}
           headerVariant={headerVariant}
+          onOpenProfile={openProfile}
         />
 
         <main
@@ -59,6 +62,11 @@ export const Layout = ({ children, headerVariant }: LayoutProps) => {
           <div className="mx-auto w-full max-w-[var(--layout-content-max-width)]">{children}</div>
         </main>
       </div>
+
+      {/* Profile modal is rendered at layout level so both Sidebar and Header can trigger it */}
+      {isAuthenticated && (
+        <ProfileModal isOpen={profileOpen} onClose={() => setProfileOpen(false)} />
+      )}
     </div>
   );
 };

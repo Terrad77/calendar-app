@@ -12,6 +12,7 @@ import {
 import storage from 'redux-persist/lib/storage';
 import userReducer from './user/userSlice';
 import taskReducer from './task/taskSlice';
+import calendarUiReducer from './calendarUi/calendarUiSlice';
 // import { TaskState } from './task/types';
 
 const userPersistConfig = {
@@ -26,6 +27,7 @@ export const store = configureStore({
   reducer: {
     user: persistedUserReducer,
     task: taskReducer,
+    calendarUi: calendarUiReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

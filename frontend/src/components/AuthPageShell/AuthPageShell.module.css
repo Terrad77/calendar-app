@@ -1,12 +1,12 @@
 .page {
   position: relative;
-  overflow: hidden;
-  min-height: 100%;
-  display: grid;
-  place-items: start center;
-  box-sizing: border-box;
-  /* remove vertical parent padding so children align to top; keep horizontal inset */
-  padding: 0 1rem;
+  /* min-height only — never fixed height; page grows naturally with content */
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* vertical padding gives breathing room; page grows past viewport on small screens */
+  padding: 2rem 1rem;
   /* local token to control top offset of hero & form columns */
   --auth-top-offset: 1rem;
   background:

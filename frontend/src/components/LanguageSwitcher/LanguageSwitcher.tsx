@@ -1,39 +1,37 @@
 import { useLanguage } from '../../hooks/useLanguage';
-import css from './LanguageSwitcher.module.css';
-import btnCss from '../Header/HeaderButton.module.css';
 import { useSelector } from 'react-redux';
 import { selectIsLoggedIn } from '../../redux/user/selectors';
 import { useAppDispatch } from '../../redux/hooks';
 import { saveLanguageAndCountry } from '../../redux/user/operations';
+import css from './LanguageSwitcher.module.css';
+import btnCss from '../Header/HeaderButton.module.css';
 
 export const LanguageSwitcher = () => {
   const { changeLanguage, currentLanguage, languages } = useLanguage();
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const dispatch = useAppDispatch();
 
-  const handleLanguageChange = (languageCode: 'en' | 'uk') => {
-    changeLanguage(languageCode);
+  // Derive current and next entries from the fixed 2-item LANGUAGES array
+  const current = languages.find((l) => l.code === currentLanguage) ?? languages[0];
+  const next = languages.find((l) => l.code !== currentLanguage) ?? languages[1];
 
-    // If user is logged in, save to profile
+  const handleToggle = () => {
+    changeLanguage(next.code);
     if (isLoggedIn) {
-      dispatch(saveLanguageAndCountry({ language: languageCode }));
+      dispatch(saveLanguageAndCountry({ language: next.code }));
     }
   };
 
   return (
-    <div className={css.languageButtonContainer}>
-      {languages.map((language) => (
-        <button
-          key={language.code}
-          className={`${btnCss.headerControl} ${css.languageButton} ${currentLanguage === language.code ? css.active : ''}`}
-          onClick={() => handleLanguageChange(language.code)}
-          title={language.name}
-          type="button"
-        >
-          <span className={css.flag}>{language.flag}</span>
-          <span className={css.code}>{language.code.toUpperCase()}</span>
-        </button>
-      ))}
-    </div>
+    <button
+      className={`${btnCss.headerControl} ${css.langToggle}`}
+      onClick={handleToggle}
+      title={`Switch to ${next.name}`}
+      aria-label={`Switch to ${next.name}`}
+      type="button"
+    >
+      <span className={css.flag}>{current.flag}</span>
+      <span className={css.code}>{current.code.toUpperCase()}</span>
+    </button>
   );
 };

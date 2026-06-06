@@ -36,6 +36,7 @@ import {
   getMyCalendarEvents,
   updateCalendarEvent,
 } from './API/apiOperations';
+import { Toaster } from 'react-hot-toast';
 import './App.css';
 import DotLoader from './components/DotLoader/DotLoader';
 
@@ -341,6 +342,35 @@ function App() {
 
   return (
     <div className="app-container">
+      {/* Single global Toaster — works on all routes including auth pages */}
+      <Toaster
+        position="top-center"
+        gutter={10}
+        reverseOrder={false}
+        toastOptions={{
+          duration: 1500,
+          removeDelay: 0,
+          style: {
+            background: 'color-mix(in srgb, var(--surface-panel-start) 92%, transparent)',
+            color: 'var(--color-text-primary)',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-md)',
+            border: '1px solid color-mix(in srgb, var(--color-text-primary) 6%, transparent)',
+            padding: '0.5rem 0.75rem',
+            fontWeight: '500',
+            width: 'auto',
+            whiteSpace: 'nowrap',
+          },
+        }}
+        containerStyle={{
+          top: 16,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999,
+          pointerEvents: 'none',
+          width: 'auto',
+        }}
+      />
       {isAuthenticated && !isAnalyticsRoute && <AIServiceNotification />}
       <Routes>
         {/* Home route with conditional rendering */}
@@ -357,14 +387,12 @@ function App() {
           }
         />
 
-        {/* Authentication routes */}
+        {/* Authentication routes — rendered without Layout; AuthPageShell provides its own full-page shell */}
         <Route
           path="/signup"
           element={
             <PublicRoute>
-              <Layout>
-                <SignUpPage />
-              </Layout>
+              <SignUpPage />
             </PublicRoute>
           }
         />
@@ -373,9 +401,7 @@ function App() {
           path="/signin"
           element={
             <PublicRoute>
-              <Layout>
-                <SignInPage />
-              </Layout>
+              <SignInPage />
             </PublicRoute>
           }
         />

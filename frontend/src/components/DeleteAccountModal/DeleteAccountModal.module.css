@@ -1,3 +1,14 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .modal {
   border-radius: 15px;
   padding: 40px 0 40px 14px;

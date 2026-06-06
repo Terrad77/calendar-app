@@ -110,6 +110,9 @@
 }
 
 .submitButton {
+  /* Reset browser native button appearance so CSS gradient always shows */
+  appearance: none;
+  -webkit-appearance: none;
   display: inline-flex;
   width: 100%;
   align-items: center;
@@ -144,6 +147,8 @@
 
 .submitButton:disabled {
   cursor: not-allowed;
+  /* Re-declare background so disabled state never falls back to browser's system grey */
+  background: linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
   opacity: 0.55;
   box-shadow: none;
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   getMyCalendarEvents,
@@ -217,6 +218,16 @@ export default function ContactsPage() {
       .catch(() => {});
   }, []);
 
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ['contactStats'],
+    queryFn: () =>
+      Promise.all([getUsers(), getCalendarShares()]).then(([users, shares]) => ({
+        users: Array.isArray(users) ? (users as Record<string, unknown>[]) : [],
+        shares,
+      })),
+    staleTime: 30_000,
+  });
+
   const handleViewCalendar = (contact: ContactItem) => {
     const hasAccess = sharesWithMe.some((s) => s.ownerId === contact.id);
     if (hasAccess) {
@@ -414,6 +425,14 @@ export default function ContactsPage() {
   const inviteEventId = currentEventId || selectedEventId;
   const selectedInviteEvent = inviteEvents.find((event) => event.id === inviteEventId) ?? null;
 
+  const currentUserId = currentUser ? (currentUser as unknown as { id?: string }).id : null;
+  const collaboratorCount = statsData
+    ? statsData.users.filter((u) => String(u.id ?? u._id ?? u.userId ?? '') !== currentUserId)
+        .length
+    : 0;
+  const sharedByMeCount = statsData?.shares.sharedByMe.length ?? 0;
+  const statPlaceholder = statsLoading ? '—' : undefined;
+
   return (
     <NavigationPageShell
       badge={t('contacts')}
@@ -422,17 +441,12 @@ export default function ContactsPage() {
       stats={[
         {
           label: t('collaborators'),
-          value: '18',
+          value: statPlaceholder ?? String(collaboratorCount),
           detail: t('collaborators_detail'),
         },
         {
-          label: t('favorites'),
-          value: '6',
-          detail: t('favorites_detail'),
-        },
-        {
           label: t('shared_spaces'),
-          value: '4',
+          value: statPlaceholder ?? String(sharedByMeCount),
           detail: t('shared_spaces_detail'),
         },
       ]}

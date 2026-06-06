@@ -384,25 +384,15 @@
   padding: 0;
 }
 
-/* Override toast animation to remove delayed slide-out */
-[data-rht-toaster] > * {
-  transition-duration: 0ms !important;
-  transition-property: none !important;
-}
-
-[data-rht-toaster] > * {
-  transform: none !important;
-}
-
 /* Base styles */
 html {
-  height: 100%;
+  /* min-height only — never fixed height on the root element */
+  min-height: 100dvh;
   scroll-behavior: smooth;
 }
 
 body {
-  min-height: 100%;
-  /* allow vertical scrolling when content exceeds viewport */
+  min-height: 100dvh;
   overflow-y: auto;
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
@@ -412,7 +402,7 @@ body {
 }
 
 #root {
-  min-height: 100%;
+  min-height: 100dvh;
 }
 
 /* Typography scale */
@@ -480,36 +470,3 @@ a:hover {
   }
 }
 
-/* Global styles for react-hot-toast container */
-[data-rht-toaster] {
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-sm);
-  width: 100%;
-  z-index: 9999;
-}
-
-[data-rht-toaster] > * {
-  pointer-events: auto;
-  width: 100%;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  background: color-mix(in srgb, var(--surface-panel-start) 92%, transparent);
-  color: var(--color-text-primary);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
-  border: 1px solid color-mix(in srgb, var(--color-text-primary) 6%, transparent);
-  font-weight: 500;
-  overflow: hidden;
-}
-
-@media (max-width: 560px) {
-  [data-rht-toaster] > * {
-    width: 100%;
-  }
-}

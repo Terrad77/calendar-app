@@ -8,7 +8,7 @@
   align-items: center;
   gap: 0.4rem;
   white-space: nowrap;
-  min-height: 2rem;
+  min-height: 2.25rem;
   padding: 0.32rem 0.55rem;
   justify-content: center;
   border: 1px solid var(--surface-button-border);

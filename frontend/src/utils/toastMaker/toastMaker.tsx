@@ -21,16 +21,12 @@ export default function toastMaker(text: string, status?: ToastStatus): string {
 
   switch (status) {
     case 'success':
-      // Success toasts are intentionally suppressed — prefer inline success messages
-      // for forms and lightweight UI feedback. Keep toasts only for errors and
-      // global notifications.
       return '';
 
     case 'error':
       return toast(render('x-close', css.toastError));
 
     default:
-      // Default / global messages still use toasts
       return toast(render('clock', css.toastSuccess));
   }
 }
