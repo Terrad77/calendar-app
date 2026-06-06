@@ -32,6 +32,8 @@ import { saveLanguageAndCountry } from '../../../redux/user/operations';
 import { selectUser } from '../../../redux/user/selectors';
 import { getCalendarShares } from '../../../API/apiOperations';
 
+const OWNER_COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
+
 // Extend dayjs with plugins for date comparison
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
@@ -282,8 +284,6 @@ export const Calendar = ({
     },
     [dispatch, user]
   );
-
-  const OWNER_COLORS = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'];
 
   useEffect(() => {
     if (!user) return;
