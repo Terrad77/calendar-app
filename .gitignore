@@ -159,3 +159,7 @@ tmp/
 EOF
 # Ensure backend local env isn't committed
 backend/.env
+
+# Claude Code
+.claude/restored_transcript.jsonl
+build_output.txt
