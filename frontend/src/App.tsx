@@ -152,9 +152,15 @@ function App() {
     );
   };
 
+  // A locally-created event has no ownerId yet; treat it as owned by the current
+  // user so it gets persisted. Events loaded from the backend always carry an
+  // ownerId, so shared events (owned by others) are still excluded.
+  const isOwnedByCurrentUser = (event: CalendarEvent) =>
+    !event.ownerId || event.ownerId === currentUserId;
+
   const syncEventChanges = async (previousEvents: CalendarEvent[], nextEvents: CalendarEvent[]) => {
-    const ownedPreviousEvents = previousEvents.filter((event) => event.ownerId === currentUserId);
-    const ownedNextEvents = nextEvents.filter((event) => event.ownerId === currentUserId);
+    const ownedPreviousEvents = previousEvents.filter(isOwnedByCurrentUser);
+    const ownedNextEvents = nextEvents.filter(isOwnedByCurrentUser);
 
     const ownedPreviousById = new Map(ownedPreviousEvents.map((event) => [event.id, event]));
     const ownedNextById = new Map(ownedNextEvents.map((event) => [event.id, event]));
@@ -166,15 +172,15 @@ function App() {
       return previousEvent ? !eventsEqual(previousEvent, event) : false;
     });
 
-    const uniqueOperation = (
+    const uniqueOperation = <T,>(
       operation: 'create' | 'update' | 'delete',
       eventId: string,
-      handler: () => Promise<unknown>
-    ) => {
+      handler: () => Promise<T>
+    ): Promise<T | undefined> => {
       const key = `${operation}:${eventId}`;
 
       if (syncInFlightOperations.has(key)) {
-        return Promise.resolve();
+        return Promise.resolve(undefined);
       }
 
       syncInFlightOperations.add(key);
@@ -185,17 +191,38 @@ function App() {
     };
 
     try {
-      await Promise.all([
-        ...createdEvents.map((event) =>
-          uniqueOperation('create', event.id, () => createCalendarEvent(event))
+      const [createdResults] = await Promise.all([
+        Promise.all(
+          createdEvents.map((event) =>
+            uniqueOperation('create', event.id, () => createCalendarEvent(event))
+          )
         ),
-        ...updatedEvents.map((event) =>
-          uniqueOperation('update', event.id, () => updateCalendarEvent(event))
+        Promise.all(
+          updatedEvents.map((event) =>
+            uniqueOperation('update', event.id, () => updateCalendarEvent(event))
+          )
         ),
-        ...deletedEvents.map((event) =>
-          uniqueOperation('delete', event.id, () => deleteCalendarEvent(event.id))
+        Promise.all(
+          deletedEvents.map((event) =>
+            uniqueOperation('delete', event.id, () => deleteCalendarEvent(event.id))
+          )
         ),
       ]);
+
+      // Reconcile locally-created events with their persisted versions: the
+      // backend assigns the canonical id (uuid) and ownerId, so adopt them to
+      // keep subsequent updates/deletes addressable.
+      const persistedByTempId = new Map<string, CalendarEvent>();
+      createdEvents.forEach((tempEvent, index) => {
+        const persisted = createdResults[index];
+        if (persisted) {
+          persistedByTempId.set(tempEvent.id, persisted);
+        }
+      });
+
+      if (persistedByTempId.size > 0) {
+        setEvents((current) => current.map((event) => persistedByTempId.get(event.id) ?? event));
+      }
     } catch (error) {
       console.error('Failed to sync calendar events with backend:', error);
     }

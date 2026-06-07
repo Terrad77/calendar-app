@@ -58,6 +58,11 @@ interface EventResponse extends Omit<EventPayload, 'color'> {
 
 const DEFAULT_EVENT_TYPE: EventType = 'task';
 
+// The id column is a uuid. Clients generate prefixed nanoid ids (e.g. "task-...")
+// for local state, which are not valid uuids — fall back to a generated one.
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const isUuid = (value: string | undefined): value is string => !!value && UUID_REGEX.test(value);
+
 const toEventResponse = (row: EventRow): EventResponse => ({
   id: row.id,
   userId: row.userId,
@@ -97,7 +102,7 @@ const normalizeColors = (payload: EventPayload): EventColor[] => {
 };
 
 const buildEventInsert = (payload: EventPayload, userId: string): EventInsert => ({
-  id: payload.id || `event-${randomUUID()}`,
+  id: isUuid(payload.id) ? payload.id : randomUUID(),
   userId,
   eventType: payload.eventType || DEFAULT_EVENT_TYPE,
   title: payload.title,
