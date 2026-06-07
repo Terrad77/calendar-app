@@ -23,6 +23,7 @@ export const users = pgTable(
     email: text('email').notNull(),
     name: text('name').notNull(),
     password: text('password').notNull(),
+    jobTitle: text('job_title'),
     googleId: text('google_id'),
     isVerified: boolean('is_verified').notNull().default(false),
     verificationToken: text('verification_token'),

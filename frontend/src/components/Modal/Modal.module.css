@@ -34,6 +34,13 @@
   overflow: visible;
 }
 
+/* Compact variant (size="small") — compound selector wins over the
+   responsive .modal width rule at all breakpoints. */
+.modal.modalSmall {
+  width: min(100%, 440px);
+  max-width: 440px;
+}
+
 .modalHeader {
   display: flex;
   align-items: center;
@@ -42,6 +49,8 @@
   width: 100%;
   min-height: 44px;
   padding: 0;
+  /* Separate the header (logo / close button) row from the modal content. */
+  margin-bottom: 1rem;
 }
 
 .modalHeaderNoLogo {
@@ -153,14 +162,16 @@
 }
 
 :global(.modal-button) {
-  padding: 0.375rem 0.75rem;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  color: var(--modal-text, #0f172a);
+  padding: 0.4rem 0.85rem;
+  border-radius: 0.65rem;
+  /* Theme-aware surfaces so buttons stay visible in light (Sand) too */
+  background: var(--surface-panel-inset);
+  border: 1px solid var(--surface-panel-border);
+  color: var(--color-text-primary);
   font-weight: 600;
   font-size: 0.9rem;
   line-height: 1;
+  cursor: pointer;
   transition:
     background-color 180ms ease,
     transform 120ms ease,
@@ -169,7 +180,8 @@
 }
 
 :global(.modal-button:hover) {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--surface-panel-start);
+  border-color: var(--color-accent);
   transform: translateY(-1px);
 }
 

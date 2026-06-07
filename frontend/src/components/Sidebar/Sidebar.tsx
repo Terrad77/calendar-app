@@ -20,6 +20,7 @@ import { selectUser } from '../../redux/user/selectors';
 import { useAppDispatch } from '../../redux/hooks';
 import { toggleOwner, selectHiddenOwners } from '../../redux/calendarUi/calendarUiSlice';
 import { useCalendarShares } from '../../hooks/useCalendarShares';
+import { getInitials } from '../../utils/getInitials';
 import css from './Sidebar.module.css';
 
 interface SidebarNavItemProps {
@@ -86,28 +87,12 @@ export const Sidebar = ({ className, isOpen = true, onClose, onOpenProfile }: Si
     onClose?.();
   };
 
-  const initials = useMemo(() => {
-    const sourceName = user?.name?.trim() || 'User';
-    return sourceName
-      .split(/\s+/)
-      .map((part) => part[0] ?? '')
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
-  }, [user?.name]);
+  const initials = useMemo(() => getInitials(user?.name, user?.email), [user?.name, user?.email]);
 
   const sidebarContent = (
     <div className={css.sidebarContent}>
       <div className={css.header}>
-        <div className={css.brand}>
-          <div className={css.brandLogo}>
-            <Logo />
-          </div>
-          <div className={css.brandText}>
-            <p className={css.brandLabel}>CalendAir</p>
-            <h1 className={css.brandTitle}>{t('workspace')}</h1>
-          </div>
-        </div>
+        <Logo />
 
         <button
           type="button"

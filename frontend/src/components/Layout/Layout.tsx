@@ -56,10 +56,12 @@ export const Layout = ({ children, headerVariant }: LayoutProps) => {
           className={clsx(
             css.content,
             headerVariant === 'overlay' && css.contentOverlay,
-            'min-h-0 flex-1 overflow-hidden px-4 py-6 sm:px-6 lg:px-8 xl:px-10 2xl:px-12'
+            'min-h-0 flex-1 flex flex-col overflow-auto px-4 pt-3 pb-3 sm:px-6 lg:px-8 xl:px-10 2xl:px-12'
           )}
         >
-          <div className="mx-auto w-full max-w-[var(--layout-content-max-width)]">{children}</div>
+          <div className="mx-auto w-full flex-1 min-h-0 max-w-[var(--layout-content-max-width)] flex flex-col">
+            {children}
+          </div>
         </main>
       </div>
 

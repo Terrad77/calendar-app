@@ -32,7 +32,10 @@
 }
 
 .layout {
-  height: 100%;
+  /* Use min-height instead of height: 100% — the outer wrapper is not a
+     flex container and only sets min-height, so % height collapses to
+     content height and breaks the flex-1 / h-full chain below. */
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   position: relative;

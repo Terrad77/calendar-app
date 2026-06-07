@@ -31,11 +31,12 @@
 }
 
 .glowSecondary {
-  bottom: -5rem;
-  left: -3rem;
+  bottom: -4rem;
+  left: -4rem;
   width: 16rem;
   height: 16rem;
   background: rgba(14, 165, 233, 0.12);
+  opacity: 0.45;
 }
 
 .shell {

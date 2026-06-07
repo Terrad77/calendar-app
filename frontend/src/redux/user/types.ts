@@ -13,6 +13,7 @@ export interface RegisterInfo extends UserInfo {
 export interface UserData {
   name?: string;
   theme?: string;
+  jobTitle?: string;
 }
 
 export interface AxiosError {

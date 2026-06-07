@@ -1,7 +1,13 @@
 .page {
   position: relative;
   overflow: hidden;
-  min-height: calc(100vh - 8rem);
+  /* Grow to fill the flex column main, clamping the panel height so the
+     card fills the viewport minus small padding without overflowing. */
+  flex: 1 1 0%;
+  min-height: clamp(500px, calc(100dvh - 8rem), 95dvh);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
   border: 1px solid var(--surface-panel-border);
   border-radius: 2rem;
   background:
@@ -16,10 +22,6 @@
 }
 
 @media (min-width: 1280px) {
-  .page {
-    min-height: calc(100vh - 9rem);
-  }
-
   .shell {
     padding: 2rem;
     gap: 2.5rem;
@@ -52,10 +54,6 @@
 }
 
 @media (min-width: 1536px) {
-  .page {
-    min-height: calc(100vh - 10rem);
-  }
-
   .shell {
     padding: 2.5rem;
     gap: 3rem;
@@ -106,8 +104,11 @@
 .shell {
   position: relative;
   z-index: 1;
+  flex: 1 1 0%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 1.75rem;
   padding: 1.4rem;
 }
@@ -365,7 +366,6 @@
 
 @media (max-width: 767px) {
   .page {
-    min-height: calc(100dvh - 6.5rem);
     border-radius: 1.35rem;
   }
 

@@ -5,6 +5,7 @@ import { styled } from '@stitches/react';
 import { logOut } from '../../redux/user/operations';
 import { selectUser } from '../../redux/user/selectors';
 import { useAppDispatch } from '../../redux/hooks';
+import { getInitials } from '../../utils/getInitials';
 import ChangePasswordModal from '../ChangePasswordModal/ChangePasswordModal';
 import DeleteAccountModal from '../DeleteAccountModal/DeleteAccountModal';
 
@@ -169,13 +170,7 @@ export const UserProfileHeader = () => {
     return null;
   }
 
-  const initials = user.name
-    .trim()
-    .split(/\s+/)
-    .map((part: string) => part[0] ?? '')
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
+  const initials = getInitials(user.name, user.email);
 
   return (
     <>

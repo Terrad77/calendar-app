@@ -24,17 +24,17 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
 
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-
-  const profileRole = (user as { role?: string } | null)?.role ?? 'user';
 
   // Pre-fill form fields each time the modal opens
   useEffect(() => {
     if (isOpen && user) {
       setEditName(user.name || '');
       setEditEmail(user.email || '');
+      setJobTitle(user.jobTitle ?? '');
       setProfileError(null);
     }
   }, [isOpen, user]);
@@ -52,7 +52,13 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
 
   return (
     <>
-      <Modal isOpen={isOpen} onClose={handleClose} title={t('edit_profile')} showCloseButton>
+      <Modal
+        isOpen={isOpen}
+        onClose={handleClose}
+        title={t('edit_profile')}
+        showCloseButton
+        size="small"
+      >
         <div className={css.body}>
           <section className={css.section}>
             <div className={css.sectionHeader}>
@@ -74,17 +80,24 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
               <label className={css.fieldLabel} htmlFor="profile-modal-email">
                 {t('email')}
               </label>
+              {/* Email is display-only: changing it would require re-verification */}
               <input
                 id="profile-modal-email"
-                className={css.input}
+                className={`${css.input} ${css.inputReadOnly}`}
                 value={editEmail}
-                onChange={(e) => setEditEmail(e.target.value)}
+                readOnly
               />
 
-              <label className={css.fieldLabel} htmlFor="profile-modal-role">
-                {t('role')}
+              <label className={css.fieldLabel} htmlFor="profile-modal-job-title">
+                {t('job_title')}
               </label>
-              <input id="profile-modal-role" className={css.input} value={profileRole} disabled />
+              <input
+                id="profile-modal-job-title"
+                className={css.input}
+                value={jobTitle}
+                placeholder={t('job_title_placeholder')}
+                onChange={(e) => setJobTitle(e.target.value)}
+              />
             </div>
 
             {profileError && <div className={css.error}>{profileError}</div>}
@@ -102,19 +115,15 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
                   setSavingProfile(true);
                   setProfileError(null);
                   try {
-                    const result = await dispatch(updateUserOp({ name: editName })).unwrap();
+                    const result = await dispatch(
+                      updateUserOp({ name: editName, jobTitle })
+                    ).unwrap();
                     if (result) {
                       try {
                         authenticationService.setUser(result);
                       } catch (_e) {
                         // setUser is best-effort; ignore if unavailable
                       }
-                    }
-                    try {
-                      const { updateUser } = await import('../../API/apiOperations');
-                      await updateUser(user.id, { email: editEmail, role: profileRole });
-                    } catch (_e) {
-                      // ignore backend mismatch for optional profile fields
                     }
                     handleClose();
                     toastMaker(t('profile_saved'));

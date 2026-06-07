@@ -320,7 +320,11 @@ export default function AnalyticsPage() {
             <p>
               {t('analytics_signin_prompt') || 'Пожалуйста, войдите чтобы просмотреть аналитику.'}
             </p>
-            <button type="button" onClick={() => navigate('/signin')}>
+            <button
+              type="button"
+              className={styles.signInButton}
+              onClick={() => navigate('/signin')}
+            >
               {t('sign_in') || 'Войти'}
             </button>
           </div>
@@ -331,23 +335,35 @@ export default function AnalyticsPage() {
               <p className={styles.sectionLabel}>{t('weekly_rhythm')}</p>
               <h2 className={styles.sectionTitle}>{t('meeting_density_by_day')}</h2>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <button
-                type="button"
-                onClick={() => void exportCsv()}
-                className={styles.sectionPill}
-                style={{ cursor: 'pointer', border: 'none', background: 'none' }}
-                title="Export CSV"
-              >
-                Export CSV
-              </button>
-              <span className={styles.sectionPill}>{t('live_snapshot')}</span>
-            </div>
+          </div>
+
+          <div className={styles.chartToolbar}>
+            <span className={styles.sectionPill}>
+              <span className={styles.liveDot} aria-hidden="true" />
+              {t('live_snapshot')}
+            </span>
+            <button
+              type="button"
+              onClick={() => void exportCsv()}
+              className={styles.sectionPillButton}
+              title={t('export_csv')}
+            >
+              {t('export_csv')}
+            </button>
           </div>
 
           <div className={styles.barChart}>
             {trendsLoading && (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gridColumn: '1 / -1',
+                  minHeight: '10rem',
+                  width: '100%',
+                }}
+              >
                 <DotLoader text={t('loading')} />
               </div>
             )}

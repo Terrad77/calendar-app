@@ -1,10 +1,13 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useDemoMode } from '../../hooks/useDemoMode';
+import DotLoader from '../../components/DotLoader/DotLoader';
 import styles from './VerificationPage.module.css';
 
 const VerificationPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { isDemoMode, isLoading } = useDemoMode();
 
   // In demo mode verification is skipped on the server — go straight to the app.
@@ -18,7 +21,7 @@ const VerificationPage = () => {
     return (
       <div className={styles.container}>
         <div className={styles.card}>
-          <p>Loading…</p>
+          <DotLoader text={t('loading')} />
         </div>
       </div>
     );

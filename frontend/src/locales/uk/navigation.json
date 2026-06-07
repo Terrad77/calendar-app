@@ -1,4 +1,6 @@
 {
+  "analytics_signin_prompt": "Увійдіть, щоб переглянути персональну аналітику",
+  "sign_in": "Увійти",
   "sidebar_title": "Навігація",
   "workspace": "Робочий простір",
   "workspace_shell": "Робочий простір CalendAir",
@@ -41,6 +43,7 @@
   "loading": "Завантаження",
   "meeting_density_by_day": "Щільність подій за днями цього тижня",
   "live_snapshot": "Живий знімок",
+  "export_csv": "Експорт CSV",
   "no_data_week": "Немає даних за тиждень",
   "best_windows": "Найкращі вікна",
   "calendar_stays_calm": "Коли календар залишається спокійним",

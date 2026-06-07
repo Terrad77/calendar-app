@@ -662,8 +662,8 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
             onChange={(e) => setIsPrivate(e.target.checked)}
           />
           <RecurringText>
-            <RecurringTitle>Private event</RecurringTitle>
-            <RecurringHint>Shows as "Busy" to people who view your shared calendar</RecurringHint>
+            <RecurringTitle>{t('private_event')}</RecurringTitle>
+            <RecurringHint>{t('private_event_hint')}</RecurringHint>
           </RecurringText>
         </RecurringToggle>
       </InputStack>

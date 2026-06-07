@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { NavigationPageShell } from '../../components/NavigationPageShell/NavigationPageShell';
+import DotLoader from '../../components/DotLoader/DotLoader';
 import toastMaker from '../../utils/toastMaker/toastMaker';
 import {
   getNotifications,
@@ -133,7 +134,9 @@ export default function NotificationsPage() {
 
       <div className={styles.notificationList}>
         {loading ? (
-          <p className={styles.stateMessage}>Loading notifications…</p>
+          <div className="flex w-full items-center justify-center py-10">
+            <DotLoader text={t('common:loading')} />
+          </div>
         ) : error ? (
           <p className={styles.stateMessage}>{error}</p>
         ) : visible.length === 0 ? (

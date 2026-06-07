@@ -1,4 +1,6 @@
 import { useState, useEffect, useTransition, useCallback, useMemo, Suspense, lazy } from 'react';
+import { useTranslation } from 'react-i18next';
+import DotLoader from '../../DotLoader/DotLoader';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
@@ -78,6 +80,7 @@ export const Calendar = ({
   setEvents: externalSetEvents,
 }: CalendarProps) => {
   const dispatch = useAppDispatch();
+  const { t } = useTranslation('common');
   const user = useSelector(selectUser);
   const hiddenOwnersArray = useSelector(selectHiddenOwners);
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
@@ -617,7 +620,7 @@ export const Calendar = ({
 
         {isPending && (
           <div className="px-4 py-3 bg-blue-50 border border-blue-200 rounded-md text-center text-sm text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-100">
-            Loading worldwide holidays...
+            {t('loading_holidays')}
           </div>
         )}
         {holidayError && (
@@ -634,7 +637,13 @@ export const Calendar = ({
 
         {/* Day events list modal (opened when day has items) */}
         {dayModalDate && (
-          <Suspense fallback={<div className="p-4">Loading...</div>}>
+          <Suspense
+            fallback={
+              <div className="flex w-full items-center justify-center p-4">
+                <DotLoader text={t('loading')} />
+              </div>
+            }
+          >
             <DayEventsModal
               isOpen={!!dayModalDate}
               date={dayModalDate}

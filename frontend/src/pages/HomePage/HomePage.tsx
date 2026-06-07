@@ -1,15 +1,18 @@
 import React, { Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import css from './HomePage.module.css';
 import type { HomePageProps } from '../../types/calendar.types';
 import { useLocation } from 'react-router-dom';
 import { useMemo, useEffect, useState } from 'react';
 import { getCalendarEvents } from '../../API/apiOperations';
+import DotLoader from '../../components/DotLoader/DotLoader';
 
 const Calendar = React.lazy(
   () => import('../../components/Calendar/CalendarComponent/CalendarComponent')
 );
 
 export default function HomePage({ events, setEvents }: HomePageProps) {
+  const { t } = useTranslation('calendar');
   const location = useLocation();
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const contactFilter = searchParams.get('contact');
@@ -60,7 +63,13 @@ export default function HomePage({ events, setEvents }: HomePageProps) {
     <div className={css.homeContainer}>
       {contactEventsLoading && <div className={css.banner}>Завантаження подій контакту…</div>}
       {contactEventsError && <div className={css.bannerError}>Помилка: {contactEventsError}</div>}
-      <Suspense fallback={<div>Loading calendar…</div>}>
+      <Suspense
+        fallback={
+          <div className={css.loadingContainer}>
+            <DotLoader text={t('loading_calendar')} />
+          </div>
+        }
+      >
         <Calendar events={filteredEvents} setEvents={setEvents} />
       </Suspense>
     </div>

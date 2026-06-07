@@ -326,7 +326,13 @@ export class AuthService {
 
   async updateProfile(
     userId: string,
-    data: { name?: string; theme?: string; language?: string; preferredCountry?: string }
+    data: {
+      name?: string;
+      theme?: string;
+      language?: string;
+      preferredCountry?: string;
+      jobTitle?: string;
+    }
   ): Promise<User> {
     const database = getDb();
     const updates: Partial<typeof usersTable.$inferInsert> = {
@@ -337,6 +343,8 @@ export class AuthService {
     if (data.theme) updates.theme = data.theme;
     if (data.language) updates.language = data.language;
     if (data.preferredCountry) updates.preferredCountry = data.preferredCountry;
+    // Allow setting or clearing the job title (empty string clears it)
+    if (data.jobTitle !== undefined) updates.jobTitle = data.jobTitle;
 
     const [updatedUser] = await database
       .update(usersTable)

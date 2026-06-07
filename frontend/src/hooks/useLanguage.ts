@@ -50,7 +50,9 @@ export const useLanguage = () => {
 
   return {
     changeLanguage,
-    currentLanguage: i18n.language as LanguageCode,
+    // Normalize region-suffixed codes (e.g. "en-US") to the base code so
+    // toggle comparisons resolve correctly on the first click.
+    currentLanguage: (i18n.language.startsWith('uk') ? 'uk' : 'en') as LanguageCode,
     languages: LANGUAGES,
   };
 };

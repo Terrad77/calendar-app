@@ -10,7 +10,14 @@ import { selectIsLoading } from '../../redux/user/selectors';
 import type { ModalProps } from '../../types/auth.types';
 import { useTranslation } from 'react-i18next';
 
-export default function Modal({ children, isOpen, onClose, btnClassName, showLogo }: ModalProps) {
+export default function Modal({
+  children,
+  isOpen,
+  onClose,
+  btnClassName,
+  showLogo,
+  size,
+}: ModalProps) {
   const { t } = useTranslation('common');
   useEffect(() => {
     // Handle Escape key to close modal
@@ -43,7 +50,10 @@ export default function Modal({ children, isOpen, onClose, btnClassName, showLog
   return createPortal(
     <div className={css.backdrop} onClick={onClose}>
       {isLoading && <DotLoader text={t('loading')} />}
-      <div className={css.modal} onClick={(e) => e.stopPropagation()}>
+      <div
+        className={clsx(css.modal, size === 'small' && css.modalSmall)}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className={clsx(css.modalHeader, !showLogo && css.modalHeaderNoLogo)}>
           {showLogo && (
             <div className={css.logoContainer}>

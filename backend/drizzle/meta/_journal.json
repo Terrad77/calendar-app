@@ -36,6 +36,13 @@
       "when": 1780960000000,
       "tag": "0005_settings_and_privacy",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781000000000,
+      "tag": "0006_add_job_title",
+      "breakpoints": true
     }
   ]
 }

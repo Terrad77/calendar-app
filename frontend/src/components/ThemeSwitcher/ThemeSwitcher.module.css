@@ -1,6 +1,7 @@
 .themeButtonContainer {
   display: flex;
   align-items: center;
+  height: 2.25rem;
 }
 
 .themeButton {
@@ -8,8 +9,9 @@
   align-items: center;
   gap: 0.4rem;
   white-space: nowrap;
-  min-height: 2.25rem;
-  padding: 0.32rem 0.55rem;
+  height: 2.25rem;
+  padding: 0 0.6rem;
+  box-sizing: border-box;
   justify-content: center;
   border: 1px solid var(--surface-button-border);
   border-radius: 9999px;

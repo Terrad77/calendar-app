@@ -154,14 +154,10 @@ router.get('/me', authenticateToken, async (req: Request, res: Response): Promis
       return;
     }
 
-    if (!user.isVerified) {
-      res.status(403).json({
-        error: 'Forbidden',
-        message: 'Account is not verified. Access restricted.',
-      });
-      return;
-    }
-
+    // Note: verification is a soft/in-app concept here — login and all other
+    // protected routes allow unverified users, so /me must not hard-block them
+    // (doing so logged valid sessions out on reload). isVerified is still
+    // returned in the payload for any soft UI prompts.
     res.status(200).json({ user });
   } catch (error) {
     res.status(500).json({
@@ -255,12 +251,13 @@ const profileHandler = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const { name, theme, language, preferredCountry } = req.body;
+    const { name, theme, language, preferredCountry, jobTitle } = req.body;
 
-    if (!name && !theme && !language && !preferredCountry) {
+    if (!name && !theme && !language && !preferredCountry && jobTitle === undefined) {
       res.status(400).json({
         error: 'Validation error',
-        message: 'At least one field (name, theme, language, preferredCountry) is required',
+        message:
+          'At least one field (name, theme, language, preferredCountry, jobTitle) is required',
       });
       return;
     }
@@ -270,6 +267,7 @@ const profileHandler = async (req: Request, res: Response): Promise<void> => {
       theme,
       language,
       preferredCountry,
+      jobTitle,
     });
 
     res.status(200).json({ message: 'Profile updated successfully', user: updatedUser });

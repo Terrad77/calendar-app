@@ -1,5 +1,6 @@
 {
   "loading": "Завантаження",
+  "loading_holidays": "Завантаження свят світу...",
   "cancel": "Скасувати",
   "submit": "Відправити",
   "success": "Успіх",
@@ -31,6 +32,8 @@
   "name": "Ім'я",
   "email": "Електронна пошта",
   "role": "Роль",
+  "job_title": "Посада",
+  "job_title_placeholder": "напр. Frontend-розробник",
   "save": "Зберегти",
   "saving": "Збереження",
   "profile_saved": "Профіль збережено",

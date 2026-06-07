@@ -10,6 +10,7 @@ import {
   type ShareWithMe,
 } from '../../API/apiOperations';
 import { useTranslation } from 'react-i18next';
+import { getInitials } from '../../utils/getInitials';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 
@@ -21,6 +22,7 @@ const relativeTimeOrFallback = (date: unknown): string => {
   return d.isValid() ? d.fromNow() : 'Recently active';
 };
 import Modal from '../../components/Modal/Modal';
+import DotLoader from '../../components/DotLoader/DotLoader';
 import { updateProfile, updateUser } from '../../API/apiOperations';
 import { authenticationService, User } from '../../services/authService';
 import { NavigationPageShell } from '../../components/NavigationPageShell/NavigationPageShell';
@@ -77,12 +79,7 @@ export default function ContactsPage() {
               role: u.role ?? 'Collaborator',
               status: u.status ?? t('available'),
               time: u.time ?? relativeTimeOrFallback(u.updatedAt),
-              accent: (u.name || '')
-                .split(' ')
-                .map((s: string) => s[0])
-                .slice(0, 2)
-                .join('')
-                .toUpperCase(),
+              accent: getInitials(u.name, u.email),
               raw: u,
             }))
           );
@@ -507,7 +504,9 @@ export default function ContactsPage() {
 
       <div className={styles.contactsGrid}>
         {loadingContacts ? (
-          <div className={styles.loading}>Завантаження контактів…</div>
+          <div className="flex w-full items-center justify-center py-10">
+            <DotLoader text={t('common:loading')} />
+          </div>
         ) : contactsError ? (
           <div className={styles.error}>Помилка: {contactsError}</div>
         ) : (

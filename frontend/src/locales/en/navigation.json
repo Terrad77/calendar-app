@@ -1,4 +1,6 @@
 {
+  "analytics_signin_prompt": "Sign in to view your personal analytics",
+  "sign_in": "Sign in",
   "sidebar_title": "Navigation",
   "workspace": "Workspace",
   "workspace_shell": "CalendAir workspace",
@@ -41,6 +43,7 @@
   "loading": "Loading",
   "meeting_density_by_day": "Event density by day this week",
   "live_snapshot": "Live snapshot",
+  "export_csv": "Export CSV",
   "no_data_week": "No data for the week",
   "best_windows": "Best windows",
   "calendar_stays_calm": "When the calendar stays calm",

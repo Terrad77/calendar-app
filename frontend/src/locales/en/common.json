@@ -1,5 +1,6 @@
 {
-  "loading": "Loading...",
+  "loading": "Loading",
+  "loading_holidays": "Loading worldwide holidays...",
   "cancel": "Cancel",
   "submit": "Submit",
   "success": "Success",
@@ -33,6 +34,8 @@
   "name": "Name",
   "email": "Email",
   "role": "Role",
+  "job_title": "Job Title",
+  "job_title_placeholder": "e.g. Frontend Developer",
   "save": "Save",
   "saving": "Saving...",
   "profile_saved": "Profile saved",

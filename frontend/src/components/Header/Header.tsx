@@ -10,6 +10,7 @@ import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher';
 import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
 import { getNotifications } from '../../API/apiOperations';
 import { selectUser } from '../../redux/user/selectors';
+import { getInitials } from '../../utils/getInitials';
 import css from './Header.module.css';
 import btnCss from './HeaderButton.module.css';
 
@@ -33,8 +34,8 @@ export const Header: React.FC<HeaderProps> = ({
   const user = useSelector(selectUser);
   const sidebarToggleLabel = sidebarOpen ? t('close_sidebar') : t('toggle_sidebar');
 
-  // First letter of the user's name for the avatar circle
-  const initial = useMemo(() => user?.name?.trim()?.[0]?.toUpperCase() ?? '?', [user?.name]);
+  // Avatar monogram from the user's name (falls back to email)
+  const initial = useMemo(() => getInitials(user?.name, user?.email), [user?.name, user?.email]);
 
   const { data: unreadNotifs } = useQuery({
     queryKey: ['notifications-unread'],

@@ -4,6 +4,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  jobTitle?: string;
   avatarURL?: string;
   theme?: string;
   language?: string;

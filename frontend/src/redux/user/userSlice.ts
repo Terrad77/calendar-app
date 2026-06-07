@@ -11,6 +11,7 @@ import {
   changePassword,
   deleteAccount,
   saveLanguageAndCountry,
+  updateUser,
 } from './operations';
 import { resetAuthState } from './authHelpers';
 
@@ -229,7 +230,17 @@ const userSlice = createSlice({
           state.isLoading = false;
           state.error = action.payload as string;
         }
-      );
+      )
+
+      // Update Profile (name, job title, etc.)
+      .addCase(updateUser.fulfilled, (state, action: PayloadAction<User>) => {
+        // Merge so any fields not echoed by the response are preserved
+        state.user = state.user ? { ...state.user, ...action.payload } : action.payload;
+        state.error = null;
+      })
+      .addCase(updateUser.rejected, (state, action: PayloadAction<string | undefined>) => {
+        state.error = action.payload as string;
+      });
   },
 });
 

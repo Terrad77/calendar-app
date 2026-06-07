@@ -25,7 +25,12 @@ const AIAssistantDrawer = React.lazy(() =>
 import { Layout } from './components/Layout/Layout';
 import type { CalendarEvent } from './types/calendar.types';
 import { useSelector } from 'react-redux';
-import { selectIsLoggedIn, selectIsRefreshing, selectUserId } from './redux/user/selectors';
+import {
+  selectIsLoggedIn,
+  selectIsRefreshing,
+  selectUserId,
+  selectUser,
+} from './redux/user/selectors';
 import { aiService } from './services/aiService';
 import { useDispatch } from 'react-redux';
 import { restoreSession } from './redux/user/operations';
@@ -36,14 +41,14 @@ import {
   getMyCalendarEvents,
   updateCalendarEvent,
 } from './API/apiOperations';
-import { Toaster } from 'react-hot-toast';
+import toast, { Toaster } from 'react-hot-toast';
 import './App.css';
 import DotLoader from './components/DotLoader/DotLoader';
 
 const syncInFlightOperations = new Set<string>();
 
 function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [authChecked, setAuthChecked] = useState(false);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const dispatch = useDispatch<AppDispatch>();
@@ -54,10 +59,22 @@ function App() {
     message?: string;
   } | null>(null);
 
-  const [aiError, setAiError] = useState<string | null>(null);
   const isAuthenticated = useSelector(selectIsLoggedIn);
   const currentUserId = useSelector(selectUserId);
+  const user = useSelector(selectUser);
   const isAnalyticsRoute = location.pathname.startsWith('/analytics');
+
+  // Keep i18n in sync with the authoritative language preference: the logged-in
+  // user's saved language when available, otherwise the persisted localStorage
+  // value. Runs on boot and whenever the backend user language loads/changes,
+  // so the UI never lags behind the stored preference.
+  useEffect(() => {
+    const preferred = user?.language || localStorage.getItem('language');
+    if (preferred && !i18n.language.startsWith(preferred)) {
+      i18n.changeLanguage(preferred);
+      localStorage.setItem('language', preferred);
+    }
+  }, [user?.language, i18n]);
 
   // Protected Route wrapper - redirect to /signin if not authenticated, but wait for auth check to complete first
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -202,10 +219,15 @@ function App() {
         setAiServiceStatus(health);
 
         if (!health.available) {
-          setAiError(`AI сервіс недоступний: ${health.message}`);
+          // Show only once per session — don't alarm the user on every check
+          if (!sessionStorage.getItem('ai-status-shown')) {
+            sessionStorage.setItem('ai-status-shown', '1');
+            toast.error('AI асистент тимчасово недоступний', {
+              id: 'ai-service-error',
+              duration: 3000,
+            });
+          }
           console.warn('AI Service is not available:', health.message);
-        } else {
-          setAiError(null);
         }
       } catch (error) {
         console.error('Failed to check AI service health:', error);
@@ -214,7 +236,14 @@ function App() {
           available: false,
           message: error instanceof Error ? error.message : 'Unknown error',
         });
-        setAiError('Не вдалося перевірити доступність AI сервісу');
+        // Show only once per session — don't alarm the user on every check
+        if (!sessionStorage.getItem('ai-status-shown')) {
+          sessionStorage.setItem('ai-status-shown', '1');
+          toast.error('Не вдалося перевірити доступність AI сервісу', {
+            id: 'ai-service-error',
+            duration: 3000,
+          });
+        }
       }
     };
 
@@ -224,20 +253,6 @@ function App() {
 
     return () => clearInterval(interval);
   }, [authChecked, isAnalyticsRoute, isAuthenticated]);
-
-  // Check AI service on authentication change
-  useEffect(() => {
-    if (isAuthenticated && !isAnalyticsRoute) {
-      const checkAIOnAuth = async () => {
-        const health = await aiService.healthCheck();
-        setAiServiceStatus(health);
-        if (!health.available) {
-          setAiError('AI асистент тимчасово недоступний. Спробуйте пізніше.');
-        }
-      };
-      checkAIOnAuth();
-    }
-  }, [isAnalyticsRoute, isAuthenticated]);
 
   useEffect(() => {
     const loadEvents = async () => {
@@ -316,30 +331,6 @@ function App() {
     applyEventsUpdate((prev) => prev.filter((event) => event.id !== eventId));
   };
 
-  // Notification component for AI service status
-  const AIServiceNotification = () => {
-    if (isAnalyticsRoute) {
-      return null;
-    }
-
-    if (!aiError && (!aiServiceStatus || aiServiceStatus.available)) {
-      return null;
-    }
-    return (
-      <div className="ai-service-notification">
-        <div className="notification-content">
-          <span className="notification-icon">🤖</span>
-          <div className="notification-text">
-            {aiError || 'AI асистент недоступний'}
-            {aiServiceStatus?.message && (
-              <small className="notification-detail">{aiServiceStatus.message}</small>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="app-container">
       {/* Single global Toaster — works on all routes including auth pages */}
@@ -350,16 +341,33 @@ function App() {
         toastOptions={{
           duration: 1500,
           removeDelay: 0,
+          // Glass card styling to match the app's design system
           style: {
-            background: 'color-mix(in srgb, var(--surface-panel-start) 92%, transparent)',
+            borderRadius: '1rem',
+            padding: '0.65rem 1rem',
+            fontSize: '0.9rem',
+            fontWeight: 500,
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            background: 'var(--surface-panel-start)',
             color: 'var(--color-text-primary)',
-            borderRadius: 'var(--radius-md)',
-            boxShadow: 'var(--shadow-md)',
-            border: '1px solid color-mix(in srgb, var(--color-text-primary) 6%, transparent)',
-            padding: '0.5rem 0.75rem',
-            fontWeight: '500',
+            border: '1px solid var(--surface-panel-border)',
+            boxShadow: '0 8px 24px var(--surface-panel-shadow)',
             width: 'auto',
             whiteSpace: 'nowrap',
+          },
+          success: {
+            iconTheme: {
+              primary: 'var(--color-accent)',
+              secondary: 'var(--color-text-primary)',
+            },
+          },
+          error: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#e05c5c',
+              secondary: 'var(--color-text-primary)',
+            },
           },
         }}
         containerStyle={{
@@ -371,7 +379,6 @@ function App() {
           width: 'auto',
         }}
       />
-      {isAuthenticated && !isAnalyticsRoute && <AIServiceNotification />}
       <Routes>
         {/* Home route with conditional rendering */}
         <Route

@@ -55,25 +55,33 @@
 
 .input {
   width: 100%;
-  border: 1px solid color-mix(in srgb, var(--surface-sidebar-border) 74%, transparent);
-  border-radius: 0.95rem;
+  border: 1px solid var(--surface-panel-border);
+  border-radius: 0.65rem;
   padding: 0.85rem 0.95rem;
-  background: color-mix(in srgb, var(--surface-sidebar-item) 92%, white 8%);
-  color: var(--surface-sidebar-text);
+  background: var(--surface-panel-start);
+  color: var(--color-text-primary);
   font-size: 0.95rem;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--surface-sidebar-item-active-border);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--surface-sidebar-item-active-border) 18%, transparent);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent);
 }
 
 .input:disabled {
   cursor: not-allowed;
   opacity: 0.82;
+}
+
+/* Display-only field (e.g. email) — dimmed, no focus ring or interaction */
+.inputReadOnly {
+  background: var(--surface-panel-inset);
+  border: 1px solid var(--surface-panel-border);
+  opacity: 0.7;
+  cursor: default;
+  pointer-events: none;
 }
 
 .error {
