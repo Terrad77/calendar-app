@@ -429,7 +429,128 @@ const RecurringHint = styled('span', {
   lineHeight: 1.35,
 });
 
+const TimeRow = styled('div', {
+  display: 'grid',
+  gridTemplateColumns: '1fr 1fr',
+  gap: '12px',
+});
+
+const FieldSelect = styled('select', {
+  width: '100%',
+  minHeight: '44px',
+  padding: '0.7rem 0.9rem',
+  border: '1px solid var(--surface-calendar-control-border)',
+  borderRadius: '14px',
+  backgroundColor: 'var(--surface-calendar-control-bg)',
+  color: 'var(--surface-calendar-control-text)',
+  fontSize: '0.92rem',
+  cursor: 'pointer',
+  appearance: 'auto',
+  transition: 'border-color 0.18s ease, box-shadow 0.18s ease',
+  '&:focus': {
+    outline: 'none',
+    borderColor: 'var(--color-accent)',
+    boxShadow: '0 0 0 4px color-mix(in srgb, var(--color-accent) 18%, transparent)',
+  },
+});
+
+const SmallNumberInput = styled('input', {
+  width: '4rem',
+  minHeight: '40px',
+  textAlign: 'center',
+  border: '1px solid var(--surface-calendar-control-border)',
+  borderRadius: '10px',
+  backgroundColor: 'var(--surface-calendar-control-bg)',
+  color: 'var(--surface-calendar-control-text)',
+  fontSize: '0.9rem',
+  padding: '0.4rem 0.5rem',
+  '&:focus': {
+    outline: 'none',
+    borderColor: 'var(--color-accent)',
+  },
+});
+
+const RecurringPanel = styled('div', {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '12px',
+  padding: '14px',
+  borderRadius: '14px',
+  border: '1px solid var(--surface-calendar-control-border)',
+  backgroundColor: 'var(--surface-panel-inset)',
+});
+
+const RecurringRow = styled('div', {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  fontSize: '0.85rem',
+  color: 'var(--surface-calendar-control-text)',
+});
+
+const DaysRow = styled('div', {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '6px',
+});
+
+const DayButton = styled('button', {
+  width: '2.2rem',
+  height: '2.2rem',
+  borderRadius: '999px',
+  border: '1px solid var(--surface-calendar-control-border)',
+  backgroundColor: 'var(--surface-calendar-control-bg)',
+  color: 'var(--surface-calendar-muted)',
+  fontSize: '0.75rem',
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease',
+  variants: {
+    active: {
+      true: {
+        background:
+          'linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%)',
+        color: 'var(--surface-button-text)',
+        borderColor: 'var(--surface-button-border)',
+      },
+    },
+  },
+});
+
 // Note: label text and button copy are produced via i18n `t()` calls in the component.
+
+type ReminderOption =
+  | 'none'
+  | 'atTime'
+  | '5min'
+  | '10min'
+  | '15min'
+  | '30min'
+  | '1hour'
+  | '2hours'
+  | '1day'
+  | '1week';
+
+type RecurringType = 'never' | 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'yearly' | 'custom';
+
+interface RecurringConfig {
+  interval: number;
+  daysOfWeek: number[]; // 0=Sun, 1=Mon ... 6=Sat
+  endDate: string; // ISO date string or ''
+}
+
+const REMINDER_OPTIONS: ReminderOption[] = [
+  'none',
+  'atTime',
+  '5min',
+  '10min',
+  '15min',
+  '30min',
+  '1hour',
+  '2hours',
+  '1day',
+  '1week',
+];
 // Removed unused local label helpers to satisfy TypeScript no-unused-vars checks.
 
 interface TaskInputFormProps {
@@ -453,7 +574,6 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
 }) => {
   const [title, setTitle] = useState(initialTask?.title || '');
   const [description, setDescription] = useState(initialTask?.description || '');
-  const [isRecurring, setIsRecurring] = useState(Boolean(initialTask?.isRecurring));
   const [isPrivate, setIsPrivate] = useState(
     Boolean(
       (initialTask as (typeof initialTask & { isPrivate?: boolean }) | null | undefined)?.isPrivate
@@ -463,10 +583,35 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     initialTask?.colors && initialTask.colors.length > 0 ? initialTask.colors : ['default']
   );
 
+  // Restore any saved custom recurrence config from metadata (not a typed field)
+  const savedPattern = (
+    initialTask as
+      | { metadata?: { recurringPattern?: { type?: RecurringType } & Partial<RecurringConfig> } }
+      | null
+      | undefined
+  )?.metadata?.recurringPattern;
+  const savedReminder = (initialTask as { reminderTime?: string } | null | undefined)?.reminderTime;
+
+  const [startTime, setStartTime] = useState(initialTask?.startTime || '');
+  const [endTime, setEndTime] = useState(initialTask?.endTime || '');
+  const [reminder, setReminder] = useState<ReminderOption>(
+    REMINDER_OPTIONS.includes(savedReminder as ReminderOption)
+      ? (savedReminder as ReminderOption)
+      : 'none'
+  );
+  const [recurringType, setRecurringType] = useState<RecurringType>(
+    savedPattern?.type ?? (initialTask?.isRecurring ? 'daily' : 'never')
+  );
+  const [recurringConfig, setRecurringConfig] = useState<RecurringConfig>({
+    interval: savedPattern?.interval ?? 1,
+    daysOfWeek: savedPattern?.daysOfWeek ?? [],
+    endDate: savedPattern?.endDate ?? '',
+  });
+  const [showRecurringConfig, setShowRecurringConfig] = useState(savedPattern?.type === 'custom');
+
   useEffect(() => {
     setTitle(initialTask?.title || '');
     setDescription(initialTask?.description || '');
-    setIsRecurring(Boolean(initialTask?.isRecurring));
     setIsPrivate(
       Boolean(
         (initialTask as (typeof initialTask & { isPrivate?: boolean }) | null | undefined)
@@ -476,9 +621,32 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     setSelectedColors(
       initialTask?.colors && initialTask.colors.length > 0 ? initialTask.colors : ['default']
     );
+
+    const pattern = (
+      initialTask as
+        | { metadata?: { recurringPattern?: { type?: RecurringType } & Partial<RecurringConfig> } }
+        | null
+        | undefined
+    )?.metadata?.recurringPattern;
+    const rem = (initialTask as { reminderTime?: string } | null | undefined)?.reminderTime;
+    setStartTime(initialTask?.startTime || '');
+    setEndTime(initialTask?.endTime || '');
+    setReminder(
+      REMINDER_OPTIONS.includes(rem as ReminderOption) ? (rem as ReminderOption) : 'none'
+    );
+    setRecurringType(pattern?.type ?? (initialTask?.isRecurring ? 'daily' : 'never'));
+    setRecurringConfig({
+      interval: pattern?.interval ?? 1,
+      daysOfWeek: pattern?.daysOfWeek ?? [],
+      endDate: pattern?.endDate ?? '',
+    });
+    setShowRecurringConfig(pattern?.type === 'custom');
   }, [initialTask]);
 
-  const { t } = useTranslation(['calendar', 'common']);
+  const { t, i18n } = useTranslation(['calendar', 'common']);
+  const dayLabels = i18n.language.startsWith('uk')
+    ? ['Нд', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+    : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   const availableColors: ColorType[] = TASK_MARKER_COLORS as unknown as ColorType[];
   const isEditing = Boolean(initialTask);
@@ -506,14 +674,26 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       return;
     }
 
-    const taskToSave: TaskEvent & { isPrivate?: boolean } = {
+    const isRecurringNow = recurringType !== 'never';
+    const taskToSave: TaskEvent & {
+      isPrivate?: boolean;
+      reminderTime?: string;
+      metadata?: Record<string, unknown>;
+    } = {
       id: taskId,
       title: title.trim(),
       description: description.trim(),
       date: taskDate,
       eventType: 'task',
       colors: selectedColors.length > 0 ? selectedColors : ['default'],
-      isRecurring,
+      startTime: startTime || undefined,
+      endTime: endTime || undefined,
+      reminderTime: reminder !== 'none' ? reminder : undefined,
+      isRecurring: isRecurringNow,
+      // recurringPattern isn't a typed field — persist it via metadata (jsonb)
+      metadata: isRecurringNow
+        ? { recurringPattern: { type: recurringType, ...recurringConfig } }
+        : undefined,
       isPrivate,
       completed: initialTask && 'completed' in initialTask ? initialTask.completed : false,
       priority: initialTask && 'priority' in initialTask ? initialTask.priority : 'medium',
@@ -526,7 +706,11 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     title,
     description,
     selectedColors,
-    isRecurring,
+    startTime,
+    endTime,
+    reminder,
+    recurringType,
+    recurringConfig,
     initialTask,
     initialDate,
     onSave,
@@ -550,14 +734,25 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       return;
     }
 
-    const copiedTask: TaskEvent & { isPrivate?: boolean } = {
+    const isRecurringNow = recurringType !== 'never';
+    const copiedTask: TaskEvent & {
+      isPrivate?: boolean;
+      reminderTime?: string;
+      metadata?: Record<string, unknown>;
+    } = {
       id: generateUniqueId('task'),
       title: title.trim(),
       description: description.trim(),
       date: initialTask.date,
       eventType: 'task',
       colors: selectedColors.length > 0 ? selectedColors : ['default'],
-      isRecurring,
+      startTime: startTime || undefined,
+      endTime: endTime || undefined,
+      reminderTime: reminder !== 'none' ? reminder : undefined,
+      isRecurring: isRecurringNow,
+      metadata: isRecurringNow
+        ? { recurringPattern: { type: recurringType, ...recurringConfig } }
+        : undefined,
       isPrivate,
       completed: initialTask && 'completed' in initialTask ? initialTask.completed : false,
       priority: initialTask && 'priority' in initialTask ? initialTask.priority : 'medium',
@@ -566,7 +761,18 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     };
 
     onDuplicate(copiedTask);
-  }, [initialTask, onDuplicate, title, description, selectedColors, isRecurring]);
+  }, [
+    initialTask,
+    onDuplicate,
+    title,
+    description,
+    selectedColors,
+    startTime,
+    endTime,
+    reminder,
+    recurringType,
+    recurringConfig,
+  ]);
 
   // --- logic for color selector ---
   const handleColorToggle = useCallback((color: ColorType) => {
@@ -641,18 +847,117 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
           />
         </FieldGroup>
 
-        <RecurringToggle htmlFor="task-recurring">
-          <RecurringCheckbox
+        <TimeRow>
+          <FieldGroup>
+            <FieldLabel htmlFor="task-start-time">{t('start_time')}</FieldLabel>
+            <TaskInput
+              id="task-start-time"
+              type="time"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            />
+          </FieldGroup>
+          <FieldGroup>
+            <FieldLabel htmlFor="task-end-time">{t('end_time')}</FieldLabel>
+            <TaskInput
+              id="task-end-time"
+              type="time"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
+            />
+          </FieldGroup>
+        </TimeRow>
+
+        <FieldGroup>
+          <FieldLabel htmlFor="task-reminder">{t('reminder')}</FieldLabel>
+          <FieldSelect
+            id="task-reminder"
+            value={reminder}
+            onChange={(e) => setReminder(e.target.value as ReminderOption)}
+          >
+            <option value="none">{t('reminder_none')}</option>
+            <option value="atTime">{t('reminder_at_time')}</option>
+            <option value="5min">{t('reminder_5min')}</option>
+            <option value="10min">{t('reminder_10min')}</option>
+            <option value="15min">{t('reminder_15min')}</option>
+            <option value="30min">{t('reminder_30min')}</option>
+            <option value="1hour">{t('reminder_1hour')}</option>
+            <option value="2hours">{t('reminder_2hours')}</option>
+            <option value="1day">{t('reminder_1day')}</option>
+            <option value="1week">{t('reminder_1week')}</option>
+          </FieldSelect>
+        </FieldGroup>
+
+        <FieldGroup>
+          <FieldLabel htmlFor="task-recurring">{t('recurring_event')}</FieldLabel>
+          <FieldSelect
             id="task-recurring"
-            type="checkbox"
-            checked={isRecurring}
-            onChange={(e) => setIsRecurring(e.target.checked)}
-          />
-          <RecurringText>
-            <RecurringTitle>{t('label_recurring')}</RecurringTitle>
-            <RecurringHint>{t('label_recurring_hint')}</RecurringHint>
-          </RecurringText>
-        </RecurringToggle>
+            value={recurringType}
+            onChange={(e) => {
+              const val = e.target.value as RecurringType;
+              setRecurringType(val);
+              setShowRecurringConfig(val === 'custom');
+            }}
+          >
+            <option value="never">{t('recurring_never')}</option>
+            <option value="daily">{t('recurring_daily')}</option>
+            <option value="weekly">{t('recurring_weekly')}</option>
+            <option value="biweekly">{t('recurring_biweekly')}</option>
+            <option value="monthly">{t('recurring_monthly')}</option>
+            <option value="yearly">{t('recurring_yearly')}</option>
+            <option value="custom">{t('recurring_custom')}</option>
+          </FieldSelect>
+        </FieldGroup>
+
+        {showRecurringConfig && (
+          <RecurringPanel>
+            <RecurringRow>
+              <span>{t('recurring_every')}</span>
+              <SmallNumberInput
+                type="number"
+                min={1}
+                max={99}
+                value={recurringConfig.interval}
+                onChange={(e) =>
+                  setRecurringConfig((prev) => ({ ...prev, interval: Number(e.target.value) }))
+                }
+              />
+              <span>{t('recurring_days')}</span>
+            </RecurringRow>
+
+            <DaysRow>
+              {dayLabels.map((day, i) => (
+                <DayButton
+                  key={i}
+                  type="button"
+                  active={recurringConfig.daysOfWeek.includes(i)}
+                  onClick={() =>
+                    setRecurringConfig((prev) => ({
+                      ...prev,
+                      daysOfWeek: prev.daysOfWeek.includes(i)
+                        ? prev.daysOfWeek.filter((d) => d !== i)
+                        : [...prev.daysOfWeek, i],
+                    }))
+                  }
+                >
+                  {day}
+                </DayButton>
+              ))}
+            </DaysRow>
+
+            <FieldGroup>
+              <FieldLabel htmlFor="task-recurring-end">{t('recurring_end_date')}</FieldLabel>
+              <TaskInput
+                id="task-recurring-end"
+                type="date"
+                value={recurringConfig.endDate}
+                onChange={(e) =>
+                  setRecurringConfig((prev) => ({ ...prev, endDate: e.target.value }))
+                }
+              />
+            </FieldGroup>
+          </RecurringPanel>
+        )}
 
         <RecurringToggle htmlFor="task-private">
           <RecurringCheckbox
