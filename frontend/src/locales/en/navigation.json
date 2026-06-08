@@ -117,6 +117,7 @@
   "quiet_by_design_item_2": "Only urgent changes stay pinned at the top.",
   "quiet_by_design_item_3": "All background noise remains out of the way until opened.",
   "notification_center": "Notification center",
+  "noNotificationsYet": "No notifications yet.",
   "priority_inbox": "Priority inbox for calendar changes",
   "hide_read_items": "Hide read items",
   "settings_title": "Refined controls for the workspace",

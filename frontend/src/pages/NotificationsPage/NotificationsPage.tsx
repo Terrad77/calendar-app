@@ -20,7 +20,6 @@ export default function NotificationsPage() {
   const [hideRead, setHideRead] = useState(false);
   const [notifications, setNotifications] = useState<NotificationApiItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [responding, setResponding] = useState<string | null>(null); // notification id being responded to
   const hasMarkedRead = useRef(false);
 
@@ -29,14 +28,16 @@ export default function NotificationsPage() {
 
     const load = async () => {
       setLoading(true);
-      setError(null);
       try {
         const data = await getNotifications();
         if (!mounted) return;
         setNotifications(data);
       } catch (err) {
         if (!mounted) return;
-        setError(err instanceof Error ? err.message : 'Failed to load notifications');
+        // Never surface raw fetch/auth error text in the UI; fall back to the
+        // empty state and log the error for debugging.
+        console.error('Failed to load notifications', err);
+        setNotifications([]);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -137,11 +138,9 @@ export default function NotificationsPage() {
           <div className="flex w-full items-center justify-center py-10">
             <DotLoader text={t('common:loading')} />
           </div>
-        ) : error ? (
-          <p className={styles.stateMessage}>{error}</p>
         ) : visible.length === 0 ? (
           <p className={styles.stateMessage}>
-            {hideRead ? 'No unread notifications.' : 'No notifications yet.'}
+            {hideRead ? 'No unread notifications.' : t('noNotificationsYet')}
           </p>
         ) : (
           visible.map((notification) => (
