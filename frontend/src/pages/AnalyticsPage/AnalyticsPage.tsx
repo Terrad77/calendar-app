@@ -407,9 +407,11 @@ export default function AnalyticsPage() {
 
   const exportCsv = async () => {
     try {
-      const res = await authenticationService.authenticatedFetch('/api/analytics/export', {
-        method: 'GET',
-      });
+      // The export endpoint requires a `date` query param (YYYY-MM-DD); export today's events.
+      const res = await authenticationService.authenticatedFetch(
+        `/api/analytics/export?date=${todayDate}`,
+        { method: 'GET' }
+      );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
