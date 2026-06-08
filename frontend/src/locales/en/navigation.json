@@ -151,5 +151,14 @@
   "compact_density": "Compact density",
   "compact_density_detail": "Condense cards and spacing on desktop.",
   "email_digest": "Email digest",
-  "email_digest_detail": "Receive a calm daily summary of what changed."
+  "email_digest_detail": "Receive a calm daily summary of what changed.",
+  "shareYourCalendar": "Share your calendar",
+  "notSharedYet": "{{username}} has not shared their calendar with you yet. You can share your own calendar with them below.",
+  "alreadyShared": "{{username}} has already shared their calendar with you.",
+  "permissionLevel": "Permission level",
+  "viewOnly": "View only",
+  "canEdit": "Can edit",
+  "cancel": "Cancel",
+  "sharing": "Sharing…",
+  "shareMyCalendar": "Share my calendar"
 }

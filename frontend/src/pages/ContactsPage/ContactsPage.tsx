@@ -638,15 +638,16 @@ export default function ContactsPage() {
       <Modal
         isOpen={!!shareModalContact}
         onClose={() => setShareModalContact(null)}
-        title="Share your calendar"
+        title={t('shareYourCalendar')}
+        size="small"
         showCloseButton
       >
         {shareModalContact && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <p style={{ color: 'var(--color-text-secondary)', fontSize: 14 }}>
               {sharesWithMe.some((s) => s.ownerId === shareModalContact.id)
-                ? `${shareModalContact.name ?? shareModalContact.id} has already shared their calendar with you.`
-                : `${shareModalContact.name ?? shareModalContact.id} has not shared their calendar with you yet. You can share your own calendar with them below.`}
+                ? t('alreadyShared', { username: shareModalContact.name ?? shareModalContact.id })
+                : t('notSharedYet', { username: shareModalContact.name ?? shareModalContact.id })}
             </p>
 
             <label
@@ -658,7 +659,7 @@ export default function ContactsPage() {
                 color: 'var(--color-text-secondary)',
               }}
             >
-              Permission level
+              {t('permissionLevel')}
               <select
                 value={sharePermission}
                 onChange={(e) => setSharePermission(e.target.value as 'read' | 'write')}
@@ -668,8 +669,8 @@ export default function ContactsPage() {
                   border: '1px solid rgba(0,0,0,0.1)',
                 }}
               >
-                <option value="read">View only</option>
-                <option value="write">View &amp; Edit</option>
+                <option value="read">{t('viewOnly')}</option>
+                <option value="write">{t('canEdit')}</option>
               </select>
             </label>
 
@@ -679,7 +680,7 @@ export default function ContactsPage() {
                 className="modal-button"
                 onClick={() => setShareModalContact(null)}
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 type="button"
@@ -687,7 +688,7 @@ export default function ContactsPage() {
                 onClick={() => void handleShareSubmit()}
                 disabled={shareSaving}
               >
-                {shareSaving ? 'Sharing…' : 'Share my calendar'}
+                {shareSaving ? t('sharing') : t('shareMyCalendar')}
               </button>
             </div>
           </div>
