@@ -231,6 +231,8 @@ export default function AnalyticsPage() {
   }, [isAuth, retryCount]);
 
   const maxValue = trends.length ? Math.max(...trends.map((p) => p.value)) : 0;
+  // Minimum bar height (%) so 0-count days stay visible instead of collapsing.
+  const MIN_BAR_HEIGHT_PCT = 6;
   // Month card is empty once loaded if there are no points or every day is zero
   // (mirrors the empty check inside MonthPulseChart).
   const monthHasNoData =
@@ -518,7 +520,15 @@ export default function AnalyticsPage() {
 
                   {!trendsLoading && trends.length === 0 && <AnalyticsEmptyState />}
                   {trends.map((point) => {
-                    const height = maxValue ? Math.round((point.value / maxValue) * 100) : 0;
+                    // Clamp the denominator to avoid divide-by-zero on an empty
+                    // week; floor every bar so 0-count days remain visible.
+                    const height =
+                      point.value === 0
+                        ? MIN_BAR_HEIGHT_PCT
+                        : Math.max(
+                            MIN_BAR_HEIGHT_PCT,
+                            Math.round((point.value / Math.max(maxValue, 1)) * 100)
+                          );
                     const isToday = point.date === todayDate;
                     const weekday = dayjs(point.date)
                       .locale(i18n.language.startsWith('uk') ? 'uk' : 'en')
