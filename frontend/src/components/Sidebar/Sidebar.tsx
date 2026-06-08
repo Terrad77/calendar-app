@@ -165,8 +165,13 @@ export const Sidebar = ({ className, isOpen = true, onClose, onOpenProfile }: Si
         >
           <div className={css.avatar}>{initials}</div>
           <div className={css.profileMeta}>
-            <p className={css.profileName}>{user?.name || 'Guest user'}</p>
-            <p className={css.profileEmail}>{user?.email || 'guest@calendar.app'}</p>
+            {/* title shows the full value on hover when truncated by ellipsis */}
+            <p className={css.profileName} title={user?.name || 'Guest user'}>
+              {user?.name || 'Guest user'}
+            </p>
+            <p className={css.profileEmail} title={user?.email || 'guest@calendar.app'}>
+              {user?.email || 'guest@calendar.app'}
+            </p>
           </div>
           <Settings className={css.profileIcon} />
         </div>

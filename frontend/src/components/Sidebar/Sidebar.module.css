@@ -136,7 +136,8 @@
   box-shadow: 0 8px 18px color-mix(in srgb, var(--surface-sidebar-shadow) 35%, transparent);
 }
 
-.navItem:hover {
+/* Keep hover for non-active items so it never overrides the active accent */
+.navItem:not(.navItemActive):hover {
   transform: translateY(-1px);
   color: var(--surface-sidebar-text);
   background: var(--surface-sidebar-item-hover);
@@ -144,17 +145,12 @@
   box-shadow: 0 12px 24px color-mix(in srgb, var(--surface-sidebar-shadow) 42%, transparent);
 }
 
+/* Active item uses the theme accent so it clearly stands out in both themes */
 .navItemActive {
-  color: var(--surface-sidebar-text);
-  background:
-    linear-gradient(
-      90deg,
-      color-mix(in srgb, #2563eb 12%, transparent),
-      var(--surface-sidebar-item-active) 34%
-    ),
-    var(--surface-sidebar-item-active);
-  border-color: var(--surface-sidebar-item-active-border);
-  box-shadow: 0 14px 28px color-mix(in srgb, #2563eb 10%, transparent);
+  color: #ffffff;
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
 .navIcon {
@@ -182,6 +178,11 @@
 .navItem:hover .navChevron,
 .navChevronActive {
   opacity: 1;
+}
+
+/* White chevron on the accent-filled active item */
+.navItemActive .navChevron {
+  color: #ffffff;
 }
 
 .footer {
