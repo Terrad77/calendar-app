@@ -436,7 +436,10 @@ export const AIAssistantDrawer = ({
   );
 
   const handleSendMessage = useCallback(async () => {
-    if (!inputValue.trim() || isLoading || !isAIAvailable) return;
+    // Only block on empty text or an in-flight request. AI availability is
+    // informational (shown via the placeholder) — the service layer degrades
+    // gracefully when offline, so it must not block keyboard sending here.
+    if (!inputValue.trim() || isLoading) return;
 
     const userMessage = inputValue.trim();
     setInputValue('');
@@ -570,7 +573,6 @@ export const AIAssistantDrawer = ({
     currentEvents,
     generateActionsFromAI,
     inputValue,
-    isAIAvailable,
     isLoading,
     onEventCreate,
     onEventUpdate,
@@ -771,14 +773,12 @@ export const AIAssistantDrawer = ({
                         ? t('assistant_input_placeholder')
                         : t('assistant_input_placeholder_unavailable')
                     }
-                    disabled={isLoading || !(isServiceAvailable && isAIAvailable)}
+                    disabled={isLoading}
                     className={css.inputField}
                   />
                   <button
                     type="submit"
-                    disabled={
-                      !inputValue.trim() || isLoading || !(isServiceAvailable && isAIAvailable)
-                    }
+                    disabled={!inputValue.trim() || isLoading}
                     className={css.sendButton}
                   >
                     <Send className={css.sendIcon} />
