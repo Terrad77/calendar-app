@@ -21,6 +21,17 @@ const relativeTimeOrFallback = (date: unknown): string => {
   const d = dayjs(date as string | number | Date);
   return d.isValid() ? d.fromNow() : 'Recently active';
 };
+
+// Format an ISO date (yyyy-mm-dd) as dd.mm.yyyy for the event picker.
+const formatEventDate = (isoDate: string): string => {
+  const d = new Date(isoDate);
+  if (Number.isNaN(d.getTime())) return isoDate;
+  return d.toLocaleDateString('uk-UA', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+};
 import Modal from '../../components/Modal/Modal';
 import DotLoader from '../../components/DotLoader/DotLoader';
 import { updateProfile, updateUser } from '../../API/apiOperations';
@@ -480,27 +491,29 @@ export default function ContactsPage() {
         />
 
         <label className={styles.eventPicker}>
-          <span className={styles.eventPickerLabel}>Event for invitation</span>
+          <span className={styles.eventPickerLabel}>{t('event_for_invitation')}</span>
           <select
             className={styles.eventSelect}
             value={inviteEventId}
             onChange={(event) => setSelectedEventId(event.target.value)}
             disabled={loadingInviteEvents || !!currentEventId}
           >
-            <option value="">{loadingInviteEvents ? 'Loading events…' : 'Select event'}</option>
+            <option value="">
+              {loadingInviteEvents ? t('loading_events') : t('select_event')}
+            </option>
             {inviteEvents.map((event) => (
               <option key={event.id} value={event.id}>
-                {event.title} · {event.startDate}
+                {event.title} · {formatEventDate(event.startDate)}
                 {event.startTime ? ` ${event.startTime}` : ''}
               </option>
             ))}
           </select>
           <span className={styles.eventPickerHint}>
             {currentEventId
-              ? 'Using the event opened from the calendar page.'
+              ? t('using_calendar_event')
               : selectedInviteEvent
-                ? `Invitations will be sent for ${selectedInviteEvent.title}.`
-                : 'Choose a calendar event before inviting someone.'}
+                ? t('invitations_will_be_sent', { name: selectedInviteEvent.title })
+                : t('choose_event_hint')}
           </span>
         </label>
       </section>
@@ -567,7 +580,7 @@ export default function ContactsPage() {
 
                       try {
                         await inviteUserToEvent(inviteEventId, contact.email);
-                        toastMaker(`Invitation sent to ${contact.email}`);
+                        toastMaker(t('invitation_sent'));
                       } catch (err) {
                         const message =
                           err instanceof Error ? err.message : 'Failed to send invite';
