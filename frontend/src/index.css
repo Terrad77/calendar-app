@@ -12,8 +12,10 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* Color Scheme */
-  color-scheme: light dark;
+  /* Color Scheme — pin to light so native controls (checkboxes) match the
+     Sand theme even when the OS prefers dark; otherwise they render as a
+     dark/black square on the light UI. */
+  color-scheme: light;
 
   /* Light theme (default) */
   --color-bg-primary: #f5f0e8;
@@ -159,6 +161,9 @@
 
 /* Dark theme */
 [data-theme='dark'] {
+  /* Pin native controls to the dark scheme to match the Navy theme. */
+  color-scheme: dark;
+
   --color-bg-primary: #0f1a2e;
   --color-bg-secondary: #162033;
   --color-bg-card: rgba(30, 45, 70, 0.6);
