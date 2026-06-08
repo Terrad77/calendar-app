@@ -30,6 +30,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isAIAvailable, setIsAIAvailable] = useState(true);
+  // Optional city for weather questions, remembered across sessions.
+  const [location, setLocation] = useState<string>(
+    () => localStorage.getItem('ai_chat_location') || ''
+  );
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -270,8 +274,13 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         isLoading: true,
       });
 
-      // Send to AI service
-      const aiResponse = await aiService.chat(userMessage, currentEvents, currentLanguage);
+      // Send to AI service (location enables weather-aware answers)
+      const aiResponse = await aiService.chat(
+        userMessage,
+        currentEvents,
+        currentLanguage,
+        location.trim() || undefined
+      );
 
       // Extract AI response data
       const messageContent = aiResponse.message || 'Відповідь AI';
@@ -373,6 +382,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
     addMessage,
     onEventCreate,
     currentLanguage,
+    location,
   ]);
 
   // handler Quick Actions
@@ -558,6 +568,21 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
               </div>
             ))}
             <div ref={messagesEndRef} />
+          </div>
+
+          {/* Optional city for weather questions — remembered in localStorage */}
+          <div className={styles.inputContainer}>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                localStorage.setItem('ai_chat_location', e.target.value);
+              }}
+              placeholder="Ваше місто (для погоди)"
+              aria-label="Місто для погоди"
+              className={styles.chatInput}
+            />
           </div>
 
           {/* Input Area */}

@@ -235,6 +235,55 @@ router.get('/export', authenticateToken, async (req: Request, res: Response) => 
   }
 });
 
+// GET /api/analytics/month-pulse
+// Returns per-day event counts for the current calendar month.
+// Response: Array<{ day: number; value: number }>
+router.get('/month-pulse', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const db = getDb();
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = now.getUTCMonth();
+    const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+    const startDate = new Date(Date.UTC(year, month, 1)).toISOString().slice(0, 10);
+    const endDate = new Date(Date.UTC(year, month, daysInMonth)).toISOString().slice(0, 10);
+
+    const rows = await db.execute(sql`
+			select extract(day from start_date::timestamp)::int as day, count(*) as value
+			from ${calendarEvents}
+			where user_id = ${userId}
+				and date(start_date) >= ${startDate}
+				and date(start_date) <= ${endDate}
+			group by extract(day from start_date::timestamp)
+			order by extract(day from start_date::timestamp) asc
+		`);
+
+    const result = (rows as any).rows || rows;
+    const countsByDay = new Map<number, number>();
+    for (const row of result as Array<{ day?: number | string; value?: number | string }>) {
+      if (row?.day != null) {
+        countsByDay.set(Number(row.day), Number(row.value) || 0);
+      }
+    }
+
+    const series = Array.from({ length: daysInMonth }, (_, index) => {
+      const day = index + 1;
+      return { day, value: countsByDay.get(day) ?? 0 };
+    });
+
+    res.json(series);
+  } catch (error) {
+    console.error('Analytics month-pulse error:', error);
+    res.status(500).json({ error: 'Failed to get month pulse data' });
+  }
+});
+
 if (process.env.NODE_ENV !== 'production' || process.env.DEBUG_API === '1') {
   router.get('/debug/all', async (_req: Request, res: Response) => {
     try {

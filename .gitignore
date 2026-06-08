@@ -137,9 +137,17 @@ frontend/build/
 frontend/vite.config.d.ts
 frontend/vite.config.js
 
+# Frontend bundle analysis (dev tools, not part of app)
+frontend/analyze-sourcemap.js
+frontend/analyze-sourcemap.cjs
+frontend/stats.html
+
 # Backend build outputs  
 backend/dist/
 backend/node_modules/
+
+# Frontend node_modules 
+frontend/node_modules/
 
 # IDE
 .idea/

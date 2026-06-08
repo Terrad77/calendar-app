@@ -1,0 +1,9 @@
+{
+  "serverTimeout": "Server is not responding. Please try again.",
+  "retry": "Retry",
+  "noDataTitle": "No events yet",
+  "noDataHint": "Create your first event to see analytics",
+  "createEvent": "Go to Calendar →",
+  "noInsightsTitle": "Not enough data",
+  "noInsightsHint": "Add more events to see AI insights"
+}

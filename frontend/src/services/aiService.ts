@@ -82,7 +82,8 @@ class AIService {
   async chat(
     message: string,
     currentEvents: CalendarEvent[] = [],
-    language: string = getAppLanguage()
+    language: string = getAppLanguage(),
+    location?: string
   ): Promise<AIResponse> {
     // Skip if service is overloaded (we recently got 503)
     if (this.retryAttempts >= this.maxRetries) {
@@ -109,6 +110,8 @@ class AIService {
           events: currentEvents,
           conversationHistory: this.conversationHistory,
           language,
+          // Optional city for weather-aware answers (undefined is omitted by JSON).
+          location,
         }),
       });
 

@@ -1,0 +1,143 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.month {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+}
+
+.peakBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 9999px;
+  background: var(--surface-panel-inset);
+  border: 1px solid var(--surface-panel-border);
+  padding: 0.3rem 0.65rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.peakDot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-accent) 70%, transparent);
+}
+
+/* Chart canvas — the SVG stretches to fill, markers/axis layer on top. */
+.plot {
+  position: relative;
+  width: 100%;
+  height: 11rem;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.gradTop {
+  stop-color: var(--color-accent);
+  stop-opacity: 0.38;
+}
+
+.gradBottom {
+  stop-color: var(--color-accent);
+  stop-opacity: 0;
+}
+
+.area {
+  stroke: none;
+}
+
+/* Constant-width glowing line regardless of container ratio. */
+.line {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--color-accent) 65%, transparent));
+}
+
+.markerLayer,
+.axis {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/* Pulsing dot anchored to its peak day. */
+.marker {
+  position: absolute;
+  width: 0.7rem;
+  height: 0.7rem;
+  margin: -0.35rem 0 0 -0.35rem;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 55%, transparent);
+  animation: pulseMarker 1.8s ease-out infinite;
+}
+
+@keyframes pulseMarker {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 55%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 0.7rem color-mix(in srgb, var(--color-accent) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marker {
+    animation: none;
+  }
+}
+
+/* Day-number ticks pinned along the bottom edge. */
+.axis {
+  top: auto;
+  height: 1rem;
+}
+
+.tick {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+  font-size: 0.66rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+/* Loading / empty placeholder — matches the chart height. */
+.state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 11rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+}

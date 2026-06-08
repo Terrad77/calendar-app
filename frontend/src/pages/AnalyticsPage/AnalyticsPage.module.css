@@ -117,12 +117,92 @@
   opacity: 0.88;
 }
 
-/* Sign-in prompt — stack text above the button with spacing */
-.authPrompt {
+/* Locked state for auth-gated analytics cards — shown when the user is not
+   signed in. Sits inside the chartCard shell, so it only needs centering. */
+.lockedCard {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: 0.75rem;
+  min-height: 12rem;
+  opacity: 0.7;
+  text-align: center;
+}
+
+/* lucide SVG inherits its stroke from currentColor — size comes from the icon's
+   size prop, so no font-size here. */
+.lockIcon {
+  opacity: 0.4;
+  color: var(--color-text-secondary);
+}
+
+.lockText {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+/* Empty state for an analytics card with no event data — icon + message + CTA.
+   grid-column spans the full bar grid when used inside the weekly chart; it is
+   ignored in the month card's block context. */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  grid-column: 1 / -1;
+  align-self: center;
+}
+
+/* lucide SVG inherits its stroke from currentColor; size comes from the icon's
+   size prop, so no font-size here. */
+.emptyIcon {
+  opacity: 0.4;
+  color: var(--color-text-secondary);
+}
+
+.emptyTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  opacity: 0.7;
+  margin: 0;
+}
+
+.emptyHint {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.emptyAction {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--color-accent);
+  text-decoration: none;
+  opacity: 0.9;
+}
+
+.emptyAction:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* Timeout/error state — replaces the grid when the initial analytics load
+   fails, giving a clear message and a Retry action instead of a stuck spinner. */
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 12rem;
+  text-align: center;
+  color: var(--color-text-secondary);
 }
 
 /* Primary action button — used for the analytics sign-in prompt */
@@ -255,46 +335,6 @@
   grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: 0.75rem;
   margin-top: 1rem;
-}
-
-.noData {
-  text-align: center;
-  color: var(--color-text-secondary);
-  padding: 0.75rem 0;
-  font-size: 0.95rem;
-}
-
-/* Make the no-data message span the full chart grid and center */
-.noData {
-  grid-column: 1 / -1;
-  align-self: center;
-  justify-self: center;
-}
-
-/* Variants for preview */
-.noDataSubtle {
-  color: var(--color-text-secondary);
-  font-weight: 600;
-}
-
-.noDataStrong {
-  color: var(--color-text-primary);
-  font-weight: 800;
-  font-size: 1rem;
-}
-
-.noDataAccent {
-  color: var(--color-accent);
-  font-weight: 700;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
-  padding: 0.6rem 1rem; /* Keep existing padding */
-  border-radius: 0.6rem; /* Keep existing border-radius */
-  /* Make accent variant span full width of the chart */
-  justify-self: stretch; /* Stretch to full width */
-  width: 100%; /* Full width */
-  display: flex; /* Use flexbox */
-  align-items: center; /* Center content vertically */
-  justify-content: center; /* Center content horizontally */
 }
 
 .focusItem {

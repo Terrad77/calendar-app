@@ -1,7 +1,10 @@
 import { Router, type Request, type Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { and, eq, gte } from 'drizzle-orm';
 import { getWorldwideHolidays } from '../../nagerApi.js';
 import { authenticateToken } from '../../middleware/authMiddleware.js';
+import { getDb } from '../../db.js';
+import { calendarEvents } from '../../schema.js';
 import type { AIResponse, ConversationMessage } from '../../types/types.js';
 
 const router = Router();
@@ -74,6 +77,82 @@ const asyncHandler =
     Promise.resolve(handler(req, res, next)).catch(next);
   };
 
+// --- Weather (open-meteo, no API key required) ----------------------------
+const WEATHER_REGEX =
+  /погод|weather|температур|temperature|дощ|rain|сніг|snow|хмар|cloud|вітер|wind/i;
+
+interface GeocodeResponse {
+  results?: Array<{ latitude: number; longitude: number; name: string }>;
+}
+
+interface ForecastResponse {
+  current?: {
+    temperature_2m: number;
+    weathercode: number;
+    windspeed_10m: number;
+    relativehumidity_2m: number;
+  };
+}
+
+type WeatherLang = 'uk' | 'en';
+
+// Map open-meteo weather codes to short descriptions in the user's language.
+const describeWeatherCode = (code: number, lang: WeatherLang): string => {
+  const uk = (value: string, en: string) => (lang === 'uk' ? value : en);
+  if (code === 0) return uk('ясно', 'clear');
+  if (code >= 1 && code <= 3) return uk('хмарно', 'cloudy');
+  if (code >= 45 && code <= 48) return uk('туман', 'fog');
+  if (code >= 51 && code <= 67) return uk('дощ', 'rain');
+  if (code >= 71 && code <= 77) return uk('сніг', 'snow');
+  if (code >= 80 && code <= 82) return uk('зливи', 'showers');
+  if (code >= 95 && code <= 99) return uk('гроза', 'thunderstorm');
+  return uk('невідомо', 'unknown');
+};
+
+// Geocode a location and return a short current-weather context block, or null
+// if anything is unavailable. Best-effort: never throws.
+const fetchWeatherContext = async (location: string, lang: WeatherLang): Promise<string | null> => {
+  try {
+    const geoRes = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+        location
+      )}&count=1&language=${lang}`
+    );
+    if (!geoRes.ok) return null;
+    const geo = (await geoRes.json()) as GeocodeResponse;
+    const place = geo.results?.[0];
+    if (!place) return null;
+
+    const forecastRes = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m&timezone=auto`
+    );
+    if (!forecastRes.ok) return null;
+    const forecast = (await forecastRes.json()) as ForecastResponse;
+    const current = forecast.current;
+    if (!current) return null;
+
+    return [
+      `Current weather in ${location}:`,
+      `Temperature: ${current.temperature_2m}°C`,
+      `Conditions: ${describeWeatherCode(current.weathercode, lang)}`,
+      `Wind: ${current.windspeed_10m} km/h`,
+      `Humidity: ${current.relativehumidity_2m}%`,
+    ].join('\n');
+  } catch {
+    return null;
+  }
+};
+
+// --- AI insights cache (per user, 5 min TTL) ------------------------------
+interface InsightsPayload {
+  insights: string[];
+  hasData: boolean;
+  error?: string;
+}
+
+const INSIGHTS_TTL_MS = 5 * 60 * 1000;
+const insightsCache = new Map<string, { expires: number; payload: InsightsPayload }>();
+
 router.get('/', (_req, res) => {
   res.status(200).json({ message: 'Backend is running!' });
 });
@@ -140,7 +219,26 @@ router.post(
       context += '\n';
     }
 
-    const responseLanguage = language === 'uk' ? 'Ukrainian' : 'English';
+    // Optional weather context: when the user asks about weather and supplied a
+    // location, fetch current conditions from open-meteo and inject them so the
+    // model can answer naturally. Best-effort — never blocks the reply.
+    // Resolve language from the body field, falling back to the Accept-Language
+    // header; defaults to English. Drives both the weather text and the reply.
+    const acceptLanguage = req.headers['accept-language'] || '';
+    const weatherLang: WeatherLang =
+      language === 'uk' || (!language && acceptLanguage.toLowerCase().startsWith('uk'))
+        ? 'uk'
+        : 'en';
+
+    const location = typeof req.body.location === 'string' ? req.body.location.trim() : '';
+    if (location && location.length <= 100 && WEATHER_REGEX.test(message)) {
+      const weatherContext = await fetchWeatherContext(location, weatherLang);
+      if (weatherContext) {
+        context += `${weatherContext}\n\n`;
+      }
+    }
+
+    const responseLanguage = weatherLang === 'uk' ? 'Ukrainian' : 'English';
     const languageInstruction = `Respond in ${responseLanguage}.`;
     const fullPrompt = `${CALENDAR_SYSTEM_PROMPT}\n\n${context}${languageInstruction}\nUser: ${message}\n\nResponse (in JSON format if action is needed, otherwise plain text):`;
 
@@ -175,6 +273,8 @@ router.post(
 
     res.json({
       response: aiResponse,
+      // Convenience alias for simple consumers (e.g. weather Q&A).
+      reply: aiResponse.message,
       conversationId: Date.now().toString(),
       userId,
       timestamp: new Date().toISOString(),
@@ -246,6 +346,80 @@ router.post(
       userId,
       timestamp: new Date().toISOString(),
     });
+  })
+);
+
+router.get(
+  '/api/ai/insights',
+  authenticateToken,
+  asyncHandler(async (req, res) => {
+    const userId = req.user!.userId;
+
+    const cached = insightsCache.get(userId);
+    if (cached && cached.expires > Date.now()) {
+      res.json(cached.payload);
+      return;
+    }
+
+    // Last 30 days of the user's events. start_date is a YYYY-MM-DD text column,
+    // so a lexicographic >= against the cutoff date works correctly.
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const events = await getDb()
+      .select({
+        title: calendarEvents.title,
+        startDate: calendarEvents.startDate,
+        endDate: calendarEvents.endDate,
+        eventType: calendarEvents.eventType,
+        isRecurring: calendarEvents.isRecurring,
+      })
+      .from(calendarEvents)
+      .where(and(eq(calendarEvents.userId, userId), gte(calendarEvents.startDate, cutoff)))
+      .orderBy(calendarEvents.startDate)
+      .limit(50);
+
+    if (events.length === 0) {
+      const payload: InsightsPayload = { insights: [], hasData: false };
+      insightsCache.set(userId, { expires: Date.now() + INSIGHTS_TTL_MS, payload });
+      res.json(payload);
+      return;
+    }
+
+    const prompt = `You are a productivity analyst for a calendar app.
+Analyze these calendar events and return exactly 2-3 insights
+about the user's work patterns, peak productivity times,
+or scheduling habits.
+
+Events (last 30 days):
+${JSON.stringify(events, null, 2)}
+
+Rules:
+- Write in the same language as the event titles (Ukrainian if titles are in Ukrainian, English if English)
+- Each insight must be 1 sentence, max 120 characters
+- Be specific (mention actual times/days if visible in data)
+- Do NOT use markdown, bullet points, or special characters
+- Return ONLY valid JSON: { "insights": ["...", "...", "..."] }`;
+
+    const result = await model.generateContent(prompt);
+    const text = (await result.response).text();
+
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('parse');
+
+      const parsed: unknown = JSON.parse(jsonMatch[0]);
+      const rawInsights = (parsed as { insights?: unknown }).insights;
+      const insights = Array.isArray(rawInsights)
+        ? rawInsights.filter((item): item is string => typeof item === 'string')
+        : [];
+      if (insights.length === 0) throw new Error('parse');
+
+      const payload: InsightsPayload = { insights: insights.slice(0, 3), hasData: true };
+      insightsCache.set(userId, { expires: Date.now() + INSIGHTS_TTL_MS, payload });
+      res.json(payload);
+    } catch {
+      // Do not cache parse failures so a later request can still succeed.
+      res.json({ insights: [], hasData: false, error: 'parse' });
+    }
   })
 );
 
