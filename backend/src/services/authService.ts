@@ -36,7 +36,10 @@ export class AuthService {
       expiresIn: ACCESS_TOKEN_EXPIRY,
     });
 
-    const refreshToken = jwt.sign(payload, JWT_REFRESH_SECRET, {
+    // Unique jti: refresh tokens are persisted under a UNIQUE index, and two
+    // tokens minted for the same user within the same second (e.g. register
+    // then immediate login) would otherwise be byte-identical and collide.
+    const refreshToken = jwt.sign({ ...payload, jti: randomUUID() }, JWT_REFRESH_SECRET, {
       expiresIn: REFRESH_TOKEN_EXPIRY,
     });
 
@@ -108,7 +111,14 @@ export class AuthService {
 
     if (!env.isDemoMode) {
       const verificationLink = `${env.backendUrl}/api/auth/verify-email?token=${verificationToken}`;
-      await sendVerificationEmail(lowerEmail, verificationLink);
+      // Email delivery is a side effect, not part of the registration contract.
+      // The user row is already committed, so a transient SMTP failure must not
+      // turn a successful registration into a 400 — log and continue.
+      try {
+        await sendVerificationEmail(lowerEmail, verificationLink);
+      } catch (error) {
+        console.error('Failed to send verification email during registration:', error);
+      }
     }
 
     const tokens = this.generateTokens(userId, lowerEmail);
