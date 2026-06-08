@@ -19,6 +19,9 @@ router.get('/', authenticateToken, async (req, res) => {
       id: u.id,
       name: u.name,
       email: u.email,
+      // Surface jobTitle so the contacts UI can show a real role instead of a
+      // generic "Collaborator" label.
+      jobTitle: u.jobTitle || null,
       preferredCountry: u.preferredCountry || null,
       createdAt: u.createdAt,
       updatedAt: u.updatedAt,

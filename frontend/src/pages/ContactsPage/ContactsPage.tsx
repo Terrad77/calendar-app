@@ -76,7 +76,10 @@ export default function ContactsPage() {
             res.map((u, index) => ({
               id: String(u.id ?? u._id ?? u.userId ?? u.email ?? u.name ?? `contact-${index}`),
               name: u.name ?? u.fullName ?? u.displayName ?? 'Unknown',
-              role: u.role ?? 'Collaborator',
+              email: u.email,
+              // Prefer the user's jobTitle (now returned by /api/users) over the
+              // generic "Collaborator" fallback.
+              role: u.jobTitle ?? u.role ?? 'Collaborator',
               status: u.status ?? t('available'),
               time: u.time ?? relativeTimeOrFallback(u.updatedAt),
               accent: getInitials(u.name, u.email),
