@@ -383,7 +383,15 @@ export const AIAssistantDrawer = ({
   );
 
   const handleQuickAction = useCallback(
-    (action: 'show_events' | 'create_quick_event' | 'analyze_week') => {
+    (action: 'show_events' | 'create_quick_event' | 'analyze_week', label: string) => {
+      // Echo the clicked button as a user bubble first (same pattern as
+      // handleSendMessage) so the assistant reply has a visible prompt.
+      addMessage({
+        role: 'user' as const,
+        content: label,
+        timestamp: new Date().toISOString(),
+      });
+
       switch (action) {
         case 'show_events': {
           const eventsCount = currentEvents.length;
@@ -607,17 +615,17 @@ export const AIAssistantDrawer = ({
     {
       label: t('assistant_quick_my_events'),
       icon: CalendarDays,
-      onClick: () => handleQuickAction('show_events'),
+      type: 'show_events',
     },
     {
       label: t('assistant_quick_new_event'),
       icon: Send,
-      onClick: () => handleQuickAction('create_quick_event'),
+      type: 'create_quick_event',
     },
     {
       label: t('assistant_quick_analyze_week'),
       icon: BarChart3,
-      onClick: () => handleQuickAction('analyze_week'),
+      type: 'analyze_week',
     },
   ] as const;
 
@@ -696,7 +704,7 @@ export const AIAssistantDrawer = ({
                       <button
                         key={action.label}
                         type="button"
-                        onClick={action.onClick}
+                        onClick={() => handleQuickAction(action.type, action.label)}
                         className={css.quickActionButton}
                       >
                         <ActionIcon className={css.quickActionIcon} />
