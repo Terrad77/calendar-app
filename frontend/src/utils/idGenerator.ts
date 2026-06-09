@@ -1,9 +1,9 @@
 import { nanoid } from 'nanoid';
 
 /**
- * Генерує унікальний ID з опціональним префіксом
- * @param prefix - префікс для ID (наприклад, 'task', 'holiday')
- * @returns унікальний рядок ID
+ * Generates a unique ID with an optional prefix
+ * @param prefix - prefix for the ID (e.g. 'task', 'holiday')
+ * @returns a unique ID string
  */
 export const generateUniqueId = (prefix?: string): string => {
   const id = nanoid(10);
@@ -11,10 +11,10 @@ export const generateUniqueId = (prefix?: string): string => {
 };
 
 /**
- * Генерує унікальний ID для подій календаря
- * @param type - тип події ('task' або 'holiday')
- * @param date - дата події
- * @returns унікальний рядок ID
+ * Generates a unique ID for calendar events
+ * @param type - event type ('task' or 'holiday')
+ * @param date - event date
+ * @returns a unique ID string
  */
 export const generateCalendarEventId = (type: 'task' | 'holiday', date?: string): string => {
   const id = nanoid(10);

@@ -16,7 +16,7 @@ const InputWrapper = styled('div', {
   boxSizing: 'border-box',
 
   '&:focus-within': {
-    // при фокусі будь-якого елемента всередині Wrapper
+    // when any element inside the Wrapper is focused
     borderColor: 'var(--surface-calendar-today-border)',
     boxShadow:
       '0 0 0 2px color-mix(in srgb, var(--surface-calendar-today-border) 22%, transparent)',
@@ -38,7 +38,7 @@ const StyledInput = styled('input', {
   },
 });
 
-// 3. Стилізована кнопка для іконки
+// 3. Styled button for the icon
 const SearchIconButton = styled('button', {
   background: 'none',
   border: 'none',
@@ -69,13 +69,13 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   style,
   ...rest
 }) => {
-  const inputRef = React.useRef<HTMLInputElement>(null); // Ref для інпута
+  const inputRef = React.useRef<HTMLInputElement>(null); // Ref for the input
 
   const handleIconClick = () => {
     if (onSearchClick) {
-      onSearchClick(); // Викликаємо зовнішній обробник
+      onSearchClick(); // Call the external handler
     }
-    // Фокусуємо інпут при кліку на іконку
+    // Focus the input when the icon is clicked
     if (inputRef.current) {
       inputRef.current.focus();
     }
@@ -90,19 +90,19 @@ export const SearchInput: React.FC<SearchInputProps> = ({
   };
 
   return (
-    // Тепер це головний елемент, який приймає зовнішні стилі
+    // This is now the root element that accepts external styles
     <InputWrapper css={css} className={className} style={style}>
       <StyledInput
-        ref={inputRef} // Прив'язуємо ref
+        ref={inputRef} // Bind the ref
         type="text"
         placeholder={placeholder}
         value={value}
         onChange={onChange}
         onKeyDown={handleKeyDown}
-        {...rest} // Передаємо решту пропсів до інпуту (наприклад, `id`, `name`, `disabled` тощо)
+        {...rest} // Pass the rest of the props to the input (e.g. `id`, `name`, `disabled`, etc.)
       />
       <SearchIconButton type="button" onClick={handleIconClick} aria-label="Search">
-        <Icon name="search" size="1.1rem" /> {/* Використовуємо ваш компонент Icon */}
+        <Icon name="search" size="1.1rem" /> {/* Use your Icon component */}
       </SearchIconButton>
     </InputWrapper>
   );

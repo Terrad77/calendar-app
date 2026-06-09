@@ -183,10 +183,10 @@ export const Calendar = ({
 
           // handling different possible response structures
           if (Array.isArray(result)) {
-            // Якщо бекенд повертає масив напряму
+            // If the backend returns an array directly
             holidaysData = result;
           } else if (result && typeof result === 'object') {
-            // Якщо бекенд повертає об'єкт з властивістю holidays
+            // If the backend returns an object with a holidays property
             if (Array.isArray(result.holidays)) {
               holidaysData = result.holidays;
             } else if (Array.isArray(result.data)) {

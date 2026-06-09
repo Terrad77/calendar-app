@@ -9,7 +9,7 @@ const NAGER_API_BASE_URL = 'https://date.nager.at/api/v3';
 const CACHE_TTL_HOLIDAYS_SECONDS = 60 * 60 * 24 * 365;
 
 /**
- * Отримує свята для певної країни та року з кешем встановленим у CACHE_TTL_HOLIDAYS_SECONDS, використовуючи Nager.Date API.
+ * Fetches holidays for a given country and year, cached for CACHE_TTL_HOLIDAYS_SECONDS, using the Nager.Date API.
  */
 async function fetchHolidaysForCountry(
   year: number,

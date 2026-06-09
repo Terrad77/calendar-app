@@ -18,7 +18,7 @@ export interface BackendHoliday {
   eventType: 'holiday';
 }
 
-// Інтерфейс CalendarEvent для даних, які приходять з ФРОНТЕНДУ на БЕКЕНД
+// CalendarEvent interface for data coming from the FRONTEND to the BACKEND
 export interface CalendarEvent {
   id?: string;
   title: string;
@@ -31,7 +31,7 @@ export interface CalendarEvent {
   location?: string;
   participants?: string[];
 }
-// Інтерфейс відповіді від AI асистента
+// Response interface from the AI assistant
 export interface AIResponse {
   action: 'create' | 'update' | 'delete' | 'query' | 'analyze';
   event?: {
@@ -49,17 +49,17 @@ export interface AIResponse {
   message: string;
   events?: CalendarEvent[];
 }
-// Інтерфейс для повідомлень в історії розмови з AI
+// Interface for messages in the AI conversation history
 export interface ConversationMessage {
   role: 'user' | 'assistant';
   content: string;
 }
-// Інтерфейс для запиту на аналіз розкладу
+// Interface for the schedule analysis request
 export interface AnalyzeScheduleRequest {
   events: CalendarEvent[];
   timeRange?: string;
 }
-// Інтерфейс для запиту на пошук вільного часу
+// Interface for the free-time search request
 export interface FindTimeRequest {
   events: CalendarEvent[];
   duration: number;
@@ -70,7 +70,7 @@ export interface FindTimeRequest {
     avoidWeekends?: boolean;
   };
 }
-//  Інтерфейс для запиту на чат з AI асистентом
+// Interface for the chat request to the AI assistant
 export interface ChatRequest {
   message: string;
   events?: CalendarEvent[];

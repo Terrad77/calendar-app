@@ -231,7 +231,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   searchInputValue,
 }) => {
   const { t, i18n } = useTranslation('calendar');
-  // useMemo, щоб monthTitle перераховувався тільки при зміні дати або мови i18n
+  // useMemo so monthTitle is recomputed only when the date or i18n language changes
   const monthTitle = useMemo(() => {
     const lang = i18n.language.startsWith('uk') ? 'uk' : 'en';
     return currentDate.locale(lang).format('MMMM');

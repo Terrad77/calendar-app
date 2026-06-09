@@ -62,8 +62,8 @@ export const addTask = createAsyncThunk<Task, NewNote, ThunkConfig<string>>(
 
 // Delete a task
 export const deleteTask = createAsyncThunk<
-  { success: boolean; id: string }, // що реально повертає бекенд
-  string, // аргумент — ID завдання
+  { success: boolean; id: string }, // what the backend actually returns
+  string, // argument — task ID
   ThunkConfig<string>
 >('task/deleteTask', async (taskId, { rejectWithValue }) => {
   try {
@@ -82,8 +82,8 @@ type EditTaskPayload = {
 
 // Edit a task
 export const editTask = createAsyncThunk<
-  Task, // возвращаем
-  EditTaskPayload, // аргумент
+  Task, // returned type
+  EditTaskPayload, // argument
   ThunkConfig<string>
 >('task/editTask', async ({ id, newNote }, { rejectWithValue }) => {
   try {
