@@ -223,6 +223,9 @@ export default function ContactsPage() {
   const [sharePermission, setSharePermission] = useState<'read' | 'write'>('read');
   const [shareSaving, setShareSaving] = useState(false);
 
+  // Tracks which contact's invite is in-flight, to disable only that button.
+  const [invitingId, setInvitingId] = useState<string | null>(null);
+
   useEffect(() => {
     getCalendarShares()
       .then(({ sharedWithMe }) => setSharesWithMe(sharedWithMe))
@@ -566,6 +569,7 @@ export default function ContactsPage() {
                   <button
                     type="button"
                     className={styles.secondaryButton}
+                    disabled={invitingId === contact.id}
                     onClick={async (e) => {
                       e.stopPropagation();
                       if (!inviteEventId) {
@@ -578,13 +582,17 @@ export default function ContactsPage() {
                         return;
                       }
 
+                      // Disable only this contact's button while the request runs.
+                      // Feedback shows regardless of SMTP status: the API response
+                      // (not email delivery) decides success vs. error.
+                      setInvitingId(contact.id);
                       try {
                         await inviteUserToEvent(inviteEventId, contact.email);
                         toastMaker(t('invitation_sent'));
-                      } catch (err) {
-                        const message =
-                          err instanceof Error ? err.message : 'Failed to send invite';
-                        toastMaker(message, 'error');
+                      } catch {
+                        toastMaker(t('invitation_failed'), 'error');
+                      } finally {
+                        setInvitingId(null);
                       }
                     }}
                   >

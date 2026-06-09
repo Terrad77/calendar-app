@@ -89,6 +89,7 @@
   "invitations_will_be_sent": "Invitations will be sent for {{name}}.",
   "choose_event_hint": "Choose a calendar event before inviting someone.",
   "invitation_sent": "Invitation sent",
+  "invitation_failed": "Failed to send invitation",
   "team_planning_moved": "Team planning moved",
   "tomorrow_time_1430": "Tomorrow · 14:30",
   "urgent": "Urgent",
