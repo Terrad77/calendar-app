@@ -1,16 +1,46 @@
 # calendar-app
 
-Calendar app with `Vite + React + TypeScript` (frontend) and `Node.js + TypeScript` (backend).
+[![Vercel](https://img.shields.io/badge/Vercel-Live-000000?logo=vercel&logoColor=white)](https://calendar-app-pi-gold.vercel.app) [![Backend](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render&logoColor=white)](https://calendar-app-i6oa.onrender.com) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white) ![Node.js](https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white) ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
 
-## Структура проекта
+CalendAir is a full-stack web calendar application with AI-powered insights, real-time notifications, calendar sharing, contacts management, and analytics. Built as a bachelor's thesis project at KhAI (Kharkiv Aviation Institute).
 
-- `frontend` - клиентское приложение (Vite)
+## Live Demo
+
+- **Production URL:** [https://calendar-app-pi-gold.vercel.app](https://calendar-app-pi-gold.vercel.app)
+- **Demo credentials:** email `dt@gmail.com` / password `Td12345678`
+
+## Tech Stack
+
+| Frontend      | Backend           |
+| ------------- | ----------------- |
+| React 19      | Node.js           |
+| TypeScript    | Express           |
+| Vite          | TypeScript        |
+| Redux Toolkit | Drizzle ORM       |
+| TailwindCSS   | PostgreSQL (Neon) |
+
+**Infra:** Vercel (frontend), Render (backend), GitHub Actions (CI/CD)
+
+## Features
+
+- AI-powered calendar insights (Google Gemini 2.5 Flash)
+- Weather-aware AI chat
+- Real-time notifications
+- Calendar sharing with privacy controls
+- Contacts management with CSV export
+- Analytics with charts (MonthPulseChart)
+- Multi-language support (EN/UK)
+- Google OAuth + JWT auth
+
+## Project Structure
+
+- `frontend` - клієнтський застосунок (Vite)
 - `backend` - API-сервер (Express)
-- `package.json` в корне - общие скрипты для удобного запуска
+- `package.json` у корені - спільні скрипти для зручного запуску
 
-## Быстрый старт
+## Quick Start
 
-Установите зависимости во всех частях проекта:
+Встановіть залежності в усіх частинах проєкту:
 
 ```bash
 npm install
@@ -18,38 +48,38 @@ npm install --prefix frontend
 npm install --prefix backend
 ```
 
-## Запуск проекта
+## Running the Project
 
-### Запуск обоих сервисов одной командой (рекомендуется)
+### Run Both Services with One Command (Recommended)
 
-Из корня проекта:
+З кореня проєкту:
 
 ```bash
 npm run dev:all
 ```
 
-Эта команда запускает:
+Ця команда запускає:
 
 - frontend (`vite`)
 - backend (`nodemon` + TypeScript hot-reload)
 
-### Раздельный запуск (если нужно)
+### Run Separately (If Needed)
 
 ```bash
 npm run dev:frontend
 npm run dev:backend
 ```
 
-## Порты
+## Ports
 
 - frontend: `http://localhost:5173`
 - backend: `http://localhost:3001`
 
-Если порт занят, frontend может автоматически перейти на следующий (`5174`, `5175` и т.д.).
+Якщо порт зайнятий, frontend може автоматично перейти на наступний (`5174`, `5175` тощо).
 
-## Если порты заняты
+## If Ports Are Busy
 
-Освободить порты и перезапустить оба сервиса:
+Звільнити порти та перезапустити обидва сервіси:
 
 ```bash
 kill -9 $(lsof -ti :3001) 2>/dev/null
@@ -58,49 +88,49 @@ kill -9 $(lsof -ti :5174) 2>/dev/null
 npm run dev:all
 ```
 
-## Полезные команды
+## Useful Commands
 
 ```bash
-# Сборка frontend
+# Build frontend
 npm run build --prefix frontend
 
-# Сборка backend
+# Build backend
 npm run build --prefix backend
 
-# Применить миграции БД
+# Apply DB migrations
 npm run db:migrate --prefix backend
 
-# Запуск backend из production-сборки
+# Start backend from production build
 npm run start --prefix backend
 ```
 
-## Render deployment
+## Render Deployment
 
-Для Render лучше запускать миграции до старта сервера, например через Build Command:
+Для Render краще запускати міграції до старту сервера, наприклад через Build Command:
 
 ```bash
 npm run db:migrate --prefix backend && npm run build
 ```
 
-Если сервис деплоится только из `backend`, можно использовать:
+Якщо сервіс деплоїться лише з `backend`, можна використати:
 
 ```bash
 npm run db:migrate && npm run build
 ```
 
-Если Render начинает приложение раньше миграций, вынесите `npm run db:migrate` в начало start command через `&&`:
+Якщо Render запускає застосунок раніше за міграції, винесіть `npm run db:migrate` на початок start command через `&&`:
 
 ```bash
 npm run db:migrate && node dist/server.js
 ```
 
-## Настройка Google OAuth (локально и для продакшн)
+## Google OAuth Setup (Local and Production)
 
-1. В Google Cloud Console создайте OAuth 2.0 Client ID (Тип: Web application).
-2. В разделе Authorized redirect URIs добавьте адрес:
-   - Для локальной разработки: `http://localhost:3001/api/auth/google/callback`
-   - Для продакшна: `https://<your-domain>/api/auth/google/callback`
-3. Скопируйте `Client ID` и `Client Secret` и добавьте их в файл `backend/.env` или в секреты окружения в хостинге:
+1. У Google Cloud Console створіть OAuth 2.0 Client ID (Тип: Web application).
+2. У розділі Authorized redirect URIs додайте адресу:
+   - Для локальної розробки: `http://localhost:3001/api/auth/google/callback`
+   - Для продакшну: `https://<your-domain>/api/auth/google/callback`
+3. Скопіюйте `Client ID` і `Client Secret` та додайте їх у файл `backend/.env` або в секрети середовища на хостингу:
 
 ```env
 GOOGLE_CLIENT_ID=<your-client-id>
@@ -108,18 +138,20 @@ GOOGLE_CLIENT_SECRET=<your-client-secret>
 GOOGLE_CALLBACK_URL=http://localhost:3001/api/auth/google/callback
 ```
 
-- Перезапустите backend: `npm run dev --prefix backend` или `npm run start --prefix backend`.
-- Проверка: откройте `http://localhost:3001/api/auth/google` — сервер должен вернуть 302 редирект на accounts.google.com.
+- Перезапустіть backend: `npm run dev --prefix backend` або `npm run start --prefix backend`.
+- Перевірка: відкрийте `http://localhost:3001/api/auth/google` — сервер має повернути 302 редирект на accounts.google.com.
 
-## Хранение и управление секретами
+## Secrets Storage and Management
 
-- Никогда не коммитьте реальные секреты в репозиторий. В корне репо есть `.env.example` — используйте его как шаблон.
-- Для локальной разработки храните секреты в `backend/.env` (этот файл должен быть в `.gitignore`).
-- Для CI/CD и продакшена используйте безопасные хранилища секретов:
+- Ніколи не комітьте справжні секрети в репозиторій. У корені репозиторію є `.env.example` — використовуйте його як шаблон.
+- Для локальної розробки зберігайте секрети в `backend/.env` (цей файл має бути в `.gitignore`).
+- Для CI/CD та продакшну використовуйте безпечні сховища секретів:
   - GitHub Actions Secrets / GitLab CI Variables
   - Vercel / Netlify environment variables
   - AWS Secrets Manager / Parameter Store, Azure Key Vault, Google Secret Manager
   - Docker secrets / Kubernetes secrets
-- При деплое убедитесь, что все обязательные переменные окружения установлены: `DATABASE_URL`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL`, `GOOGLE_AI_API_KEY` и т.д.
+- Під час деплою переконайтеся, що всі обовʼязкові змінні середовища встановлені: `DATABASE_URL`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL`, `GOOGLE_AI_API_KEY` тощо.
 
-Если нужно, могу добавить пример workflow для GitHub Actions с использованием секретов — скажите, где вы деплоите.
+## Author
+
+- GitHub: [Terrad77](https://github.com/Terrad77)

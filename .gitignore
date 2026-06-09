@@ -169,5 +169,5 @@ EOF
 backend/.env
 
 # Claude Code
-.claude/restored_transcript.jsonl
+.claude/
 build_output.txt
