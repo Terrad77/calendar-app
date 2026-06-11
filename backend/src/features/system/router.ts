@@ -355,7 +355,13 @@ router.get(
   asyncHandler(async (req, res) => {
     const userId = req.user!.userId;
 
-    const cached = insightsCache.get(userId);
+    // Response language follows the UI locale sent by the client (?lang=).
+    const lang = String(req.query.lang || '');
+    const responseLanguage = lang.startsWith('uk') ? 'Ukrainian' : 'English';
+
+    // Cache per user AND language so switching locale never returns stale copy.
+    const cacheKey = `${userId}:${responseLanguage}`;
+    const cached = insightsCache.get(cacheKey);
     if (cached && cached.expires > Date.now()) {
       res.json(cached.payload);
       return;
@@ -379,7 +385,7 @@ router.get(
 
     if (events.length === 0) {
       const payload: InsightsPayload = { insights: [], hasData: false };
-      insightsCache.set(userId, { expires: Date.now() + INSIGHTS_TTL_MS, payload });
+      insightsCache.set(cacheKey, { expires: Date.now() + INSIGHTS_TTL_MS, payload });
       res.json(payload);
       return;
     }
@@ -393,7 +399,7 @@ Events (last 30 days):
 ${JSON.stringify(events, null, 2)}
 
 Rules:
-- Write in the same language as the event titles (Ukrainian if titles are in Ukrainian, English if English)
+- Write all insights in ${responseLanguage}
 - Each insight must be 1 sentence, max 120 characters
 - Be specific (mention actual times/days if visible in data)
 - Do NOT use markdown, bullet points, or special characters
@@ -414,7 +420,7 @@ Rules:
       if (insights.length === 0) throw new Error('parse');
 
       const payload: InsightsPayload = { insights: insights.slice(0, 3), hasData: true };
-      insightsCache.set(userId, { expires: Date.now() + INSIGHTS_TTL_MS, payload });
+      insightsCache.set(cacheKey, { expires: Date.now() + INSIGHTS_TTL_MS, payload });
       res.json(payload);
     } catch {
       // Do not cache parse failures so a later request can still succeed.

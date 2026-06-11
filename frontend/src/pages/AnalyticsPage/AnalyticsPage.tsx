@@ -213,10 +213,13 @@ export default function AnalyticsPage() {
     const controller = new AbortController();
     const loadInsights = async () => {
       try {
-        const res = await authenticationService.authenticatedFetch('/api/ai/insights', {
-          method: 'GET',
-          signal: controller.signal,
-        });
+        const res = await authenticationService.authenticatedFetch(
+          `/api/ai/insights?lang=${i18n.language}`,
+          {
+            method: 'GET',
+            signal: controller.signal,
+          }
+        );
         if (res.ok) {
           setInsights((await res.json()) as { insights: string[]; hasData: boolean });
         }
@@ -228,7 +231,8 @@ export default function AnalyticsPage() {
     void loadInsights();
 
     return () => controller.abort();
-  }, [isAuth, retryCount]);
+    // Refetch when the UI language changes so insights match the active locale.
+  }, [isAuth, retryCount, i18n.language]);
 
   const maxValue = trends.length ? Math.max(...trends.map((p) => p.value)) : 0;
   // Minimum bar height (%) so 0-count days stay visible instead of collapsing.
@@ -241,8 +245,15 @@ export default function AnalyticsPage() {
   // The "Weekly pattern" panel now reflects AI insights instead of static copy.
   let insightTitle = t('weekly_pattern');
   let insightItems: string[];
+  // While AI insights load for an authenticated user the panel shows a DotLoader.
+  let insightsLoading = false;
   if (insights === null) {
-    insightItems = isAuth ? [t('loading')] : [t('noInsightsHint', { ns: 'analytics' })];
+    if (isAuth) {
+      insightsLoading = true;
+      insightItems = [];
+    } else {
+      insightItems = [t('noInsightsHint', { ns: 'analytics' })];
+    }
   } else if (insights.hasData && insights.insights.length > 0) {
     insightItems = insights.insights;
   } else {
@@ -458,6 +469,7 @@ export default function AnalyticsPage() {
         {
           title: insightTitle,
           items: insightItems,
+          loading: insightsLoading,
         },
       ]}
     >

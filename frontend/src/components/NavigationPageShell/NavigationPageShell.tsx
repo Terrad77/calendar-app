@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
+import DotLoader from '../DotLoader/DotLoader';
 import Logo from '../Logo/Logo';
 import styles from './NavigationPageShell.module.css';
 
@@ -12,6 +13,7 @@ export interface NavigationStat {
 export interface NavigationPanel {
   title: string;
   items: string[];
+  loading?: boolean;
 }
 
 interface NavigationPageShellProps {
@@ -66,14 +68,18 @@ export const NavigationPageShell = ({
           {panels.map((panel) => (
             <article key={panel.title} className={styles.panelCard}>
               <h2 className={styles.panelTitle}>{panel.title}</h2>
-              <ul className={styles.panelList}>
-                {panel.items.map((item) => (
-                  <li key={item} className={styles.panelItem}>
-                    <span className={styles.panelBullet} />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
+              {panel.loading ? (
+                <DotLoader text={t('loading')} />
+              ) : (
+                <ul className={styles.panelList}>
+                  {panel.items.map((item) => (
+                    <li key={item} className={styles.panelItem}>
+                      <span className={styles.panelBullet} />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </article>
           ))}
         </section>
