@@ -84,7 +84,7 @@ describe('Analytics routes', () => {
     const res = await request(app).get(`/api/analytics/export?date=${date}`).set(auth);
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toMatch(/text\/csv/);
-    expect(res.text).toContain('id,userId,eventType,title,description');
+    expect(res.text).toContain('id;userId;eventType;title;description');
   });
 
   it('GET /api/analytics/overview returns metrics when authorized', async () => {

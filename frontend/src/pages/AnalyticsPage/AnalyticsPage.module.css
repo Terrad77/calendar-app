@@ -117,6 +117,92 @@
   opacity: 0.88;
 }
 
+/* Export split button: a primary CSV action joined to a caret toggle that
+   opens a format menu. Positioned relative so the menu anchors to it. */
+.exportGroup {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.exportMainButton,
+.exportCaretButton {
+  border: 1px solid var(--surface-panel-border);
+  background: var(--surface-panel-inset);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.exportMainButton {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  border-radius: 9999px 0 0 9999px;
+  padding: 0.4rem 0.9rem;
+}
+
+.exportCaretButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 9999px 9999px 0;
+  border-left: 0;
+  padding: 0.4rem 0.6rem;
+  line-height: 1;
+}
+
+.exportMainButton:hover,
+.exportCaretButton:hover {
+  opacity: 0.88;
+}
+
+.exportMainButton:focus-visible,
+.exportCaretButton:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+  outline-offset: 0.15rem;
+}
+
+/* Dropdown menu anchored to the right edge of the split button. */
+.exportMenu {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 9rem;
+  padding: 0.3rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--surface-panel-border);
+  background: linear-gradient(180deg, var(--surface-panel-start), var(--surface-panel-end));
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--surface-panel-shadow) 50%, transparent);
+}
+
+.exportMenuItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.exportMenuItem:hover,
+.exportMenuItem:focus-visible {
+  background: var(--surface-panel-inset);
+  outline: none;
+}
+
 /* Locked state for auth-gated analytics cards — shown when the user is not
    signed in. Sits inside the chartCard shell, so it only needs centering. */
 .lockedCard {

@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import ExcelJS from 'exceljs';
 import { getDb } from '../../db.js';
 import { calendarEvents } from '../../schema.js';
 import { sql } from 'drizzle-orm';
@@ -186,16 +187,27 @@ router.get('/export', authenticateToken, async (req: Request, res: Response) => 
       res.status(401).json({ error: 'Authentication required' });
       return;
     }
+    // Optional date filter: a valid YYYY-MM-DD narrows the export to a single
+    // day; with no date param all of the user's events are exported.
     const date = String(req.query.date || '');
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    const hasDate = date.length > 0;
+    if (hasDate && !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       res.status(400).json({ error: 'Invalid date format, expected YYYY-MM-DD' });
       return;
     }
 
-    const rows = await db.execute(sql`
+    const rows = hasDate
+      ? await db.execute(sql`
 			select id, user_id as "userId", event_type as "eventType", title, description, start_date as "startDate", end_date as "endDate", is_recurring as "isRecurring", created_at as "createdAt"
 			from ${calendarEvents}
 			where user_id = ${userId} and date(start_date) = ${date}
+			order by created_at desc
+			limit 1000
+		`)
+      : await db.execute(sql`
+			select id, user_id as "userId", event_type as "eventType", title, description, start_date as "startDate", end_date as "endDate", is_recurring as "isRecurring", created_at as "createdAt"
+			from ${calendarEvents}
+			where user_id = ${userId}
 			order by created_at desc
 			limit 1000
 		`);
@@ -212,7 +224,9 @@ router.get('/export', authenticateToken, async (req: Request, res: Response) => 
       'isRecurring',
       'createdAt',
     ];
-    const csv = [header.join(',')]
+    // Semicolon delimiter so spreadsheet apps (Excel) parse columns correctly in
+    // locales that reserve the comma as a decimal separator.
+    const csv = [header.join(';')]
       .concat(
         data.map((r: any) =>
           header
@@ -221,16 +235,154 @@ router.get('/export', authenticateToken, async (req: Request, res: Response) => 
               if (typeof v === 'string') return '"' + v.replace(/"/g, '""') + '"';
               return String(v);
             })
-            .join(',')
+            .join(';')
         )
       )
       .join('\n');
 
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="events-${date}.csv"`);
-    res.send(csv);
+    const filename = hasDate ? `events-${date}.csv` : 'analytics.csv';
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    // Prefix with a UTF-8 BOM so Excel detects the encoding and renders
+    // non-ASCII characters (e.g. Cyrillic titles) correctly.
+    res.send('﻿' + csv);
   } catch (error) {
     console.error('Analytics export error:', error);
+    res.status(500).json({ error: 'Failed to export events' });
+  }
+});
+
+router.get('/export-xlsx', authenticateToken, async (req: Request, res: Response) => {
+  try {
+    const db = getDb();
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ error: 'Authentication required' });
+      return;
+    }
+
+    // Query mode: no params = all events; from+to = inclusive range; a single
+    // date = that day. Validate any provided date param before use.
+    const date = String(req.query.date || '');
+    const from = String(req.query.from || '');
+    const to = String(req.query.to || '');
+    const isDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+    if (date && !isDate(date)) {
+      res.status(400).json({ error: 'Invalid date format, expected YYYY-MM-DD' });
+      return;
+    }
+    if ((from || to) && (!isDate(from) || !isDate(to))) {
+      res.status(400).json({ error: 'Invalid range, expected from and to as YYYY-MM-DD' });
+      return;
+    }
+
+    const baseSelect = sql`
+			select id, event_type as "eventType", title, description, start_date as "startDate", end_date as "endDate", is_recurring as "isRecurring", created_at as "createdAt"
+			from ${calendarEvents}
+		`;
+
+    let rows;
+    if (from && to) {
+      rows = await db.execute(sql`
+				${baseSelect}
+				where user_id = ${userId} and date(start_date) >= ${from} and date(start_date) <= ${to}
+				order by created_at desc
+				limit 5000
+			`);
+    } else if (date) {
+      rows = await db.execute(sql`
+				${baseSelect}
+				where user_id = ${userId} and date(start_date) = ${date}
+				order by created_at desc
+				limit 5000
+			`);
+    } else {
+      rows = await db.execute(sql`
+				${baseSelect}
+				where user_id = ${userId}
+				order by created_at desc
+				limit 5000
+			`);
+    }
+
+    const data = (rows as any).rows || rows;
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('CalendAir Analytics');
+    worksheet.columns = [
+      { header: 'id', key: 'id' },
+      { header: 'title', key: 'title' },
+      { header: 'eventType', key: 'eventType' },
+      { header: 'description', key: 'description' },
+      { header: 'startDate', key: 'startDate' },
+      { header: 'endDate', key: 'endDate' },
+      { header: 'isRecurring', key: 'isRecurring' },
+      { header: 'createdAt', key: 'createdAt' },
+    ];
+
+    const thinBorder = {
+      top: { style: 'thin' as const },
+      left: { style: 'thin' as const },
+      bottom: { style: 'thin' as const },
+      right: { style: 'thin' as const },
+    };
+
+    // Header row: navy fill, bold white text, centered, bordered.
+    const headerRow = worksheet.getRow(1);
+    headerRow.eachCell((cell) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A5F' } };
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = thinBorder;
+    });
+
+    // Data rows: alternating fill (even = light blue, odd = white).
+    for (const record of data as Array<Record<string, unknown>>) {
+      const row = worksheet.addRow({
+        id: record.id ?? '',
+        title: record.title ?? '',
+        eventType: record.eventType ?? '',
+        description: record.description ?? '',
+        startDate: record.startDate ?? '',
+        endDate: record.endDate ?? '',
+        isRecurring: record.isRecurring ?? '',
+        createdAt: record.createdAt ?? '',
+      });
+      const isEven = row.number % 2 === 0;
+      row.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: isEven ? 'FFF0F4F8' : 'FFFFFFFF' },
+        };
+        cell.font = { size: 10 };
+        cell.alignment = { vertical: 'middle' };
+        cell.border = thinBorder;
+      });
+    }
+
+    // Auto column widths from the longest cell content, clamped to [12, 40].
+    worksheet.columns.forEach((column) => {
+      let maxLength = 0;
+      column.eachCell?.({ includeEmpty: true }, (cell) => {
+        const length = cell.value == null ? 0 : String(cell.value).length;
+        if (length > maxLength) maxLength = length;
+      });
+      column.width = Math.min(40, Math.max(12, maxLength + 2));
+    });
+
+    // Freeze the header row so it stays visible while scrolling.
+    worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader('Content-Disposition', 'attachment; filename="analytics.xlsx"');
+    res.send(await workbook.xlsx.writeBuffer());
+  } catch (error) {
+    console.error('Analytics export-xlsx error:', error);
     res.status(500).json({ error: 'Failed to export events' });
   }
 });

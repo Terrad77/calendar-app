@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { NavigationPageShell } from '../../components/NavigationPageShell/NavigationPageShell';
 import styles from './AnalyticsPage.module.css';
-import { Suspense, lazy, useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, Lock } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -418,24 +418,68 @@ export default function AnalyticsPage() {
   const todayDate = dayjs().format('YYYY-MM-DD');
   const currentMonthLabel = dayjs().format('MMMM YYYY');
 
+  // Export dropdown: a split button (CSV by default) plus a caret that opens a
+  // menu with both formats. Closes on outside click or Escape.
+  const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const exportGroupRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!exportMenuOpen) return;
+
+    const handlePointer = (event: MouseEvent) => {
+      if (!exportGroupRef.current?.contains(event.target as Node)) {
+        setExportMenuOpen(false);
+      }
+    };
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setExportMenuOpen(false);
+    };
+
+    document.addEventListener('mousedown', handlePointer);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handlePointer);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [exportMenuOpen]);
+
+  // Trigger a browser download from a blob response under the given filename.
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const exportCsv = async () => {
+    setExportMenuOpen(false);
     try {
-      // The export endpoint requires a `date` query param (YYYY-MM-DD); export today's events.
-      const res = await authenticationService.authenticatedFetch(
-        `/api/analytics/export?date=${todayDate}`,
-        { method: 'GET' }
-      );
+      // No date param: export all of the user's events as CSV.
+      const res = await authenticationService.authenticatedFetch('/api/analytics/export', {
+        method: 'GET',
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `analytics-${dayjs().format('YYYY-MM-DD')}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadBlob(await res.blob(), `analytics-${dayjs().format('YYYY-MM-DD')}.csv`);
     } catch (e) {
       toastMaker('Failed to export CSV', 'error');
       if (import.meta.env.DEV) console.error('CSV export failed', e);
+    }
+  };
+
+  const exportXlsx = async () => {
+    setExportMenuOpen(false);
+    try {
+      // No date param: export all of the user's events as a styled XLSX.
+      const res = await authenticationService.authenticatedFetch('/api/analytics/export-xlsx', {
+        method: 'GET',
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      downloadBlob(await res.blob(), `analytics-${dayjs().format('YYYY-MM-DD')}.xlsx`);
+    } catch (e) {
+      toastMaker('Failed to export XLSX', 'error');
+      if (import.meta.env.DEV) console.error('XLSX export failed', e);
     }
   };
 
@@ -504,14 +548,46 @@ export default function AnalyticsPage() {
                     <span className={styles.liveDot} aria-hidden="true" />
                     {t('live_snapshot')}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => void exportCsv()}
-                    className={styles.sectionPillButton}
-                    title={t('export_csv')}
-                  >
-                    {t('export_csv')}
-                  </button>
+                  <div className={styles.exportGroup} ref={exportGroupRef}>
+                    <button
+                      type="button"
+                      onClick={() => void exportCsv()}
+                      className={styles.exportMainButton}
+                      title={t('export_csv')}
+                    >
+                      {t('export_csv')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setExportMenuOpen((open) => !open)}
+                      className={styles.exportCaretButton}
+                      aria-haspopup="menu"
+                      aria-expanded={exportMenuOpen}
+                      aria-label={t('export')}
+                    >
+                      <span aria-hidden="true">▾</span>
+                    </button>
+                    {exportMenuOpen && (
+                      <div className={styles.exportMenu} role="menu">
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={styles.exportMenuItem}
+                          onClick={() => void exportCsv()}
+                        >
+                          {t('export_csv')}
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={styles.exportMenuItem}
+                          onClick={() => void exportXlsx()}
+                        >
+                          {t('export_xlsx')}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className={styles.barChart}>

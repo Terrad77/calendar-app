@@ -44,6 +44,8 @@
   "meeting_density_by_day": "Event density current week",
   "live_snapshot": "Live snapshot",
   "export_csv": "Export CSV",
+  "export_xlsx": "Export XLSX",
+  "export": "Export",
   "no_data_week": "No data for the week",
   "month_pulse_label": "Activity",
   "month_pulse_title": "Month Pulse",

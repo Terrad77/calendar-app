@@ -44,6 +44,8 @@
   "meeting_density_by_day": "Щільність подій поточного тижня",
   "live_snapshot": "Живий знімок",
   "export_csv": "Експорт CSV",
+  "export_xlsx": "Експорт XLSX",
+  "export": "Експорт",
   "no_data_week": "Немає даних за тиждень",
   "month_pulse_label": "Активність",
   "month_pulse_title": "Пульс місяця",
