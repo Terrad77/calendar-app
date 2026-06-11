@@ -265,6 +265,10 @@ export const markNotificationRead = async (id: string): Promise<void> => {
   await instance.patch(`/api/notifications/${id}/read`);
 };
 
+export const deleteNotification = async (id: string): Promise<void> => {
+  await instance.delete(`/api/notifications/${id}`);
+};
+
 // --- Settings ---
 
 export const saveSettings = async (settings: {

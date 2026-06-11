@@ -375,12 +375,17 @@ router.delete('/account', authenticateToken, async (req: Request, res: Response)
 
     const { password } = req.body;
 
+    // Google OAuth users have no local password, so they confirm deletion with
+    // the checkbox only. Everyone else must still provide their password.
     if (!password) {
-      res.status(400).json({
-        error: 'Validation error',
-        message: 'Password is required to delete account',
-      });
-      return;
+      const account = await authService.getUserById(req.user.userId);
+      if (!account?.googleId) {
+        res.status(400).json({
+          error: 'Validation error',
+          message: 'Password is required to delete account',
+        });
+        return;
+      }
     }
 
     await authService.deleteAccount(req.user.userId, password);

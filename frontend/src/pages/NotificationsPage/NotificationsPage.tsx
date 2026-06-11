@@ -8,6 +8,7 @@ import toastMaker from '../../utils/toastMaker/toastMaker';
 import {
   getNotifications,
   markNotificationRead,
+  deleteNotification,
   respondToInvitation,
   type NotificationApiItem,
 } from '../../API/apiOperations';
@@ -21,6 +22,7 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<NotificationApiItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [responding, setResponding] = useState<string | null>(null); // notification id being responded to
+  const [deleting, setDeleting] = useState<string | null>(null); // notification id being deleted
   const hasMarkedRead = useRef(false);
 
   useEffect(() => {
@@ -70,11 +72,28 @@ export default function NotificationsPage() {
     try {
       await respondToInvitation(invitationId, status);
       setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-      toastMaker(status === 'accepted' ? 'Invitation accepted' : 'Invitation declined');
+      toastMaker(status === 'accepted' ? t('invitation_accepted') : t('invitation_declined'));
     } catch (err) {
-      toastMaker(err instanceof Error ? err.message : 'Failed to respond', 'error');
+      toastMaker(err instanceof Error ? err.message : t('failed_to_respond'), 'error');
     } finally {
       setResponding(null);
+    }
+  };
+
+  // Delete works for any notification type (INVITATION, REMINDER, SYSTEM).
+  // Optimistically remove the card and restore it if the request fails.
+  const handleDelete = async (notificationId: string) => {
+    setDeleting(notificationId);
+    const previous = notifications;
+    setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+    try {
+      await deleteNotification(notificationId);
+      toastMaker(t('notification_deleted'));
+    } catch (err) {
+      setNotifications(previous);
+      toastMaker(err instanceof Error ? err.message : t('failed_to_delete_notification'), 'error');
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -140,7 +159,7 @@ export default function NotificationsPage() {
           </div>
         ) : visible.length === 0 ? (
           <p className={styles.stateMessage}>
-            {hideRead ? 'No unread notifications.' : t('noNotificationsYet')}
+            {hideRead ? t('no_unread_notifications') : t('noNotificationsYet')}
           </p>
         ) : (
           visible.map((notification) => (
@@ -149,7 +168,20 @@ export default function NotificationsPage() {
               <div className={styles.notificationBody}>
                 <div className={styles.notificationHeader}>
                   <h3 className={styles.notificationTitle}>{notification.title}</h3>
-                  <span className={styles.group}>{notification.type}</span>
+                  <div className={styles.headerMeta}>
+                    <span className={styles.group}>{notification.type}</span>
+                    {/* Delete is available for every type, including SYSTEM. */}
+                    <button
+                      type="button"
+                      className={styles.deleteBtn}
+                      aria-label={t('delete_notification')}
+                      title={t('delete_notification')}
+                      disabled={deleting === notification.id}
+                      onClick={() => handleDelete(notification.id)}
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
                 <p className={styles.notificationDetail}>{notification.message}</p>
                 <p className={styles.notificationTime}>{dayjs(notification.createdAt).fromNow()}</p>
@@ -164,7 +196,7 @@ export default function NotificationsPage() {
                         handleRespond(notification.id, notification.referenceId!, 'accepted')
                       }
                     >
-                      Accept
+                      {t('accept')}
                     </button>
                     <button
                       type="button"
@@ -174,7 +206,7 @@ export default function NotificationsPage() {
                         handleRespond(notification.id, notification.referenceId!, 'declined')
                       }
                     >
-                      Decline
+                      {t('decline')}
                     </button>
                   </div>
                 )}

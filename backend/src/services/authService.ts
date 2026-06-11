@@ -446,7 +446,7 @@ export class AuthService {
       .where(eq(usersTable.id, userId));
   }
 
-  async deleteAccount(userId: string, password: string): Promise<void> {
+  async deleteAccount(userId: string, password?: string): Promise<void> {
     const database = getDb();
 
     // Get user
@@ -461,8 +461,12 @@ export class AuthService {
       throw new Error('User not found');
     }
 
-    // If user has a password, verify it
+    // Google OAuth users have no local password and skip the password check.
+    // Anyone with a local password must provide a matching one.
     if (user.password) {
+      if (!password) {
+        throw new Error('Password is required to delete account');
+      }
       const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         throw new Error('Password is incorrect');

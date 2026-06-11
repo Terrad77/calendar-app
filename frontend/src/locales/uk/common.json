@@ -57,6 +57,7 @@
   "enter_password": "Введіть пароль",
   "delete_account": "Видалити акаунт",
   "delete_account_warning": "Ця дія перманентна і не може бути скасована. Всі ваші дані будуть видалені.",
+  "delete_account_google_warning": "Ви увійшли через Google. Підтвердіть видалення акаунту.",
   "confirm_delete": "Я розумію і хочу видалити свій акаунт",
   "deleting": "Видалення",
   "personal_planning_polished": "Особисте планування, відшліфоване",

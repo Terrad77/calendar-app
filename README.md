@@ -148,6 +148,7 @@ GOOGLE_CALLBACK_URL=http://localhost:3001/api/auth/google/callback
 - Для CI/CD та продакшну використовуйте безпечні сховища секретів:
   - GitHub Actions Secrets / GitLab CI Variables
   - Vercel / Netlify environment variables
+  - Render Environment Secrets
   - AWS Secrets Manager / Parameter Store, Azure Key Vault, Google Secret Manager
   - Docker secrets / Kubernetes secrets
 - Під час деплою переконайтеся, що всі обовʼязкові змінні середовища встановлені: `DATABASE_URL`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_CALLBACK_URL`, `GOOGLE_AI_API_KEY` тощо.

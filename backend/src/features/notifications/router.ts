@@ -75,4 +75,35 @@ router.patch('/:id/read', authenticateToken, async (req: Request, res: Response)
   }
 });
 
+// DELETE /api/notifications/:id
+// Removes a single notification. Only the owning user can delete their own notifications.
+router.delete('/:id', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const user = req.user as TokenPayload | undefined;
+    if (!user) {
+      sendApiError(res, 401, 'User not authenticated');
+      return;
+    }
+
+    const db = getDb();
+    const [deleted] = await db
+      .delete(notifications)
+      .where(and(eq(notifications.id, req.params.id), eq(notifications.userId, user.userId)))
+      .returning();
+
+    if (!deleted) {
+      sendApiError(res, 404, 'Notification not found');
+      return;
+    }
+
+    sendApiResponse(res, 200, { notification: deleted });
+  } catch (error) {
+    sendApiError(
+      res,
+      500,
+      error instanceof Error ? error.message : 'Failed to delete notification'
+    );
+  }
+});
+
 export default router;

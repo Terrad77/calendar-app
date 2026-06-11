@@ -85,6 +85,41 @@
   gap: 1rem;
 }
 
+.headerMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.deleteBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.deleteBtn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--color-status-error) 16%, transparent);
+  color: var(--color-status-error);
+}
+
+.deleteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .notificationTitle {
   font-size: 1rem;
   font-weight: 700;

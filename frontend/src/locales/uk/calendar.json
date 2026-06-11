@@ -83,6 +83,8 @@
   "organizer": "Організатор",
   "start_time": "Час початку",
   "end_time": "Час закінчення",
+  "error_end_after_start": "Час завершення має бути пізніше за час початку",
+  "error_past_start": "Час початку не може бути в минулому",
   "reminder": "Нагадування",
   "reminder_none": "Немає",
   "reminder_at_time": "В момент події",

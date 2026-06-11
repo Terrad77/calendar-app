@@ -17,6 +17,9 @@ export const selectUserName = (state: RootState): string | null =>
 export const selectUserId = (state: RootState): string | null =>
   selectUserState(state).user?.id || null;
 
+export const selectIsGoogleUser = (state: RootState): boolean =>
+  Boolean(selectUserState(state).user?.googleId);
+
 export const selectIsLoading = (state: RootState): boolean => selectUserState(state).isLoading;
 
 export const selectError = (state: RootState): string | null => selectUserState(state).error;

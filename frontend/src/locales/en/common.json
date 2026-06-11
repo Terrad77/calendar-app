@@ -59,6 +59,7 @@
   "enter_password": "Enter your password",
   "delete_account": "Delete Account",
   "delete_account_warning": "This action is permanent and cannot be undone. All your data will be deleted.",
+  "delete_account_google_warning": "You signed in with Google. Confirm account deletion.",
   "confirm_delete": "I understand and want to delete my account",
   "deleting": "Deleting...",
   "personal_planning_polished": "Personal planning, polished",

@@ -83,6 +83,8 @@
   "organizer": "Organizer",
   "start_time": "Start time",
   "end_time": "End time",
+  "error_end_after_start": "End time must be after start time",
+  "error_past_start": "Start time cannot be in the past",
   "reminder": "Reminder",
   "reminder_none": "None",
   "reminder_at_time": "At time of event",

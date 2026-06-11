@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { styled } from '@stitches/react';
+import dayjs from 'dayjs';
+import { styled, keyframes } from '@stitches/react';
 import {
   type ColorType,
   TASK_MARKER_COLORS,
@@ -139,6 +140,13 @@ const FormDescription = styled('p', {
   },
 });
 
+// Shake the field on invalid save attempts (iOS-style feedback).
+const shake = keyframes({
+  '0%, 100%': { transform: 'translateX(0)' },
+  '20%, 60%': { transform: 'translateX(-6px)' },
+  '40%, 80%': { transform: 'translateX(6px)' },
+});
+
 const TaskInput = styled('input', {
   width: '100%',
   minHeight: '44px',
@@ -170,6 +178,22 @@ const TaskInput = styled('input', {
     padding: '0.95rem 1.05rem',
     fontSize: '1rem',
   },
+
+  variants: {
+    invalid: {
+      true: {
+        borderColor: 'var(--color-status-error)',
+        animation: `${shake} 0.5s`,
+      },
+    },
+  },
+});
+
+const FieldError = styled('p', {
+  margin: '4px 0 0',
+  fontSize: '0.78rem',
+  fontWeight: 600,
+  color: 'var(--color-status-error)',
 });
 
 const FieldGroup = styled('div', {
@@ -609,6 +633,10 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
   });
   const [showRecurringConfig, setShowRecurringConfig] = useState(savedPattern?.type === 'custom');
 
+  // Inline time-field validation errors and a counter that retriggers the shake.
+  const [timeErrors, setTimeErrors] = useState<{ startTime?: string; endTime?: string }>({});
+  const [shakeNonce, setShakeNonce] = useState(0);
+
   useEffect(() => {
     setTitle(initialTask?.title || '');
     setDescription(initialTask?.description || '');
@@ -675,6 +703,29 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     }
 
     const isRecurringNow = recurringType !== 'never';
+
+    // Time validation. End must be after start; the start datetime cannot be in
+    // the past — except today (any time allowed) and recurring events.
+    const nextErrors: { startTime?: string; endTime?: string } = {};
+    const isToday = dayjs(taskDate).isSame(dayjs(), 'day');
+
+    if (startTime && !isToday && !isRecurringNow) {
+      const start = new Date(`${taskDate}T${startTime}`);
+      if (start.getTime() < Date.now()) {
+        nextErrors.startTime = t('error_past_start');
+      }
+    }
+
+    if (startTime && endTime && endTime <= startTime) {
+      nextErrors.endTime = t('error_end_after_start');
+    }
+
+    if (nextErrors.startTime || nextErrors.endTime) {
+      setTimeErrors(nextErrors);
+      setShakeNonce((n) => n + 1);
+      return;
+    }
+    setTimeErrors({});
     const taskToSave: TaskEvent & {
       isPrivate?: boolean;
       reminderTime?: string;
@@ -715,6 +766,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     initialDate,
     onSave,
     isCreatingInPast,
+    t,
   ]);
 
   // --- logic for btn "Delete"---
@@ -851,20 +903,26 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
           <FieldGroup>
             <FieldLabel htmlFor="task-start-time">{t('start_time')}</FieldLabel>
             <TaskInput
+              key={`start-${shakeNonce}`}
               id="task-start-time"
               type="time"
               value={startTime}
+              invalid={Boolean(timeErrors.startTime)}
               onChange={(e) => setStartTime(e.target.value)}
             />
+            {timeErrors.startTime && <FieldError>{timeErrors.startTime}</FieldError>}
           </FieldGroup>
           <FieldGroup>
             <FieldLabel htmlFor="task-end-time">{t('end_time')}</FieldLabel>
             <TaskInput
+              key={`end-${shakeNonce}`}
               id="task-end-time"
               type="time"
               value={endTime}
+              invalid={Boolean(timeErrors.endTime)}
               onChange={(e) => setEndTime(e.target.value)}
             />
+            {timeErrors.endTime && <FieldError>{timeErrors.endTime}</FieldError>}
           </FieldGroup>
         </TimeRow>
 
