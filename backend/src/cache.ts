@@ -44,7 +44,6 @@ export const getOrSetCache = async <T>(
   if (inFlightRequest) {
     return inFlightRequest;
   }
-  console.log(`[Cache Miss] Key: ${key}`);
 
   const requestPromise = factory().then((value) => {
     setCache(key, value, ttlSeconds);
