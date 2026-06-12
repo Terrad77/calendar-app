@@ -118,4 +118,49 @@ describe('Analytics routes', () => {
     const res = await request(app).get('/api/analytics/overview');
     expect(res.status).toBe(401);
   });
+
+  it('POST /api/analytics/import imports rows from a valid CSV', async () => {
+    // Insert resolves; the handler reports how many rows it inserted.
+    mockExecute.mockResolvedValueOnce({ rows: [] });
+
+    const csv = [
+      'title;startDate;endDate;eventType;isRecurring',
+      'Standup;2026-06-01;2026-06-01;meeting;true',
+      'Review;2026-06-02;2026-06-02;task;false',
+    ].join('\n');
+
+    const res = await request(app)
+      .post('/api/analytics/import')
+      .set(auth)
+      .attach('file', Buffer.from(csv, 'utf-8'), {
+        filename: 'events.csv',
+        contentType: 'text/csv',
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.imported).toBe(2);
+  });
+
+  it('POST /api/analytics/import rejects an oversized file with 400', async () => {
+    const tooBig = Buffer.alloc(2 * 1024 * 1024 + 1024, 'a');
+
+    const res = await request(app)
+      .post('/api/analytics/import')
+      .set(auth)
+      .attach('file', tooBig, { filename: 'big.csv', contentType: 'text/csv' });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/analytics/import rejects a wrong MIME type with 400', async () => {
+    const res = await request(app)
+      .post('/api/analytics/import')
+      .set(auth)
+      .attach('file', Buffer.from('not a spreadsheet'), {
+        filename: 'image.png',
+        contentType: 'image/png',
+      });
+
+    expect(res.status).toBe(400);
+  });
 });

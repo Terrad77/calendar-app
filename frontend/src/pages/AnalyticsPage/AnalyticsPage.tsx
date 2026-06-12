@@ -1,7 +1,16 @@
 import { useTranslation } from 'react-i18next';
 import { NavigationPageShell } from '../../components/NavigationPageShell/NavigationPageShell';
 import styles from './AnalyticsPage.module.css';
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Suspense,
+  lazy,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from 'react';
 import { CalendarDays, Lock } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -13,6 +22,7 @@ import Modal from '../../components/Modal/Modal';
 import DotLoader from '../../components/DotLoader/DotLoader';
 import { TaskInputForm } from '../../components/Calendar/TaskInputFormComponent/TaskInputFormComponent';
 import { updateCalendarEvent } from '../../API/apiOperations';
+import axiosInstance from '../../API/axiosInstance';
 import toastMaker from '../../utils/toastMaker/toastMaker';
 import { MonthPulseChart } from '../../components/MonthPulseChart/MonthPulseChart';
 import type { MonthPulsePoint } from '../../components/MonthPulseChart/MonthPulseChart';
@@ -483,6 +493,90 @@ export default function AnalyticsPage() {
     }
   };
 
+  // Import split button: main action opens a file picker for both formats; the
+  // caret menu lets the user pre-filter to CSV or XLSX. Closes on outside click
+  // or Escape, mirroring the export menu.
+  const [importMenuOpen, setImportMenuOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const importGroupRef = useRef<HTMLDivElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!importMenuOpen) return;
+
+    const handlePointer = (event: MouseEvent) => {
+      if (!importGroupRef.current?.contains(event.target as Node)) {
+        setImportMenuOpen(false);
+      }
+    };
+    const handleKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setImportMenuOpen(false);
+    };
+
+    document.addEventListener('mousedown', handlePointer);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handlePointer);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [importMenuOpen]);
+
+  // Open the hidden file input, optionally pre-filtered to a single extension.
+  const triggerFilePicker = (accept: string) => {
+    setImportMenuOpen(false);
+    const input = fileInputRef.current;
+    if (!input) return;
+    input.accept = accept;
+    input.value = ''; // allow re-selecting the same file
+    input.click();
+  };
+
+  const MAX_IMPORT_BYTES = 2 * 1024 * 1024;
+
+  const handleImportFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    // Client-side guard rails before the upload (server re-validates).
+    if (file.size > MAX_IMPORT_BYTES) {
+      toastMaker(t('import_file_too_large'), 'error');
+      return;
+    }
+    const name = file.name.toLowerCase();
+    if (!name.endsWith('.csv') && !name.endsWith('.xlsx')) {
+      toastMaker(t('import_invalid_format'), 'error');
+      return;
+    }
+
+    setImporting(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const { data } = await axiosInstance.post<{
+        imported: number;
+        skipped: number;
+        warnings: string[];
+      }>('/api/analytics/import', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      toastMaker(t('import_success', { count: data.imported }));
+      if (data.skipped > 0) {
+        toastMaker(t('import_skipped', { count: data.skipped }));
+      }
+      // Reload all analytics data so the new events appear.
+      setRetryCount((count) => count + 1);
+    } catch (e) {
+      const serverMessage = (e as { response?: { data?: { error?: string } } })?.response?.data
+        ?.error;
+      toastMaker(serverMessage || t('import_error'), 'error');
+      if (import.meta.env.DEV) console.error('Import failed', e);
+    } finally {
+      setImporting(false);
+    }
+  };
+
   return (
     <NavigationPageShell
       badge={t('analytics')}
@@ -548,45 +642,100 @@ export default function AnalyticsPage() {
                     <span className={styles.liveDot} aria-hidden="true" />
                     {t('live_snapshot')}
                   </span>
-                  <div className={styles.exportGroup} ref={exportGroupRef}>
-                    <button
-                      type="button"
-                      onClick={() => void exportCsv()}
-                      className={styles.exportMainButton}
-                      title={t('export_csv')}
-                    >
-                      {t('export_csv')}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setExportMenuOpen((open) => !open)}
-                      className={styles.exportCaretButton}
-                      aria-haspopup="menu"
-                      aria-expanded={exportMenuOpen}
-                      aria-label={t('export')}
-                    >
-                      <span aria-hidden="true">▾</span>
-                    </button>
-                    {exportMenuOpen && (
-                      <div className={styles.exportMenu} role="menu">
-                        <button
-                          type="button"
-                          role="menuitem"
-                          className={styles.exportMenuItem}
-                          onClick={() => void exportCsv()}
-                        >
-                          {t('export_csv')}
-                        </button>
-                        <button
-                          type="button"
-                          role="menuitem"
-                          className={styles.exportMenuItem}
-                          onClick={() => void exportXlsx()}
-                        >
-                          {t('export_xlsx')}
-                        </button>
-                      </div>
-                    )}
+                  <div className={styles.actionGroups}>
+                    {/* Hidden input shared by the import buttons; accept is set
+                        per-trigger so the menu items can filter by format. */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".csv,.xlsx"
+                      onChange={(event) => void handleImportFile(event)}
+                      style={{ display: 'none' }}
+                    />
+
+                    <div className={styles.splitGroup} ref={importGroupRef}>
+                      <button
+                        type="button"
+                        onClick={() => triggerFilePicker('.csv,.xlsx')}
+                        className={styles.splitMainButton}
+                        title={t('import')}
+                        disabled={importing}
+                      >
+                        {importing ? `${t('import')}…` : t('import')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImportMenuOpen((open) => !open)}
+                        className={styles.splitCaretButton}
+                        aria-haspopup="menu"
+                        aria-expanded={importMenuOpen}
+                        aria-label={t('import')}
+                        disabled={importing}
+                      >
+                        <span aria-hidden="true">▾</span>
+                      </button>
+                      {importMenuOpen && (
+                        <div className={styles.splitMenu} role="menu">
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className={styles.splitMenuItem}
+                            onClick={() => triggerFilePicker('.csv')}
+                          >
+                            {t('import_csv')}
+                          </button>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className={styles.splitMenuItem}
+                            onClick={() => triggerFilePicker('.xlsx')}
+                          >
+                            {t('import_xlsx')}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className={styles.splitGroup} ref={exportGroupRef}>
+                      <button
+                        type="button"
+                        onClick={() => void exportCsv()}
+                        className={styles.splitMainButton}
+                        title={t('export_csv')}
+                      >
+                        {t('export_csv')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setExportMenuOpen((open) => !open)}
+                        className={styles.splitCaretButton}
+                        aria-haspopup="menu"
+                        aria-expanded={exportMenuOpen}
+                        aria-label={t('export')}
+                      >
+                        <span aria-hidden="true">▾</span>
+                      </button>
+                      {exportMenuOpen && (
+                        <div className={styles.splitMenu} role="menu">
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className={styles.splitMenuItem}
+                            onClick={() => void exportCsv()}
+                          >
+                            {t('export_csv')}
+                          </button>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className={styles.splitMenuItem}
+                            onClick={() => void exportXlsx()}
+                          >
+                            {t('export_xlsx')}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 

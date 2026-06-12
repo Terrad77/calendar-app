@@ -117,16 +117,26 @@
   opacity: 0.88;
 }
 
-/* Export split button: a primary CSV action joined to a caret toggle that
-   opens a format menu. Positioned relative so the menu anchors to it. */
-.exportGroup {
+/* Wrapper holding the import and export split buttons side by side. */
+.actionGroups {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* Split button: a primary action joined to a caret toggle that opens a format
+   menu. Positioned relative so the menu anchors to it. Shared by import/export. */
+.splitGroup {
   position: relative;
   display: inline-flex;
   flex: 0 0 auto;
 }
 
-.exportMainButton,
-.exportCaretButton {
+.splitMainButton,
+.splitCaretButton {
   border: 1px solid var(--surface-panel-border);
   background: var(--surface-panel-inset);
   font-size: 0.72rem;
@@ -136,7 +146,7 @@
   transition: opacity 0.15s ease;
 }
 
-.exportMainButton {
+.splitMainButton {
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
@@ -144,7 +154,7 @@
   padding: 0.4rem 0.9rem;
 }
 
-.exportCaretButton {
+.splitCaretButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -154,19 +164,25 @@
   line-height: 1;
 }
 
-.exportMainButton:hover,
-.exportCaretButton:hover {
+.splitMainButton:hover,
+.splitCaretButton:hover {
   opacity: 0.88;
 }
 
-.exportMainButton:focus-visible,
-.exportCaretButton:focus-visible {
+.splitMainButton:disabled,
+.splitCaretButton:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+
+.splitMainButton:focus-visible,
+.splitCaretButton:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
   outline-offset: 0.15rem;
 }
 
 /* Dropdown menu anchored to the right edge of the split button. */
-.exportMenu {
+.splitMenu {
   position: absolute;
   top: calc(100% + 0.4rem);
   right: 0;
@@ -181,7 +197,7 @@
   box-shadow: 0 16px 36px color-mix(in srgb, var(--surface-panel-shadow) 50%, transparent);
 }
 
-.exportMenuItem {
+.splitMenuItem {
   display: flex;
   align-items: center;
   width: 100%;
@@ -197,8 +213,8 @@
   transition: background 0.15s ease;
 }
 
-.exportMenuItem:hover,
-.exportMenuItem:focus-visible {
+.splitMenuItem:hover,
+.splitMenuItem:focus-visible {
   background: var(--surface-panel-inset);
   outline: none;
 }
