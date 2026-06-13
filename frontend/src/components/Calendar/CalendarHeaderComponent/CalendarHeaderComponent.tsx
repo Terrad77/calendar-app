@@ -5,6 +5,7 @@ import 'dayjs/locale/en';
 import type { CalendarHeaderProps } from '../../../types/calendar.types';
 import Icon from '../../Icon';
 import SearchInput from '../SearchInputComponent/SearchInputComponent';
+import { WeatherWidget } from '../../WeatherWidget/WeatherWidget';
 import { useMemo } from 'react';
 
 const HeaderWrapper = styled('div', {
@@ -273,13 +274,14 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           ))}
         </CountrySelect>
       </MonthAndCountryContainer>
-      <ButtonContainer gapSize="large">
+      <ButtonContainer gapSize="large" css={{ flexWrap: 'nowrap', alignItems: 'center' }}>
         <SearchInput
           placeholder={t('search_task')}
           onChange={onSearchChange}
           value={searchInputValue}
-          css={{ margin: '0px', flexGrow: 1, width: '100%' }}
+          css={{ margin: '0px', flex: 1, maxWidth: '320px' }}
         />
+        <WeatherWidget />
         <ButtonContainer>
           <ViewButton onClick={() => onViewModeChange('week')}>{t('week')}</ViewButton>
           <ViewButton onClick={() => onViewModeChange('month')}>{t('month')}</ViewButton>

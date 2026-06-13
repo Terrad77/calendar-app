@@ -1,0 +1,141 @@
+.widget {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.loading {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  font-size: 0.8rem;
+  color: var(--surface-calendar-muted);
+}
+
+/* Compact inline trigger — matches the header control buttons. */
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--surface-calendar-control-border);
+  background-color: var(--surface-calendar-control-bg);
+  color: var(--surface-calendar-control-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 4px var(--surface-calendar-shell-shadow);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.trigger:hover,
+.trigger:focus-visible {
+  outline: none;
+  background-color: var(--surface-calendar-control-hover-bg);
+  border-color: var(--surface-calendar-control-hover-border);
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-accent);
+}
+
+.temp {
+  font-weight: 700;
+}
+
+.city {
+  color: var(--surface-calendar-muted);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.minmax {
+  color: var(--surface-calendar-muted);
+  font-size: 0.78rem;
+}
+
+/* Hide the city label on narrow screens to keep the trigger compact. */
+@media (max-width: 768px) {
+  .city {
+    display: none;
+  }
+}
+
+/* Glassmorphism popover below the trigger. */
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--surface-panel-border);
+  background: linear-gradient(180deg, var(--surface-panel-start) 0%, var(--surface-panel-end) 100%);
+  box-shadow: 0 18px 40px var(--surface-panel-shadow);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  color: var(--surface-calendar-text);
+  animation: weatherFadeIn 0.18s ease;
+}
+
+@keyframes weatherFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdownHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--surface-calendar-title);
+}
+
+.headerGlyph {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+  color: var(--color-accent);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+}
+
+.rowIcon {
+  flex-shrink: 0;
+  color: var(--color-accent);
+}
+
+.rowLabel {
+  color: var(--surface-calendar-muted);
+}
+
+.rowValue {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--surface-calendar-text);
+}

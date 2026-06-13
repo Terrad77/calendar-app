@@ -181,5 +181,11 @@
   "canEdit": "Може редагувати",
   "cancel": "Скасувати",
   "sharing": "Надсилання…",
-  "shareMyCalendar": "Поділитися моїм календарем"
+  "shareMyCalendar": "Поділитися моїм календарем",
+  "weather_humidity": "Вологість",
+  "weather_wind": "Вітер км/год",
+  "weather_feels_like": "Відчувається як",
+  "weather_day": "День",
+  "weather_night": "Ніч",
+  "weather_loading": "Завантаження погоди..."
 }

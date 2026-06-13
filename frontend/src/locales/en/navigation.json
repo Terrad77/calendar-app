@@ -181,5 +181,11 @@
   "canEdit": "Can edit",
   "cancel": "Cancel",
   "sharing": "Sharing…",
-  "shareMyCalendar": "Share my calendar"
+  "shareMyCalendar": "Share my calendar",
+  "weather_humidity": "Humidity",
+  "weather_wind": "Wind km/h",
+  "weather_feels_like": "Feels like",
+  "weather_day": "Day",
+  "weather_night": "Night",
+  "weather_loading": "Loading weather..."
 }
