@@ -10,7 +10,7 @@ import type { AIResponse, ConversationMessage } from '../../types/types.js';
 const router = Router();
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
-const MODEL_NAME = 'gemini-2.5-flash';
+const MODEL_NAME = 'gemini-3.1-flash-lite';
 
 const model = genAI.getGenerativeModel({
   model: MODEL_NAME,
