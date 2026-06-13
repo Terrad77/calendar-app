@@ -207,6 +207,13 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
   const isPastDate = dayInLoop.isBefore(today, 'day');
   const canCreateEvent = !isPastDate;
 
+  // Guard against duplicate event ids reaching the render list (would cause
+  // duplicate React keys and duplicate dnd-kit sortable ids).
+  const uniqueDailyTasks = useMemo(
+    () => dailyTasks.filter((e, i, arr) => arr.findIndex((x) => x.id === e.id) === i),
+    [dailyTasks]
+  );
+
   // show title (abbr of month) for first & last day of month
   const showMonthAbbr = useMemo(() => {
     const isFirstDayOfItsMonth = dayInLoop.date() === 1;
@@ -342,10 +349,10 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
         style={{ overflowY: hasOverflow ? 'auto' : 'hidden', overflowX: 'hidden' }}
       >
         <SortableContext
-          items={dailyTasks.map((task) => task.id)}
+          items={uniqueDailyTasks.map((task) => task.id)}
           id={`sortable-day-${dayFormatted}`}
         >
-          {dailyTasks.map((task) => (
+          {uniqueDailyTasks.map((task) => (
             <TaskCardDraggable
               key={task.id}
               event={task}

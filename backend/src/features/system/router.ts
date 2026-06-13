@@ -32,6 +32,7 @@ const CALENDAR_SYSTEM_PROMPT = `Ти - розумний AI-асістент ка
 5. Аналіз розкладу і пропозиції
 6. Виявлення конфліктів
 7. Нагадування і рекомендації
+8. Інформація про погоду (якщо користувач запитує погоду — відповідай на основі наданого контексту погоди)
 
 ТИПИ ПОДІЙ (ВАЖЛИВО - використовуй ТІЛЬКИ ці типи):
 - "task": звичайна задача/подія (може бути будь-якого дня)
@@ -64,9 +65,13 @@ const CALENDAR_SYSTEM_PROMPT = `Ти - розумний AI-асістент ка
 - Якщо це щось нагадати → тип "reminder"
 - НІКОЛИ не використовуй інші типи!
 
+Якщо в контексті є інформація про погоду — використовуй її для відповіді на погодні запити.
+Погодні запити НЕ є поза межами твоїх можливостей.
+
 Поточна дата: ${new Date().toISOString()}
 Формат часу: 24-годинний
-Мова: визначай автоматично за запитом користувача (українська або англійська);
+Мова: визначай автоматично за запитом користувача (українська або англійська).
+Ти також можеш відповідати на запитання про погоду — якщо користувач запитує погоду і в контексті є погодні дані, використовуй їх. Якщо погодних даних немає — чесно скажи що не маєш актуальних даних про погоду і порадь перевірити прогноз на weather.com або погода.ua.
 ВАЖЛИВО: Завжди відповідай в JSON форматі для дій з подіями!`;
 
 const asyncHandler =
@@ -113,13 +118,18 @@ const describeWeatherCode = (code: number, lang: WeatherLang): string => {
 // if anything is unavailable. Best-effort: never throws.
 const fetchWeatherContext = async (location: string, lang: WeatherLang): Promise<string | null> => {
   try {
-    const geoRes = await fetch(
-      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
-        location
-      )}&count=1&language=${lang}`
-    );
-    if (!geoRes.ok) return null;
-    const geo = (await geoRes.json()) as GeocodeResponse;
+    // Geocode with English first (most reliable), then fall back to Ukrainian.
+    let geo: GeocodeResponse = {};
+    for (const geoLang of ['en', 'uk'] as const) {
+      const geoRes = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+          location
+        )}&count=1&language=${geoLang}`
+      );
+      if (!geoRes.ok) return null;
+      geo = (await geoRes.json()) as GeocodeResponse;
+      if (geo.results?.length) break;
+    }
     const place = geo.results?.[0];
     if (!place) return null;
 
