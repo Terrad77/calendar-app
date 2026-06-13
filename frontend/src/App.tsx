@@ -42,6 +42,7 @@ import {
   getMyCalendarEvents,
   updateCalendarEvent,
 } from './API/apiOperations';
+import instance from './API/axiosInstance';
 import toast, { Toaster } from 'react-hot-toast';
 import './App.css';
 import DotLoader from './components/DotLoader/DotLoader';
@@ -80,11 +81,10 @@ function App() {
   // Detect the user's city once on mount via IP geolocation and store it for
   // weather-aware AI answers. Best-effort — silently ignore any failure.
   useEffect(() => {
-    fetch('https://ipapi.co/json/')
-      .then((res) => res.json())
-      .then((data) => {
-        const city = String(data.city || data.region || data.country_name || '').trim();
-        if (city) dispatch(setUserCity(city));
+    instance
+      .get('/api/ai/location')
+      .then(({ data }) => {
+        if (data?.city) dispatch(setUserCity(data.city));
       })
       .catch(() => {
         // Ignore: city detection is optional.

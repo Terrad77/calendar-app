@@ -116,11 +116,43 @@ const describeWeatherCode = (code: number, lang: WeatherLang): string => {
   return uk('невідомо', 'unknown');
 };
 
-// Geocode a location and return a short current-weather context block, or null
-// if anything is unavailable. Best-effort: never throws.
-const fetchWeatherContext = async (location: string, lang: WeatherLang): Promise<string | null> => {
+interface NominatimResult {
+  lat: string;
+  lon: string;
+}
+
+type Coordinates = { latitude: number; longitude: number };
+
+// Geocode via Nominatim (OpenStreetMap). Handles Cyrillic and inflected city
+// names better than open-meteo. Best-effort: never throws. A descriptive
+// User-Agent is required by Nominatim's usage policy.
+const geocodeNominatim = async (
+  location: string,
+  lang: WeatherLang
+): Promise<Coordinates | null> => {
   try {
-    // Geocode with English first (most reliable), then fall back to Ukrainian.
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+        location
+      )}&format=json&limit=1&accept-language=${lang}`,
+      { headers: { 'User-Agent': 'CalendAir/1.0 (weather geocoding)' } }
+    );
+    if (!res.ok) return null;
+    const results = (await res.json()) as NominatimResult[];
+    const place = results?.[0];
+    if (!place) return null;
+    const latitude = Number(place.lat);
+    const longitude = Number(place.lon);
+    if (Number.isNaN(latitude) || Number.isNaN(longitude)) return null;
+    return { latitude, longitude };
+  } catch {
+    return null;
+  }
+};
+
+// Fallback geocoder: open-meteo. Try English first, then Ukrainian.
+const geocodeOpenMeteo = async (location: string): Promise<Coordinates | null> => {
+  try {
     let geo: GeocodeResponse = {};
     for (const geoLang of ['en', 'uk'] as const) {
       const geoRes = await fetch(
@@ -134,9 +166,22 @@ const fetchWeatherContext = async (location: string, lang: WeatherLang): Promise
     }
     const place = geo.results?.[0];
     if (!place) return null;
+    return { latitude: place.latitude, longitude: place.longitude };
+  } catch {
+    return null;
+  }
+};
+
+// Geocode a location and return a short current-weather context block, or null
+// if anything is unavailable. Best-effort: never throws.
+const fetchWeatherContext = async (location: string, lang: WeatherLang): Promise<string | null> => {
+  try {
+    // Resolve coordinates: Nominatim first, fall back to open-meteo's geocoder.
+    const coords = (await geocodeNominatim(location, lang)) ?? (await geocodeOpenMeteo(location));
+    if (!coords) return null;
 
     const forecastRes = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m&timezone=auto`
+      `https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current=temperature_2m,weathercode,windspeed_10m,relativehumidity_2m&timezone=auto`
     );
     if (!forecastRes.ok) return null;
     const forecast = (await forecastRes.json()) as ForecastResponse;
@@ -165,6 +210,16 @@ interface InsightsPayload {
 const INSIGHTS_TTL_MS = 5 * 60 * 1000;
 const insightsCache = new Map<string, { expires: number; payload: InsightsPayload }>();
 
+// --- IP geolocation cache (per IP, 1 hour TTL) ----------------------------
+interface IpApiResponse {
+  city?: string;
+  region?: string;
+  country_name?: string;
+}
+
+const LOCATION_TTL_MS = 60 * 60 * 1000;
+const locationCache = new Map<string, { expires: number; city: string }>();
+
 router.get('/', (_req, res) => {
   res.status(200).json({ message: 'Backend is running!' });
 });
@@ -191,6 +246,44 @@ router.get('/api/ai/health', (_req, res) => {
       : 'GOOGLE_AI_API_KEY not configured',
   });
 });
+
+// Resolve the caller's city via IP geolocation (moved off the client). Cached
+// per IP for an hour. Best-effort — always returns 200 with a city string.
+router.get(
+  '/api/ai/location',
+  asyncHandler(async (req, res) => {
+    // Resolve the real client IP: the first X-Forwarded-For hop (set by the
+    // hosting proxy) takes priority over the directly-connected req.ip.
+    const clientIp =
+      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || '';
+    const cacheKey = clientIp || 'unknown';
+    const cached = locationCache.get(cacheKey);
+    if (cached && cached.expires > Date.now()) {
+      res.json({ city: cached.city });
+      return;
+    }
+
+    try {
+      const ipRes = await fetch(`https://ipapi.co/${clientIp}/json/`, {
+        headers: { 'User-Agent': 'CalendAir/1.0' },
+      });
+      if (!ipRes.ok) {
+        res.json({ city: '' });
+        return;
+      }
+      const data = (await ipRes.json()) as IpApiResponse;
+      const city = String(data.city || data.region || data.country_name || '').trim();
+      // Only cache successful lookups so a transient failure (e.g. rate limit)
+      // isn't pinned for the full hour.
+      if (city) {
+        locationCache.set(cacheKey, { expires: Date.now() + LOCATION_TTL_MS, city });
+      }
+      res.json({ city });
+    } catch {
+      res.json({ city: '' });
+    }
+  })
+);
 
 router.get('/api/users/google', (_req, res) => {
   res.redirect('/api/auth/google');

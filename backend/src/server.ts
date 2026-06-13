@@ -1,3 +1,9 @@
+// Dev only: a local TLS-interception proxy breaks Node's cert verification for
+// outbound fetch (weather / IP geolocation APIs). Relax it outside production.
+if (process.env.NODE_ENV !== 'production') {
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+}
+
 import './sentry.js';
 import 'dotenv/config';
 
