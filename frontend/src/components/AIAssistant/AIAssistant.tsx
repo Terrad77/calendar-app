@@ -15,7 +15,7 @@ import { generateUniqueId } from '../../utils/idGenerator';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { useLanguage } from '../../hooks/useLanguage';
-import { selectUser } from '../../redux/user/selectors';
+import { selectUserCity } from '../../redux/user/selectors';
 import clsx from 'clsx';
 import { Sparkles, X } from 'lucide-react';
 
@@ -39,11 +39,10 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  // Auto-detected city for weather questions (no UI). Resolved once on mount.
-  const cityRef = useRef<string>('');
   const { t } = useTranslation('common');
   const { currentLanguage } = useLanguage();
-  const user = useSelector(selectUser);
+  // Auto-detected city (IP geolocation, resolved at App level) for weather Q&A.
+  const autoCity = useSelector(selectUserCity);
 
   // Check AI service availability on component mount
   useEffect(() => {
@@ -72,24 +71,6 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
 
     return () => clearTimeout(timer);
   }, [isAIAvailable]);
-
-  // Resolve a default city for weather questions once on mount. The user's
-  // saved country and IP geolocation are queried concurrently; the IP result
-  // wins when available. Failures are silently ignored.
-  useEffect(() => {
-    const fromStore = user?.preferredCountry?.trim() || '';
-
-    const fromIp = fetch('https://ipapi.co/json/')
-      .then((res) => res.json())
-      .then((data) => String(data.city || data.region || data.country_name || '').trim());
-
-    Promise.allSettled([Promise.resolve(fromStore), fromIp]).then(([store, ip]) => {
-      if (store.status === 'fulfilled' && store.value) cityRef.current = store.value;
-      if (ip.status === 'fulfilled' && ip.value) cityRef.current = ip.value;
-    });
-    // Mount-only: a one-time best-effort city lookup.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // Auto-scroll to new messages
   useEffect(() => {
@@ -303,7 +284,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
         userMessage,
         currentEvents,
         currentLanguage,
-        location.trim() || cityRef.current || undefined
+        location.trim() || autoCity || undefined
       );
 
       // Extract AI response data
@@ -407,6 +388,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({
     onEventCreate,
     currentLanguage,
     location,
+    autoCity,
   ]);
 
   // handler Quick Actions

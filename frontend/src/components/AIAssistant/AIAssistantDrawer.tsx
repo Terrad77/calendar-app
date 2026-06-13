@@ -3,6 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { BarChart3, CalendarDays, Send, X } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import { selectUserCity } from '../../redux/user/selectors';
 import type {
   AIAction,
   AIAssistantProps,
@@ -49,6 +51,8 @@ export const AIAssistantDrawer = ({
   isServiceAvailable = true,
 }: AIAssistantDrawerProps) => {
   const { t, i18n } = useTranslation('common');
+  // Auto-detected city (IP geolocation, stored at App level) for weather Q&A.
+  const autoCity = useSelector(selectUserCity);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -468,7 +472,13 @@ export const AIAssistantDrawer = ({
         isLoading: true,
       });
 
-      const aiResponse = await aiService.chat(userMessage, currentEvents);
+      // Pass UI language and the auto-detected city so weather queries resolve.
+      const aiResponse = await aiService.chat(
+        userMessage,
+        currentEvents,
+        i18n.language,
+        autoCity || undefined
+      );
       const messageContent = aiResponse.message || t('assistant_default_ai_response');
       const aiAction = aiResponse.action;
       const aiEventData = aiResponse.event;
@@ -586,6 +596,8 @@ export const AIAssistantDrawer = ({
     onEventUpdate,
     lastCreatedEventId,
     t,
+    i18n.language,
+    autoCity,
   ]);
 
   const handleSubmit = useCallback(

@@ -34,6 +34,7 @@ import {
 import { aiService } from './services/aiService';
 import { useDispatch } from 'react-redux';
 import { restoreSession } from './redux/user/operations';
+import { setUserCity } from './redux/user/userSlice';
 import { persistor, type AppDispatch } from './redux/store';
 import {
   createCalendarEvent,
@@ -75,6 +76,20 @@ function App() {
       localStorage.setItem('language', preferred);
     }
   }, [user?.language, i18n]);
+
+  // Detect the user's city once on mount via IP geolocation and store it for
+  // weather-aware AI answers. Best-effort — silently ignore any failure.
+  useEffect(() => {
+    fetch('https://ipapi.co/json/')
+      .then((res) => res.json())
+      .then((data) => {
+        const city = String(data.city || data.region || data.country_name || '').trim();
+        if (city) dispatch(setUserCity(city));
+      })
+      .catch(() => {
+        // Ignore: city detection is optional.
+      });
+  }, [dispatch]);
 
   // Protected Route wrapper - redirect to /signin if not authenticated, but wait for auth check to complete first
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {

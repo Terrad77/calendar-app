@@ -8,4 +8,6 @@ export interface UserState {
   isRefreshing: boolean;
   isLoading: boolean;
   error: string | null;
+  // Auto-detected city (IP geolocation) for weather-aware AI answers.
+  userCity: string;
 }

@@ -28,3 +28,5 @@ export const selectAccessToken = (state: RootState): string | null => selectUser
 
 export const selectIsRefreshing = (state: RootState): boolean =>
   selectUserState(state).isRefreshing;
+
+export const selectUserCity = (state: RootState): string => selectUserState(state).userCity;

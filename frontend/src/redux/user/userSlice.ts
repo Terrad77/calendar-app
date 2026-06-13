@@ -23,6 +23,7 @@ const initialState: UserState = {
   isRefreshing: !!(localStorage.getItem('accessToken') || localStorage.getItem('refreshToken')),
   isLoading: false,
   error: null,
+  userCity: '',
 };
 
 // --- Slice ---
@@ -46,6 +47,9 @@ const userSlice = createSlice({
       state.refreshToken = action.payload.refreshToken;
       localStorage.setItem('accessToken', action.payload.accessToken);
       localStorage.setItem('refreshToken', action.payload.refreshToken);
+    },
+    setUserCity: (state, action: PayloadAction<string>) => {
+      state.userCity = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -244,5 +248,5 @@ const userSlice = createSlice({
   },
 });
 
-export const { clearError, clearCredentials, setTokens } = userSlice.actions;
+export const { clearError, clearCredentials, setTokens, setUserCity } = userSlice.actions;
 export default userSlice.reducer;
