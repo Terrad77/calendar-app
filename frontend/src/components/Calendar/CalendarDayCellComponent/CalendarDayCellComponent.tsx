@@ -352,14 +352,25 @@ export const CalendarDayCell: React.FC<CalendarDayCellProps> = ({
           items={uniqueDailyTasks.map((task) => task.id)}
           id={`sortable-day-${dayFormatted}`}
         >
-          {uniqueDailyTasks.map((task) => (
-            <TaskCardDraggable
-              key={task.id}
-              event={task}
-              onCardClick={handleTaskCardClick}
-              compact
-            />
-          ))}
+          {uniqueDailyTasks.map((task) =>
+            task.isContinuation ? (
+              // Continuation of a multi-day event: muted, arrow-prefixed, same color.
+              <div key={task.id} style={{ opacity: 0.6 }}>
+                <TaskCardDraggable
+                  event={{ ...task, title: `↳ ${task.title}` }}
+                  onCardClick={handleTaskCardClick}
+                  compact
+                />
+              </div>
+            ) : (
+              <TaskCardDraggable
+                key={task.id}
+                event={task}
+                onCardClick={handleTaskCardClick}
+                compact
+              />
+            )
+          )}
         </SortableContext>
       </div>
       {hiddenTaskCount > 0 && (

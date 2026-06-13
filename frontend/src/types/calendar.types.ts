@@ -49,6 +49,11 @@ export interface BaseCalendarEvent {
   location?: string;
   isRecurring?: boolean;
   isPrivate?: boolean;
+  // Multi-day range (ISO strings); `date` stays the start day for grid placement.
+  startDate?: string;
+  endDate?: string;
+  // Set on the expanded copies of a multi-day event for days after its start.
+  isContinuation?: boolean;
 }
 
 export interface TaskEvent extends BaseCalendarEvent {

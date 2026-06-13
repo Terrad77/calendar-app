@@ -616,6 +616,9 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
   )?.metadata?.recurringPattern;
   const savedReminder = (initialTask as { reminderTime?: string } | null | undefined)?.reminderTime;
 
+  // Start/end dates default to the selected day; end mirrors start.
+  const [startDate, setStartDate] = useState(initialTask?.date || initialDate || '');
+  const [endDate, setEndDate] = useState(initialTask?.date || initialDate || '');
   const [startTime, setStartTime] = useState(initialTask?.startTime || '');
   const [endTime, setEndTime] = useState(initialTask?.endTime || '');
   const [reminder, setReminder] = useState<ReminderOption>(
@@ -634,7 +637,11 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
   const [showRecurringConfig, setShowRecurringConfig] = useState(savedPattern?.type === 'custom');
 
   // Inline time-field validation errors and a counter that retriggers the shake.
-  const [timeErrors, setTimeErrors] = useState<{ startTime?: string; endTime?: string }>({});
+  const [timeErrors, setTimeErrors] = useState<{
+    startTime?: string;
+    endTime?: string;
+    endDate?: string;
+  }>({});
   const [shakeNonce, setShakeNonce] = useState(0);
 
   useEffect(() => {
@@ -657,6 +664,8 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
         | undefined
     )?.metadata?.recurringPattern;
     const rem = (initialTask as { reminderTime?: string } | null | undefined)?.reminderTime;
+    setStartDate(initialTask?.date || initialDate || '');
+    setEndDate(initialTask?.date || initialDate || '');
     setStartTime(initialTask?.startTime || '');
     setEndTime(initialTask?.endTime || '');
     setReminder(
@@ -669,7 +678,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       endDate: pattern?.endDate ?? '',
     });
     setShowRecurringConfig(pattern?.type === 'custom');
-  }, [initialTask]);
+  }, [initialTask, initialDate]);
 
   const { t, i18n } = useTranslation(['calendar', 'common']);
   const dayLabels = i18n.language.startsWith('uk')
@@ -694,7 +703,8 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     }
 
     const taskId = initialTask?.id || generateUniqueId('task'); // generate ID for new task
-    const taskDate = initialTask?.date || initialDate; // get date from exist task or initialDate
+    // Start date field drives the event day; fall back to the originally passed date.
+    const taskDate = startDate || initialTask?.date || initialDate;
 
     if (!taskDate) {
       console.error('Task date is missing! Cannot save task.');
@@ -706,7 +716,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
 
     // Time validation. End must be after start; the start datetime cannot be in
     // the past — except today (any time allowed) and recurring events.
-    const nextErrors: { startTime?: string; endTime?: string } = {};
+    const nextErrors: { startTime?: string; endTime?: string; endDate?: string } = {};
     const isToday = dayjs(taskDate).isSame(dayjs(), 'day');
 
     if (startTime && !isToday && !isRecurringNow) {
@@ -720,21 +730,34 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       nextErrors.endTime = t('error_end_after_start');
     }
 
-    if (nextErrors.startTime || nextErrors.endTime) {
+    // End date must not precede the start date.
+    if (startDate && endDate && endDate < startDate) {
+      nextErrors.endDate = t('error_end_date_after_start');
+    }
+
+    if (nextErrors.startTime || nextErrors.endTime || nextErrors.endDate) {
       setTimeErrors(nextErrors);
       setShakeNonce((n) => n + 1);
       return;
     }
     setTimeErrors({});
+
+    // Combine date + time into ISO strings; default to midnight when no time set.
+    const startDateISO = `${taskDate}T${startTime || '00:00'}`;
+    const endDateISO = `${endDate || taskDate}T${endTime || '00:00'}`;
     const taskToSave: TaskEvent & {
       isPrivate?: boolean;
       reminderTime?: string;
       metadata?: Record<string, unknown>;
+      startDate?: string;
+      endDate?: string;
     } = {
       id: taskId,
       title: title.trim(),
       description: description.trim(),
       date: taskDate,
+      startDate: startDateISO,
+      endDate: endDateISO,
       eventType: 'task',
       colors: selectedColors.length > 0 ? selectedColors : ['default'],
       startTime: startTime || undefined,
@@ -757,6 +780,8 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     title,
     description,
     selectedColors,
+    startDate,
+    endDate,
     startTime,
     endTime,
     reminder,
@@ -898,6 +923,30 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
             aria-label="Task description input"
           />
         </FieldGroup>
+
+        <TimeRow>
+          <FieldGroup>
+            <FieldLabel htmlFor="task-start-date">{t('date_start')}</FieldLabel>
+            <TaskInput
+              id="task-start-date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </FieldGroup>
+          <FieldGroup>
+            <FieldLabel htmlFor="task-end-date">{t('date_end')}</FieldLabel>
+            <TaskInput
+              key={`end-date-${shakeNonce}`}
+              id="task-end-date"
+              type="date"
+              value={endDate}
+              invalid={Boolean(timeErrors.endDate)}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+            {timeErrors.endDate && <FieldError>{timeErrors.endDate}</FieldError>}
+          </FieldGroup>
+        </TimeRow>
 
         <TimeRow>
           <FieldGroup>

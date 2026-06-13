@@ -363,13 +363,41 @@ export const Calendar = ({
       )
       .forEach((task) => {
         const matchesSearch = task.title.toLowerCase().includes(lowerCaseSearchQuery);
+        if (!matchesSearch && lowerCaseSearchQuery !== '') {
+          return;
+        }
 
-        if (matchesSearch || lowerCaseSearchQuery === '') {
-          const taskDate = dayjs(task.date).format('YYYY-MM-DD');
-          if (!result[taskDate]) {
-            result[taskDate] = { tasks: [], holidays: [] };
+        // Expand multi-day events (endDate after start) across every covered day.
+        // The start day shows the original task; later days are continuations.
+        const eventStart = dayjs(task.date);
+        const rawEnd = task.endDate ? dayjs(task.endDate) : eventStart;
+        const eventEnd =
+          rawEnd.isValid() && rawEnd.isAfter(eventStart, 'day') ? rawEnd : eventStart;
+
+        // Clamp the walk to the visible grid so the loop stays bounded.
+        let cursor = eventStart.isBefore(startDate, 'day')
+          ? startDate.startOf('day')
+          : eventStart.startOf('day');
+        const lastDay = eventEnd.isAfter(endDate, 'day')
+          ? endDate.startOf('day')
+          : eventEnd.startOf('day');
+
+        while (cursor.isSameOrBefore(lastDay, 'day')) {
+          const dayKey = cursor.format('YYYY-MM-DD');
+          if (!result[dayKey]) {
+            result[dayKey] = { tasks: [], holidays: [] };
           }
-          result[taskDate].tasks.push(task);
+          if (cursor.isSame(eventStart, 'day')) {
+            result[dayKey].tasks.push(task);
+          } else {
+            // Synthetic id keeps dnd-kit ids unique and makes continuation drags no-op.
+            result[dayKey].tasks.push({
+              ...task,
+              id: `${task.id}__cont__${dayKey}`,
+              isContinuation: true,
+            });
+          }
+          cursor = cursor.add(1, 'day');
         }
       });
 
