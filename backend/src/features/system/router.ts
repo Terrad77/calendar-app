@@ -243,8 +243,44 @@ router.post(
         : 'en';
 
     const location = typeof req.body.location === 'string' ? req.body.location.trim() : '';
-    if (location && location.length <= 100 && WEATHER_REGEX.test(message)) {
-      const weatherContext = await fetchWeatherContext(location, weatherLang);
+
+    // Try to extract a city name from the user message when they ask about weather
+    // Supports Ukrainian, Russian, and English patterns like:
+    // "яка погода в Харкові", "погода у Києві", "weather in London", "какая погода в Одессе"
+    const cityFromMessage = WEATHER_REGEX.test(message)
+      ? (message
+          .match(
+            /(?:погод[аиі]\s+(?:в|у)|weather\s+in|погода\s+в)\s+([А-ЯҐЄІЇа-яґєіїA-Za-zА-Яа-я'\-]+)/i
+          )?.[1]
+          ?.trim() ?? '')
+      : '';
+
+    // Convert common Ukrainian/Russian inflected city forms to nominative so the
+    // geocoder resolves them reliably.
+    const normalizeCityName = (city: string): string => {
+      // Common Ukrainian locative/genitive → nominative mappings
+      const inflectionMap: Record<string, string> = {
+        Харкові: 'Харків',
+        Києві: 'Київ',
+        Одесі: 'Одеса',
+        Одессе: 'Одеса',
+        Львові: 'Львів',
+        Дніпрі: 'Дніпро',
+        Запоріжжі: 'Запоріжжя',
+        Миколаєві: 'Миколаїв',
+        Херсоні: 'Херсон',
+        Полтаві: 'Полтава',
+        Вінниці: 'Вінниця',
+        Чернігові: 'Чернігів',
+      };
+      return inflectionMap[city] ?? city;
+    };
+
+    // Use city from message as priority, fall back to client-supplied location
+    const effectiveLocation = normalizeCityName(cityFromMessage) || location;
+
+    if (effectiveLocation && effectiveLocation.length <= 100 && WEATHER_REGEX.test(message)) {
+      const weatherContext = await fetchWeatherContext(effectiveLocation, weatherLang);
       if (weatherContext) {
         context += `${weatherContext}\n\n`;
       }
