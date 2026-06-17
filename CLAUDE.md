@@ -5,7 +5,7 @@
 - **Backend:** Node.js + Express + Drizzle ORM + PostgreSQL (Neon)
 - **Auth:** JWT + Google OAuth
 - **Deployment:** Vercel (frontend) + Render (backend)
-- **Testing:** Playwright (MCP)
+- **Testing:** Vitest (frontend: @testing-library; backend: supertest)
 
 ## Structure
 calendar-app/
@@ -17,12 +17,12 @@ calendar-app/
 │       ├── pages/               # route-level components
 │       ├── redux/               # store, slices, operations
 │       ├── API/                 # axios instance, operations
-│       ├── schemas/             # zod validation schemas
+│       ├── schemas/             # yup validation schemas (frontend forms)
 │       ├── types/               # TypeScript types
 │       └── locales/             # i18n (en, uk)
 └── backend/
 └── src/
-├── features/            # auth, events, notifications, users
+├── features/            # analytics, auth, calendar, config, events, notifications, system, users
 ├── controllers/         # request handlers
 ├── services/            # business logic
 ├── middleware/          # auth, error handling
@@ -40,29 +40,36 @@ cd backend && npx tsc --noEmit
 
 # Database
 npm run db:migrate --prefix backend
-npm run db:generate --prefix backend
 
 # Build
 npm run build --prefix frontend
 npm run build --prefix backend
 ```
 
+## Testing
+- Pre-commit (husky) runs vitest conditionally: frontend tests on frontend/ changes, backend tests on backend/ changes
+- Current suites: 19 frontend + 39 backend
+
 ## Architecture Decisions
 - Monorepo with separate frontend/backend package.json
 - Feature-based modular structure on both frontend and backend
 - Unified API response contract via apiResponse utility
+- calendar feature split: features/calendar/router.ts (events + access) + sharesRouter.ts (calendar shares)
+- features/events/router.ts — pure event CRUD
+- features/events/eventSerializer.ts — shared event→response serializer (used by calendar & events routers)
+- Shared in-memory TTL cache (cache.ts/getOrSetCache) with in-flight dedup for holidays, IP geolocation, AI insights
 - In-app notifications replace real email flows (academic demo)
 - Demo Mode available for presentation without real account
 
 ## Active Branch
-- `Analitics` — current development branch
+- `main` — primary branch
 
 ## Code Rules
 - Feature-based structure: `src/features/<name>/{components,hooks,api}`
 - English comments only — concise, no self-explanatory logic
 - No premature optimization (useMemo/useCallback only with measurements)
 - All API responses follow unified contract via `apiResponse` utility
-- Zod validation on all API inputs
+- Input validation: frontend forms via Yup (react-hook-form); backend validates request inputs manually
 - Drizzle ORM only — no raw SQL except migrations
 
 ## Environment
