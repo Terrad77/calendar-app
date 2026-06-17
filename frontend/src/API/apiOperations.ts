@@ -171,14 +171,6 @@ export const inviteUserToEvent = async (eventId: string, email: string) => {
   return data.data.invitation;
 };
 
-export const getPendingInvitations = async () => {
-  const { data } = await instance.get<ApiEnvelope<{ invitations: InvitationApiItem[] }>>(
-    '/api/calendar/invitations/pending'
-  );
-
-  return Array.isArray(data.data?.invitations) ? data.data.invitations : [];
-};
-
 export const respondToInvitation = async (
   invitationId: string,
   status: 'accepted' | 'declined'
