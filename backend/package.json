@@ -16,6 +16,9 @@
     "test:watch": "vitest",
     "auto-start": "npm run build && npm start"
   },
+  "overrides": {
+    "@types/node": "$@types/node"
+  },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@sentry/node": "^7.58.0",

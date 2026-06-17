@@ -1,227 +1,18 @@
 import { Router, Request, Response } from 'express';
-import { and, eq, gte, lte, sql, ne, or, getTableColumns } from 'drizzle-orm';
-import { randomUUID } from 'crypto';
+import { and, eq, gte, lte } from 'drizzle-orm';
 import { authenticateToken } from '../../middleware/authMiddleware.js';
 import { checkEventAccess } from '../../middleware/checkEventAccess.js';
 import { getDb } from '../../db.js';
-import { calendarEvents, calendarShares, eventParticipants, users } from '../../schema.js';
+import { calendarEvents } from '../../schema.js';
 import {
-  inviteUser,
-  listPendingInvitations,
-  respondToInvitation,
-} from '../../controllers/invitationController.js';
-import { sendApiError, sendApiResponse } from '../../utils/apiResponse.js';
+  EventType,
+  EventPayload,
+  toEventResponse,
+  buildEventInsert,
+  isPastDate,
+} from './eventSerializer.js';
 
 const router = Router();
-
-type EventType = 'task' | 'holiday' | 'meeting' | 'reminder';
-type EventColor = 'default' | 'red' | 'yellow' | 'green';
-
-type EventRow = typeof calendarEvents.$inferSelect;
-type EventInsert = typeof calendarEvents.$inferInsert;
-
-interface EventPayload {
-  id?: string;
-  title: string;
-  description?: string;
-  startDate: string;
-  endDate: string;
-  startTime?: string;
-  endTime?: string;
-  location?: string;
-  countryCode?: string;
-  reminderTime?: string;
-  isRecurring?: boolean;
-  isPublic?: boolean;
-  isPrivate?: boolean;
-  completed?: boolean;
-  priority?: 'low' | 'medium' | 'high';
-  color?: EventColor;
-  colors?: EventColor[];
-  participants?: string[];
-  metadata?: Record<string, unknown>;
-  eventType?: EventType;
-}
-
-interface EventResponse extends Omit<EventPayload, 'color'> {
-  id: string;
-  userId: string;
-  color?: EventColor;
-  colors: EventColor[];
-  isPrivate?: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  accessRole?: 'owner' | 'participant' | 'shared';
-  participantStatus?: 'pending' | 'accepted' | 'declined' | null;
-  ownerInfo?: { id: string; name: string } | null;
-}
-
-const DEFAULT_EVENT_TYPE: EventType = 'task';
-
-// The id column is a uuid. Clients generate prefixed nanoid ids (e.g. "task-...")
-// for local state, which are not valid uuids — fall back to a generated one.
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const isUuid = (value: string | undefined): value is string => !!value && UUID_REGEX.test(value);
-
-const toEventResponse = (row: EventRow): EventResponse => ({
-  id: row.id,
-  userId: row.userId,
-  title: row.title,
-  description: row.description ?? undefined,
-  startDate: row.startDate,
-  endDate: row.endDate,
-  startTime: row.startTime ?? undefined,
-  endTime: row.endTime ?? undefined,
-  location: row.location ?? undefined,
-  countryCode: row.countryCode ?? undefined,
-  reminderTime: row.reminderTime ?? undefined,
-  isRecurring: row.isRecurring,
-  isPublic: row.isPublic,
-  isPrivate: row.isPrivate,
-  completed: row.completed,
-  priority: row.priority ?? undefined,
-  eventType: row.eventType,
-  color: row.colors[0],
-  colors: row.colors,
-  participants: row.participants,
-  metadata: row.metadata,
-  createdAt: row.createdAt,
-  updatedAt: row.updatedAt,
-});
-
-const normalizeColors = (payload: EventPayload): EventColor[] => {
-  if (payload.colors && payload.colors.length > 0) {
-    return payload.colors;
-  }
-
-  if (payload.color) {
-    return [payload.color];
-  }
-
-  return ['default'];
-};
-
-const buildEventInsert = (payload: EventPayload, userId: string): EventInsert => ({
-  id: isUuid(payload.id) ? payload.id : randomUUID(),
-  userId,
-  eventType: payload.eventType || DEFAULT_EVENT_TYPE,
-  title: payload.title,
-  description: payload.description ?? null,
-  startDate: payload.startDate,
-  endDate: payload.endDate,
-  startTime: payload.startTime ?? null,
-  endTime: payload.endTime ?? null,
-  location: payload.location ?? null,
-  countryCode: payload.countryCode ?? null,
-  reminderTime: payload.reminderTime ?? null,
-  isRecurring: payload.isRecurring ?? false,
-  isPublic: payload.isPublic ?? false,
-  isPrivate: payload.isPrivate ?? false,
-  completed: payload.completed ?? false,
-  priority: payload.priority ?? null,
-  colors: normalizeColors(payload),
-  participants: payload.participants ?? [],
-  metadata: payload.metadata ?? {},
-});
-
-const isPastDate = (value: string): boolean => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const eventDate = new Date(value);
-  eventDate.setHours(0, 0, 0, 0);
-
-  return eventDate < today;
-};
-
-router.get('/my-events', authenticateToken, async (req: Request, res: Response): Promise<void> => {
-  try {
-    if (!req.user) {
-      sendApiError(res, 401, 'User not authenticated');
-      return;
-    }
-
-    const database = getDb();
-    const userId = req.user.userId;
-
-    // Get all columns of table as object
-    const calendarEventColumns = getTableColumns(calendarEvents);
-
-    // typesafe query to get events where the user is either the owner or a participant (not declined)
-    const rows = await database
-      .select({
-        ...calendarEventColumns,
-        accessRole:
-          sql<string>`CASE WHEN ${calendarEvents.userId} = ${userId}::uuid THEN 'owner' ELSE 'participant' END`.as(
-            'accessRole'
-          ),
-        participantStatus: eventParticipants.status,
-      })
-      .from(calendarEvents)
-      .leftJoin(
-        eventParticipants,
-        and(eq(eventParticipants.eventId, calendarEvents.id), eq(eventParticipants.userId, userId))
-      )
-      .where(
-        or(
-          eq(calendarEvents.userId, userId),
-          and(eq(eventParticipants.userId, userId), ne(eventParticipants.status, 'declined'))
-        )
-      )
-      .orderBy(calendarEvents.startDate, calendarEvents.startTime);
-
-    const ownEvents = rows.map((row) => ({
-      ...toEventResponse(row),
-      accessRole: row.accessRole as 'owner' | 'participant',
-      participantStatus: row.participantStatus as 'pending' | 'accepted' | 'declined' | null,
-    }));
-
-    // Append events from calendars that have been shared with the current user
-    const shares = await database
-      .select({ ownerId: calendarShares.ownerId, ownerName: users.name })
-      .from(calendarShares)
-      .leftJoin(users, eq(users.id, calendarShares.ownerId))
-      .where(eq(calendarShares.sharedWithId, userId));
-
-    const sharedEventArrays = await Promise.all(
-      shares.map(async ({ ownerId, ownerName }) => {
-        const ownerEvents = await database
-          .select()
-          .from(calendarEvents)
-          .where(eq(calendarEvents.userId, ownerId))
-          .orderBy(calendarEvents.startDate, calendarEvents.startTime);
-
-        return ownerEvents.map((ev) => {
-          const base = toEventResponse(ev);
-          if (ev.isPrivate) {
-            return {
-              ...base,
-              title: 'Busy',
-              description: undefined,
-              location: undefined,
-              participants: [],
-              metadata: {},
-              accessRole: 'shared' as const,
-              ownerInfo: { id: ownerId, name: ownerName ?? '' },
-            };
-          }
-          return {
-            ...base,
-            accessRole: 'shared' as const,
-            ownerInfo: { id: ownerId, name: ownerName ?? '' },
-          };
-        });
-      })
-    );
-
-    const events = [...ownEvents, ...sharedEventArrays.flat()];
-
-    sendApiResponse(res, 200, { events }, { total: events.length });
-  } catch (error) {
-    console.error('Database Error:', error);
-    sendApiError(res, 500, 'Failed to load calendar events');
-  }
-});
 
 router.get('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
@@ -308,12 +99,6 @@ router.get(
     }
   }
 );
-
-router.post('/:eventId/invite', authenticateToken, inviteUser);
-
-router.get('/invitations/pending', authenticateToken, listPendingInvitations);
-
-router.put('/invitations/:invitationId/respond', authenticateToken, respondToInvitation);
 
 router.post('/', authenticateToken, async (req: Request, res: Response): Promise<void> => {
   try {
