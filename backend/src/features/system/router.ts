@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { and, eq, gte } from 'drizzle-orm';
 import { getWorldwideHolidays } from '../../nagerApi.js';
+import { getOrSetCache } from '../../cache.js';
 import { authenticateToken } from '../../middleware/authMiddleware.js';
 import { getDb } from '../../db.js';
 import { calendarEvents } from '../../schema.js';
@@ -200,25 +201,28 @@ const fetchWeatherContext = async (location: string, lang: WeatherLang): Promise
   }
 };
 
-// --- AI insights cache (per user, 5 min TTL) ------------------------------
+// --- AI insights cache (per user+language, 5 min TTL via shared cache) -----
 interface InsightsPayload {
   insights: string[];
   hasData: boolean;
   error?: string;
 }
 
-const INSIGHTS_TTL_MS = 5 * 60 * 1000;
-const insightsCache = new Map<string, { expires: number; payload: InsightsPayload }>();
+const INSIGHTS_TTL_SECONDS = 5 * 60;
 
-// --- IP geolocation cache (per IP, 1 hour TTL) ----------------------------
+// Sentinel for an unparseable Gemini response: the insights factory throws it so
+// getOrSetCache never caches the failure, and the handler tells it apart from
+// real infrastructure errors (DB/Gemini), which must still surface as 500.
+const INSIGHTS_PARSE_ERROR = 'insights-parse-failure';
+
+// --- IP geolocation cache (per IP, 1 hour TTL via shared cache) ------------
 interface IpApiResponse {
   city?: string;
   region?: string;
   country_name?: string;
 }
 
-const LOCATION_TTL_MS = 60 * 60 * 1000;
-const locationCache = new Map<string, { expires: number; city: string }>();
+const LOCATION_TTL_SECONDS = 60 * 60;
 
 router.get('/', (_req, res) => {
   res.status(200).json({ message: 'Backend is running!' });
@@ -256,28 +260,22 @@ router.get(
     // hosting proxy) takes priority over the directly-connected req.ip.
     const clientIp =
       (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip || '';
-    const cacheKey = clientIp || 'unknown';
-    const cached = locationCache.get(cacheKey);
-    if (cached && cached.expires > Date.now()) {
-      res.json({ city: cached.city });
-      return;
-    }
+    const cacheKey = `location:${clientIp || 'unknown'}`;
 
     try {
-      const ipRes = await fetch(`https://ipapi.co/${clientIp}/json/`, {
-        headers: { 'User-Agent': 'CalendAir/1.0' },
+      // The factory throws on a failed lookup or empty city, so getOrSetCache
+      // never caches it — a transient failure (e.g. rate limit) isn't pinned for
+      // the full hour. Only successful, non-empty lookups are cached.
+      const city = await getOrSetCache(cacheKey, LOCATION_TTL_SECONDS, async () => {
+        const ipRes = await fetch(`https://ipapi.co/${clientIp}/json/`, {
+          headers: { 'User-Agent': 'CalendAir/1.0' },
+        });
+        if (!ipRes.ok) throw new Error('geolocation lookup failed');
+        const data = (await ipRes.json()) as IpApiResponse;
+        const resolved = String(data.city || data.region || data.country_name || '').trim();
+        if (!resolved) throw new Error('geolocation returned empty city');
+        return resolved;
       });
-      if (!ipRes.ok) {
-        res.json({ city: '' });
-        return;
-      }
-      const data = (await ipRes.json()) as IpApiResponse;
-      const city = String(data.city || data.region || data.country_name || '').trim();
-      // Only cache successful lookups so a transient failure (e.g. rate limit)
-      // isn't pinned for the full hour.
-      if (city) {
-        locationCache.set(cacheKey, { expires: Date.now() + LOCATION_TTL_MS, city });
-      }
       res.json({ city });
     } catch {
       res.json({ city: '' });
@@ -501,37 +499,32 @@ router.get(
     const responseLanguage = lang.startsWith('uk') ? 'Ukrainian' : 'English';
 
     // Cache per user AND language so switching locale never returns stale copy.
-    const cacheKey = `${userId}:${responseLanguage}`;
-    const cached = insightsCache.get(cacheKey);
-    if (cached && cached.expires > Date.now()) {
-      res.json(cached.payload);
-      return;
-    }
+    const cacheKey = `insights:${userId}:${responseLanguage}`;
 
-    // Last 30 days of the user's events. start_date is a YYYY-MM-DD text column,
-    // so a lexicographic >= against the cutoff date works correctly.
-    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
-    const events = await getDb()
-      .select({
-        title: calendarEvents.title,
-        startDate: calendarEvents.startDate,
-        endDate: calendarEvents.endDate,
-        eventType: calendarEvents.eventType,
-        isRecurring: calendarEvents.isRecurring,
-      })
-      .from(calendarEvents)
-      .where(and(eq(calendarEvents.userId, userId), gte(calendarEvents.startDate, cutoff)))
-      .orderBy(calendarEvents.startDate)
-      .limit(50);
+    try {
+      const payload = await getOrSetCache(cacheKey, INSIGHTS_TTL_SECONDS, async () => {
+        // Last 30 days of the user's events. start_date is a YYYY-MM-DD text
+        // column, so a lexicographic >= against the cutoff date works correctly.
+        const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+        const events = await getDb()
+          .select({
+            title: calendarEvents.title,
+            startDate: calendarEvents.startDate,
+            endDate: calendarEvents.endDate,
+            eventType: calendarEvents.eventType,
+            isRecurring: calendarEvents.isRecurring,
+          })
+          .from(calendarEvents)
+          .where(and(eq(calendarEvents.userId, userId), gte(calendarEvents.startDate, cutoff)))
+          .orderBy(calendarEvents.startDate)
+          .limit(50);
 
-    if (events.length === 0) {
-      const payload: InsightsPayload = { insights: [], hasData: false };
-      insightsCache.set(cacheKey, { expires: Date.now() + INSIGHTS_TTL_MS, payload });
-      res.json(payload);
-      return;
-    }
+        // No data is a valid, cacheable result.
+        if (events.length === 0) {
+          return { insights: [], hasData: false } as InsightsPayload;
+        }
 
-    const prompt = `You are a productivity analyst for a calendar app.
+        const prompt = `You are a productivity analyst for a calendar app.
 Analyze these calendar events and return exactly 2-3 insights
 about the user's work patterns, peak productivity times,
 or scheduling habits.
@@ -546,26 +539,32 @@ Rules:
 - Do NOT use markdown, bullet points, or special characters
 - Return ONLY valid JSON: { "insights": ["...", "...", "..."] }`;
 
-    const result = await model.generateContent(prompt);
-    const text = (await result.response).text();
+        const result = await model.generateContent(prompt);
+        const text = (await result.response).text();
 
-    try {
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) throw new Error('parse');
+        // Throw on parse failure so getOrSetCache does not cache it; the handler
+        // catch returns the uncached fallback, matching previous behavior.
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) throw new Error(INSIGHTS_PARSE_ERROR);
 
-      const parsed: unknown = JSON.parse(jsonMatch[0]);
-      const rawInsights = (parsed as { insights?: unknown }).insights;
-      const insights = Array.isArray(rawInsights)
-        ? rawInsights.filter((item): item is string => typeof item === 'string')
-        : [];
-      if (insights.length === 0) throw new Error('parse');
+        const parsed: unknown = JSON.parse(jsonMatch[0]);
+        const rawInsights = (parsed as { insights?: unknown }).insights;
+        const insights = Array.isArray(rawInsights)
+          ? rawInsights.filter((item): item is string => typeof item === 'string')
+          : [];
+        if (insights.length === 0) throw new Error(INSIGHTS_PARSE_ERROR);
 
-      const payload: InsightsPayload = { insights: insights.slice(0, 3), hasData: true };
-      insightsCache.set(cacheKey, { expires: Date.now() + INSIGHTS_TTL_MS, payload });
+        return { insights: insights.slice(0, 3), hasData: true } as InsightsPayload;
+      });
       res.json(payload);
-    } catch {
-      // Do not cache parse failures so a later request can still succeed.
-      res.json({ insights: [], hasData: false, error: 'parse' });
+    } catch (err) {
+      // Only the parse failure returns the uncached fallback; real infrastructure
+      // errors (DB/Gemini) propagate to the error handler (500), as before.
+      if (err instanceof Error && err.message === INSIGHTS_PARSE_ERROR) {
+        res.json({ insights: [], hasData: false, error: 'parse' });
+        return;
+      }
+      throw err;
     }
   })
 );
