@@ -9,11 +9,4 @@
   overflow-y: auto;
 }
 
-.card {
-  padding: var(--space-xl);
-  background-color: var(--color-bg-card);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-}
-
 /* Width is constrained inside feature layouts, not on the app shell */
