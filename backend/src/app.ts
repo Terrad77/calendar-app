@@ -4,7 +4,8 @@ import passport from './config/passport.js';
 import authRoutes from './features/auth/router.js';
 import usersRoutes from './features/users/router.js';
 import eventsRoutes from './features/events/router.js';
-import sharesRoutes from './features/events/sharesRouter.js';
+import calendarRoutes from './features/calendar/router.js';
+import sharesRoutes from './features/calendar/sharesRouter.js';
 import analyticsRoutes from './features/analytics/router.js';
 import systemRoutes from './features/system/router.js';
 import configRoutes from './features/config/router.js';
@@ -34,8 +35,12 @@ app.use(passport.initialize());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventsRoutes);
+// /api/calendar/shares is mounted before /api/calendar.
+// Currently safe regardless of order: calendarRoutes has no GET /:id
+// or other single-segment catch-all that could match "shares" as a param.
+// If you add such a route to features/calendar/router.ts, re-verify this ordering.
 app.use('/api/calendar/shares', sharesRoutes);
-app.use('/api/calendar', eventsRoutes);
+app.use('/api/calendar', calendarRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/notifications', notificationsRoutes);
