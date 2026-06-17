@@ -16,8 +16,5 @@
     "types": ["node"]
   },
   "include": ["src/**/*", "drizzle.config.ts"],
-  "exclude": ["node_modules", "dist"],
-  "ts-node": {
-    "esm": true
-  }
+  "exclude": ["node_modules", "dist"]
 }

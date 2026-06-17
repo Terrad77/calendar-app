@@ -454,20 +454,6 @@
   }
 }
 
-.assistantDisabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.assistantDisabledMessage {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.95rem;
-  color: #64748b;
-  font-size: 0.9rem;
-}
-
 :global([data-theme='dark']) .assistantButton {
   border-color: var(--surface-panel-border);
   background:
@@ -513,8 +499,7 @@
 
 :global([data-theme='dark']) .headerKicker,
 :global([data-theme='dark']) .headerSubtitle,
-:global([data-theme='dark']) .quickActionIcon,
-:global([data-theme='dark']) .assistantDisabledMessage {
+:global([data-theme='dark']) .quickActionIcon {
   color: var(--color-text-secondary);
 }
 
