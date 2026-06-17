@@ -8,17 +8,29 @@ export npm_config_script_shell=sh
 export SHELL=sh
 
 echo "🚀 Running lint-staged..."
-if npx lint-staged; then
-    echo "🧪 Running frontend unit tests (Vitest)..."
-    if npm --prefix frontend run test; then
-        echo "✅ Pre-commit checks passed"
-    else
-        echo "❌ Frontend tests failed"
-        exit 1
-    fi
-else
+if ! npx lint-staged; then
     echo "❌ Pre-commit checks failed"
     exit 1
 fi
 
+# Run each suite only when the commit actually touches that area, so a
+# frontend-only change doesn't pay for backend tests (live Neon) and vice versa.
+staged="$(git diff --cached --name-only --diff-filter=ACMR)"
 
+if echo "$staged" | grep -q '^frontend/'; then
+    echo "🧪 Running frontend unit tests (Vitest)..."
+    if ! npm --prefix frontend run test; then
+        echo "❌ Frontend tests failed"
+        exit 1
+    fi
+fi
+
+if echo "$staged" | grep -q '^backend/'; then
+    echo "🧪 Running backend unit tests (Vitest)..."
+    if ! npm --prefix backend run test; then
+        echo "❌ Backend tests failed"
+        exit 1
+    fi
+fi
+
+echo "✅ Pre-commit checks passed"
