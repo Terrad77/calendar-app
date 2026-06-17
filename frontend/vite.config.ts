@@ -63,13 +63,6 @@ export default defineConfig(async ({ mode }: ConfigEnv): Promise<UserConfig> => 
   return {
     plugins,
 
-    resolve: {
-      alias: {
-        // Enable absolute imports: import { foo } from '@/components/foo'
-        '@': path.resolve(__dirname, './src'),
-      },
-    },
-
     logLevel: 'info', // Set to 'info' to see the server URL and startup messages
     server: {
       host: 'localhost', // Explicitly set host to localhost for development

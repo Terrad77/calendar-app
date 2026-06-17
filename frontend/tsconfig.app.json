@@ -18,17 +18,7 @@
     "types": ["react", "react-dom"],
 
     // 💡 important for references
-    "composite": true,
-
-    // 💅 path aliases
-    "baseUrl": "src",
-    "paths": {
-      "@redux/*": ["redux/*"],
-      "@api/*": ["API/*"],
-      "@hooks/*": ["hooks/*"],
-      "@components/*": ["components/*"],
-      "@utils/*": ["utils/*"]
-    }
+    "composite": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "dist"]
