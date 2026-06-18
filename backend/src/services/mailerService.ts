@@ -8,6 +8,7 @@ const SMTP_FROM = process.env.SMTP_FROM || SMTP_USER;
 
 const isSmtpConfigured = Boolean(SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS && SMTP_FROM);
 
+// Create a transporter only if SMTP is properly configured;
 const transporter = isSmtpConfigured
   ? nodemailer.createTransport({
       host: SMTP_HOST,
@@ -24,6 +25,7 @@ const transporter = isSmtpConfigured
     })
   : null;
 
+// function for sending a verification email to the user with a link to confirm their registration.
 export async function sendVerificationEmail(
   email: string,
   verificationLink: string
@@ -32,6 +34,7 @@ export async function sendVerificationEmail(
     console.warn(
       'SMTP is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, and SMTP_FROM to send real emails.'
     );
+    // Fallback: Log the verification link to the console for development purposes
     console.log('\n--- Verification Email (Fallback Log) ---');
     console.log(`To: ${email}`);
     console.log(`Link: ${verificationLink}`);

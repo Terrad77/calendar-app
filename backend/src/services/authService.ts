@@ -21,6 +21,8 @@ const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY = '7d';
 const SALT_ROUNDS = 10;
 
+// AuthService handles user authentication, including:
+//  registration, login, social login, email verification, token management, profile updates, and account deletion.
 export class AuthService {
   private generateVerificationToken(): string {
     return randomBytes(32).toString('hex');

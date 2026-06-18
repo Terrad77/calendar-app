@@ -4,6 +4,11 @@ dotenv.config();
 
 const API_URL = process.env.AI_API_URL || 'http://localhost:3001';
 
+// AIService handles interactions with the AI API, including:
+//  - Chatting with the AI model
+//  - Analyzing schedules
+//  - Finding optimal meeting times
+// It maintains a conversation history for context and provides methods to clear or retrieve this history.
 class AIService {
   private conversationHistory: ConversationMessage[] = [];
 

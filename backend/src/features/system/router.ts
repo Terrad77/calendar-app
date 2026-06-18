@@ -11,8 +11,11 @@ import type { AIResponse, ConversationMessage } from '../../types/types.js';
 const router = Router();
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '');
+
+// This Gemini AI model will be used for generating AI responses.
 const MODEL_NAME = 'gemini-3.1-flash-lite';
 
+// Create a generative model instance with specific configuration.
 const model = genAI.getGenerativeModel({
   model: MODEL_NAME,
   generationConfig: {
@@ -224,14 +227,15 @@ interface IpApiResponse {
 
 const LOCATION_TTL_SECONDS = 60 * 60;
 
+// router for health check of the backend service
 router.get('/', (_req, res) => {
   res.status(200).json({ message: 'Backend is running!' });
 });
-
+// router for health of calendar AI assistant service
 router.get('/health', (_req, res) => {
   res.json({ status: 'ok', service: 'Calendar AI Assistant' });
 });
-
+// router for AI service health check
 router.get('/api/ai/health', (_req, res) => {
   const googleAIAvailable = !!process.env.GOOGLE_AI_API_KEY;
 
@@ -252,7 +256,7 @@ router.get('/api/ai/health', (_req, res) => {
 });
 
 // Resolve the caller's city via IP geolocation (moved off the client). Cached
-// per IP for an hour. Best-effort — always returns 200 with a city string.
+// per IP for an hour, always returns 200 with a city string.
 router.get(
   '/api/ai/location',
   asyncHandler(async (req, res) => {

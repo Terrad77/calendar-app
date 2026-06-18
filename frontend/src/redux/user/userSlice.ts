@@ -21,6 +21,7 @@ const initialState: UserState = {
   refreshToken: localStorage.getItem('refreshToken'),
   isLoggedIn: false,
   isRefreshing: !!(localStorage.getItem('accessToken') || localStorage.getItem('refreshToken')),
+  sessionRestored: false,
   isLoading: false,
   error: null,
   userCity: '',
@@ -178,9 +179,11 @@ const userSlice = createSlice({
       })
       .addCase(restoreSession.fulfilled, (state) => {
         state.isRefreshing = false;
+        state.sessionRestored = true;
       })
       .addCase(restoreSession.rejected, (state) => {
         state.isRefreshing = false;
+        state.sessionRestored = true;
       })
 
       // Change Password

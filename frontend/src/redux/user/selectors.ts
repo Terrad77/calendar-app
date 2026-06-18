@@ -29,4 +29,7 @@ export const selectAccessToken = (state: RootState): string | null => selectUser
 export const selectIsRefreshing = (state: RootState): boolean =>
   selectUserState(state).isRefreshing;
 
+export const selectSessionRestored = (state: RootState): boolean =>
+  selectUserState(state).sessionRestored;
+
 export const selectUserCity = (state: RootState): string => selectUserState(state).userCity;

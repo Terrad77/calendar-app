@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '../LanguageSwitcher/LanguageSwitcher';
 import { ThemeSwitcher } from '../ThemeSwitcher/ThemeSwitcher';
 import { getNotifications } from '../../API/apiOperations';
-import { selectUser } from '../../redux/user/selectors';
+import { selectUser, selectSessionRestored } from '../../redux/user/selectors';
 import { getInitials } from '../../utils/getInitials';
 import css from './Header.module.css';
 import btnCss from './HeaderButton.module.css';
@@ -32,6 +32,10 @@ export const Header: React.FC<HeaderProps> = ({
   const { t } = useTranslation('common');
   const navigate = useNavigate();
   const user = useSelector(selectUser);
+  // True once session restore has settled; gate the notifications query on it
+  // so the request waits for a validated token instead of firing with a
+  // possibly-stale persisted one.
+  const sessionRestored = useSelector(selectSessionRestored);
   const sidebarToggleLabel = sidebarOpen ? t('close_sidebar') : t('toggle_sidebar');
 
   // Avatar monogram from the user's name (falls back to email)
@@ -40,7 +44,7 @@ export const Header: React.FC<HeaderProps> = ({
   const { data: unreadNotifs } = useQuery({
     queryKey: ['notifications-unread'],
     queryFn: () => getNotifications(true),
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && sessionRestored,
     refetchInterval: 30_000,
     staleTime: 15_000,
   });
