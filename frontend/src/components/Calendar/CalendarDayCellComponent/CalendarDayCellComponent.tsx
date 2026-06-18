@@ -62,7 +62,7 @@ const DayCell = styled('div', {
     overflowY: 'auto',
     overflowX: 'hidden',
     maxHeight: '50px',
-    paddingRight: '2px',
+    paddingRight: '6px',
     paddingBottom: '30px',
     overscrollBehavior: 'contain',
     scrollbarWidth: 'thin',
