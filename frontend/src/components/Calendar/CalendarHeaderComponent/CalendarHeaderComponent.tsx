@@ -274,7 +274,16 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
           ))}
         </CountrySelect>
       </MonthAndCountryContainer>
-      <ButtonContainer gapSize="large" css={{ flexWrap: 'nowrap', alignItems: 'center' }}>
+      <ButtonContainer
+        gapSize="large"
+        css={{
+          flexWrap: 'nowrap',
+          alignItems: 'center',
+          // Allow the search/weather/view row to wrap on mobile so the
+          // Week/Month buttons don't overflow the column-stacked header.
+          '@media (max-width: 768px)': { flexWrap: 'wrap' },
+        }}
+      >
         <SearchInput
           placeholder={t('search_task')}
           onChange={onSearchChange}
