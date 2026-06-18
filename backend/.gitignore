@@ -3,3 +3,6 @@
 .env.*.local
 node_modules/
 dist/
+
+# Local diagnostic/scratch scripts (read-only or DB-touching), not part of CI
+scripts/diag*.ts
