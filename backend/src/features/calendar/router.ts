@@ -96,7 +96,20 @@ router.get('/my-events', authenticateToken, async (req: Request, res: Response):
       })
     );
 
-    const events = [...ownEvents, ...sharedEventArrays.flat()];
+    // Dedupe by event id: a user can be both a participant of an event and have
+    // its owner's calendar shared with them, so the same event reaches both
+    // branches. The ownEvents (participant) version wins — it carries full
+    // details and participantStatus, whereas the shared version redacts private
+    // events to "Busy".
+    const eventsById = new Map<
+      string,
+      (typeof ownEvents)[number] | (typeof sharedEventArrays)[number][number]
+    >();
+    for (const ev of ownEvents) eventsById.set(ev.id, ev);
+    for (const ev of sharedEventArrays.flat()) {
+      if (!eventsById.has(ev.id)) eventsById.set(ev.id, ev);
+    }
+    const events = [...eventsById.values()];
 
     sendApiResponse(res, 200, { events }, { total: events.length });
   } catch (error) {

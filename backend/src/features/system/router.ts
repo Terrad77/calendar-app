@@ -435,9 +435,9 @@ router.post(
 
     const analysisLanguage = language === 'uk' ? 'Ukrainian' : 'English';
 
-    const prompt = `User ID: ${userId}\nAnalyze the following schedule for the period ${
+    const prompt = `Analyze the following schedule for the period ${
       timeRange || 'week'
-    } and provide recommendations in ${analysisLanguage}:\n      
+    } and provide recommendations in ${analysisLanguage}:\n
 Events: ${JSON.stringify(events, null, 2)}
 
 Provide:
@@ -473,7 +473,7 @@ router.post(
       return;
     }
 
-    const prompt = `User ID: ${userId}\nFind the optimal time for a meeting with duration of ${duration} minutes.\n\nExisting events: ${JSON.stringify(events || [], null, 2)}\nPreferences: ${JSON.stringify(preferences || {}, null, 2)}\n\nSuggest 3-5 best time slots with explanations of why they are suitable.`;
+    const prompt = `Find the optimal time for a meeting with duration of ${duration} minutes.\n\nExisting events: ${JSON.stringify(events || [], null, 2)}\nPreferences: ${JSON.stringify(preferences || {}, null, 2)}\n\nSuggest 3-5 best time slots with explanations of why they are suitable.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
