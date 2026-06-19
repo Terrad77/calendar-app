@@ -1,4 +1,5 @@
 import express from 'express';
+import Sentry from './sentry.js';
 import cors from 'cors';
 import passport from './config/passport.js';
 import authRoutes from './features/auth/router.js';
@@ -12,9 +13,17 @@ import configRoutes from './features/config/router.js';
 import notificationsRoutes from './features/notifications/router.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
+// Create an Express application instance
 const app = express();
 
-app.use(express.json({ limit: '50kb' }));
+// Integrate Sentry request and tracing handlers
+// if SENTRY_DSN is configured
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.Handlers.requestHandler());
+  app.use(Sentry.Handlers.tracingHandler());
+}
+
+app.use(express.json({ limit: '50kb' })); // Parse incoming JSON requests with a size limit of 50kb
 
 app.use(
   cors({
@@ -47,6 +56,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use(configRoutes);
 app.use(systemRoutes);
 
+// Catch-all route for undefined endpoints, returning a 404 Not Found error
 app.use('*', (req, res) => {
   res.status(404).json({
     error: 'NotFoundError',
@@ -56,6 +66,12 @@ app.use('*', (req, res) => {
   });
 });
 
+// Sentry error handler. !before any custom error handlers!
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.Handlers.errorHandler());
+}
+
+// Custom error handler to format errors consistently
 app.use(errorHandler);
 
 export default app;
