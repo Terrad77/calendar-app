@@ -124,7 +124,7 @@ export default function ContactsPage() {
       } catch (err: unknown) {
         console.error('Failed to load users:', err);
         try {
-          const sentry = await import(/* @vite-ignore */ '@' + 'sentry/react');
+          const sentry = await import('@sentry/react');
           try {
             type SentryScopeLike = {
               setUser?: (u: Record<string, unknown> | null) => void;
@@ -350,7 +350,7 @@ export default function ContactsPage() {
           const msg = err instanceof Error ? err.message : String(err);
           setEditError(msg || 'Failed to save');
           try {
-            const sentry = await import(/* @vite-ignore */ '@' + 'sentry/react');
+            const sentry = await import('@sentry/react');
             try {
               type SentryScopeLike = {
                 setUser?: (u: Record<string, unknown> | null) => void;

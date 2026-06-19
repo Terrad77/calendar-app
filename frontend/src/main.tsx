@@ -13,39 +13,30 @@ import './locales';
 
 const queryClient = new QueryClient();
 
-type SentryInitOptions = {
-  dsn: string;
-  integrations: unknown[];
-  tracesSampleRate: number;
-  environment: string;
-  release?: string;
-};
-
 type SentryModule = {
-  init: (options: SentryInitOptions) => void;
+  init: (options: {
+    dsn: string;
+    integrations?: unknown[];
+    tracesSampleRate: number;
+    environment: string;
+    release?: string;
+  }) => void;
 };
 
-type BrowserTracingModule = {
-  BrowserTracing: new () => unknown;
-};
-
-// Initialize Sentry dynamically only when DSN is provided. This keeps
-// local development and pre-commit hooks working when @sentry/* packages
-// are not installed (they are optional dev-deps for release builds).
+// Initialize Sentry dynamically only when DSN is provided.
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 if (SENTRY_DSN) {
   void (async () => {
     try {
-      const sentryPkg = '@' + 'sentry/react';
-      const tracingPkg = '@' + 'sentry/tracing';
-      const sentryModule: unknown = await import(/* @vite-ignore */ sentryPkg);
-      const tracingModule: unknown = await import(/* @vite-ignore */ tracingPkg);
+      const sentryModule = (await import('@sentry/react')) as unknown;
+
+      // Type assertion to SentryModule type
       const Sentry = sentryModule as SentryModule;
-      const { BrowserTracing } = tracingModule as BrowserTracingModule;
 
       Sentry.init({
         dsn: SENTRY_DSN,
-        integrations: [new BrowserTracing()],
+        // В Sentry v10 интеграция трассировки больше не требуется вручную!
+        // Она включается автоматически благодаря строке ниже.
         tracesSampleRate: Number(import.meta.env.VITE_SENTRY_TRACES_SAMPLE_RATE) || 0.0,
         environment: import.meta.env.MODE,
         release: import.meta.env.VITE_SENTRY_RELEASE || undefined,

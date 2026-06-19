@@ -92,6 +92,9 @@ export default defineConfig(async ({ mode }: ConfigEnv): Promise<UserConfig> => 
           // Split vendor chunks for better long-term caching and smaller initial bundle
           manualChunks(id) {
             if (id.includes('node_modules')) {
+              // Keep Sentry in its own async chunk so it loads only on demand
+              // (init gated behind VITE_SENTRY_DSN; error reporting on catch paths)
+              if (id.includes('@sentry')) return 'vendor_sentry';
               if (id.includes('framer-motion')) return 'vendor_framer';
               if (id.includes('@dnd-kit')) return 'vendor_dndkit';
               if (id.includes('react-router')) return 'vendor_router';
