@@ -78,8 +78,7 @@ function App() {
     }
   }, [user?.language, i18n]);
 
-  // Detect the user's city once on mount via IP geolocation and store it for
-  // weather-aware AI answers. Best-effort — silently ignore any failure.
+  // Detect the user's city once on mount via IP geolocation and store it for weather-aware AI answers, silently ignore any failure.
   useEffect(() => {
     instance
       .get('/api/ai/location')
@@ -251,8 +250,9 @@ function App() {
     });
   };
 
-  // AI Service health check — run only after initial auth check completes
+  // AI Service health check
   useEffect(() => {
+    // ! run only after initial auth check completes !
     if (!authChecked || !isAuthenticated || isAnalyticsRoute) return;
 
     const checkAIService = async () => {
