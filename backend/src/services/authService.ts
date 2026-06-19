@@ -296,8 +296,20 @@ export class AuthService {
       const payload = jwt.verify(refreshToken, JWT_REFRESH_SECRET) as TokenPayload;
       const tokens = this.generateTokens(payload.userId, payload.email);
 
-      await database.delete(refreshTokensTable).where(eq(refreshTokensTable.token, refreshToken));
-      await this.storeRefreshToken(payload.userId, tokens.refreshToken);
+      // Rotate atomically: dropping the old token and inserting the new one must
+      // both commit or both roll back. Without a transaction, a crash between the
+      // two statements would leave the user with no valid refresh token, forcing
+      // a re-login. Token generation and jwt.verify above are CPU-only and stay
+      // outside the transaction so the row lock is held for the two writes only.
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      await database.transaction(async (tx) => {
+        await tx.delete(refreshTokensTable).where(eq(refreshTokensTable.token, refreshToken));
+        await tx.insert(refreshTokensTable).values({
+          userId: payload.userId,
+          token: tokens.refreshToken,
+          expiresAt,
+        });
+      });
 
       return tokens;
     } catch (_error) {

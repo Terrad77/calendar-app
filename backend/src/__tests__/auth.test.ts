@@ -170,6 +170,38 @@ describe.skipIf(!hasRealDb)('Auth endpoints', () => {
       refreshToken = res.body.tokens.refreshToken;
     });
 
+    it('supports two consecutive refreshes, each using the freshly rotated token', async () => {
+      // First refresh: exchange the current token for a new one.
+      const first = await request(app).post('/api/auth/refresh').send({ refreshToken });
+      expect(first.status).toBe(200);
+      const rotatedRefreshToken = first.body.tokens.refreshToken;
+      expect(typeof rotatedRefreshToken).toBe('string');
+      expect(rotatedRefreshToken.length).toBeGreaterThan(0);
+
+      // Second refresh: must use the NEW token from the first refresh, not the
+      // old one. This exercises the full rotation chain now guarded by the
+      // delete+insert transaction — if the new token were not persisted, this
+      // call would 401.
+      const second = await request(app)
+        .post('/api/auth/refresh')
+        .send({ refreshToken: rotatedRefreshToken });
+      expect(second.status).toBe(200);
+      expect(typeof second.body.tokens.accessToken).toBe('string');
+      expect(second.body.tokens.accessToken.length).toBeGreaterThan(0);
+      expect(typeof second.body.tokens.refreshToken).toBe('string');
+      expect(second.body.tokens.refreshToken.length).toBeGreaterThan(0);
+
+      // The twice-rotated access token authenticates a protected route.
+      const meRes = await request(app)
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${second.body.tokens.accessToken}`);
+      expect(meRes.status).toBe(200);
+      expect(meRes.body.user.email).toBe(email);
+
+      // Carry the latest valid refresh token forward for the logout test.
+      refreshToken = second.body.tokens.refreshToken;
+    });
+
     it('returns 401 with invalid refreshToken', async () => {
       const res = await request(app).post('/api/auth/refresh').send({ refreshToken: 'invalid' });
       expect(res.status).toBe(401);
