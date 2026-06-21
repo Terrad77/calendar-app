@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { and, eq, gte, lte } from 'drizzle-orm';
 import { authenticateToken } from '../../middleware/authMiddleware.js';
 import { checkEventAccess } from '../../middleware/checkEventAccess.js';
+import { resolveCalendarWriteTarget } from '../../services/calendarShareService.js';
 import { getDb } from '../../db.js';
 import { calendarEvents } from '../../schema.js';
 import {
@@ -125,10 +126,27 @@ router.post('/', authenticateToken, async (req: Request, res: Response): Promise
       return;
     }
 
+    const writeTarget = await resolveCalendarWriteTarget(
+      req.user.userId,
+      payload.targetCalendarOwnerId
+    );
+
+    if ('error' in writeTarget) {
+      const status = writeTarget.error === 'not_shared' ? 404 : 403;
+      res.status(status).json({
+        error: writeTarget.error === 'not_shared' ? 'Not found' : 'Forbidden',
+        message:
+          writeTarget.error === 'not_shared'
+            ? 'Target calendar is not shared with you'
+            : 'You only have read access to this calendar',
+      });
+      return;
+    }
+
     const database = getDb();
     const [createdEvent] = await database
       .insert(calendarEvents)
-      .values(buildEventInsert(payload as EventPayload, req.user.userId))
+      .values(buildEventInsert(payload as EventPayload, writeTarget.ownerId))
       .returning();
 
     if (!createdEvent) {

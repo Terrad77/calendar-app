@@ -12,6 +12,10 @@ export type EventInsert = typeof calendarEvents.$inferInsert;
 
 export interface EventPayload {
   id?: string;
+  // Owner of the calendar this event should be created in, when the actor
+  // is acting on a calendar shared with them (write permission). Ignored
+  // for update/delete, which stay scoped to events the actor already owns.
+  targetCalendarOwnerId?: string;
   title: string;
   description?: string;
   startDate: string;
