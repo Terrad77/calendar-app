@@ -100,6 +100,7 @@ const mapBackendEventToCalendarEvent = (event: BackendCalendarEvent): CalendarEv
 
 const toBackendPayload = (event: CalendarEvent): CalendarEventPayload => ({
   id: event.id,
+  targetCalendarOwnerId: event.targetCalendarOwnerId,
   title: event.title,
   description: event.description,
   startDate: event.date,

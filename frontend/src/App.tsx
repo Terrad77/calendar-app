@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import React, { useEffect, useState, Suspense } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import WelcomeSection from './components/WelcomeSection/WelcomeSection';
 import SignUpPage from './pages/SignUpPage/SignUpPage';
 import SignInPage from './pages/SignInPage/SignInPage';
@@ -39,6 +40,7 @@ import { persistor, type AppDispatch } from './redux/store';
 import {
   createCalendarEvent,
   deleteCalendarEvent,
+  getCalendarShares,
   getMyCalendarEvents,
   updateCalendarEvent,
 } from './API/apiOperations';
@@ -65,6 +67,17 @@ function App() {
   const currentUserId = useSelector(selectUserId);
   const user = useSelector(selectUser);
   const isAnalyticsRoute = location.pathname.startsWith('/analytics');
+
+  // Calendars shared with the current user; the write-permission ones are
+  // offered as targets in the event-creation form (see TaskInputForm).
+  const { data: calendarSharesData } = useQuery({
+    queryKey: ['calendarShares'],
+    queryFn: getCalendarShares,
+  });
+
+  const writableSharedCalendars = (calendarSharesData?.sharedWithMe ?? [])
+    .filter((share) => share.permission === 'write')
+    .map((share) => ({ ownerId: share.ownerId, ownerName: share.ownerName ?? '' }));
 
   // Keep i18n in sync with the authoritative language preference: the logged-in
   // user's saved language when available, otherwise the persisted localStorage
@@ -483,7 +496,11 @@ function App() {
           element={
             <ProtectedRoute>
               <Layout>
-                <HomePage events={events} setEvents={applyEventsUpdate} />
+                <HomePage
+                  events={events}
+                  setEvents={applyEventsUpdate}
+                  writableSharedCalendars={writableSharedCalendars}
+                />
               </Layout>
             </ProtectedRoute>
           }

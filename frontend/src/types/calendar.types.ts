@@ -9,6 +9,7 @@ export type EventType = 'task' | 'holiday' | 'meeting' | 'reminder';
 
 export interface CalendarEventPayload {
   id?: string;
+  targetCalendarOwnerId?: string;
   title: string;
   description?: string;
   startDate: string;
@@ -35,6 +36,10 @@ export interface BaseCalendarEvent {
   date: string;
   title: string;
   ownerId?: string;
+  // When set on a NEW event being created, indicates the user is writing into
+  // someone else's calendar that has been shared with them (write permission).
+  // Ignored on existing/persisted events.
+  targetCalendarOwnerId?: string;
   accessRole?: 'owner' | 'participant' | 'shared';
   participantStatus?: 'pending' | 'accepted' | 'declined' | null;
   ownerInfo?: { id: string; name: string } | null;
@@ -166,6 +171,9 @@ export interface HomePageProps {
   setEvents: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
   isLoading?: boolean;
   error?: string | null;
+  // Write-permission shared calendars, forwarded to the calendar's event form
+  // so the user can create events in someone else's calendar.
+  writableSharedCalendars?: { ownerId: string; ownerName: string }[];
 }
 
 export interface Holiday {

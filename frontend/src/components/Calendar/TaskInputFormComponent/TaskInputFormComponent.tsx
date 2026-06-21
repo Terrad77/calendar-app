@@ -585,6 +585,11 @@ interface TaskInputFormProps {
   onDelete?: (taskId: string) => void; // callback for delete
   initialDate?: string; // date for new task, if no exist initialTask
   isSubmitting?: boolean;
+  // Calendars shared with the current user with write permission. When
+  // non-empty and not editing an existing task, show a calendar picker so
+  // the user can choose to create the event in someone else's calendar
+  // instead of their own.
+  writableSharedCalendars?: { ownerId: string; ownerName: string }[];
 }
 
 export const TaskInputForm: React.FC<TaskInputFormProps> = ({
@@ -595,6 +600,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
   onDelete,
   initialDate,
   isSubmitting,
+  writableSharedCalendars,
 }) => {
   const [title, setTitle] = useState(initialTask?.title || '');
   const [description, setDescription] = useState(initialTask?.description || '');
@@ -606,6 +612,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
   const [selectedColors, setSelectedColors] = useState<ColorType[]>(
     initialTask?.colors && initialTask.colors.length > 0 ? initialTask.colors : ['default']
   );
+  const [targetCalendarOwnerId, setTargetCalendarOwnerId] = useState<string>('');
 
   // Restore any saved custom recurrence config from metadata (not a typed field)
   const savedPattern = (
@@ -753,6 +760,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       endDate?: string;
     } = {
       id: taskId,
+      targetCalendarOwnerId: targetCalendarOwnerId || undefined,
       title: title.trim(),
       description: description.trim(),
       date: taskDate,
@@ -788,6 +796,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     recurringType,
     recurringConfig,
     initialTask,
+    targetCalendarOwnerId,
     initialDate,
     onSave,
     isCreatingInPast,
@@ -1078,6 +1087,26 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
             <RecurringHint>{t('private_event_hint')}</RecurringHint>
           </RecurringText>
         </RecurringToggle>
+
+        {!isEditing && writableSharedCalendars && writableSharedCalendars.length > 0 && (
+          <FieldGroup>
+            <FieldLabel htmlFor="target-calendar-select">
+              {t('form_label_calendar', { defaultValue: 'Календар' })}
+            </FieldLabel>
+            <FieldSelect
+              id="target-calendar-select"
+              value={targetCalendarOwnerId}
+              onChange={(e) => setTargetCalendarOwnerId(e.target.value)}
+            >
+              <option value="">{t('form_calendar_own', { defaultValue: 'Мій календар' })}</option>
+              {writableSharedCalendars.map((cal) => (
+                <option key={cal.ownerId} value={cal.ownerId}>
+                  {cal.ownerName}
+                </option>
+              ))}
+            </FieldSelect>
+          </FieldGroup>
+        )}
       </InputStack>
 
       <FieldGroup>

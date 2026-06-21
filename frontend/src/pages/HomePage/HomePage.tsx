@@ -11,7 +11,7 @@ const Calendar = React.lazy(
   () => import('../../components/Calendar/CalendarComponent/CalendarComponent')
 );
 
-export default function HomePage({ events, setEvents }: HomePageProps) {
+export default function HomePage({ events, setEvents, writableSharedCalendars }: HomePageProps) {
   const { t } = useTranslation('calendar');
   const location = useLocation();
   const searchParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
@@ -70,7 +70,11 @@ export default function HomePage({ events, setEvents }: HomePageProps) {
           </div>
         }
       >
-        <Calendar events={filteredEvents} setEvents={setEvents} />
+        <Calendar
+          events={filteredEvents}
+          setEvents={setEvents}
+          writableSharedCalendars={writableSharedCalendars}
+        />
       </Suspense>
     </div>
   );

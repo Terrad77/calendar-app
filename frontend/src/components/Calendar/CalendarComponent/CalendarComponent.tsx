@@ -42,6 +42,7 @@ dayjs.extend(isSameOrAfter);
 type CalendarProps = {
   events?: CalendarEvent[];
   setEvents?: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
+  writableSharedCalendars?: { ownerId: string; ownerName: string }[];
 };
 
 // Tailwind styling moved to JSX
@@ -78,6 +79,7 @@ const isRawHoliday = (value: unknown): value is RawHoliday => {
 export const Calendar = ({
   events: externalEvents,
   setEvents: externalSetEvents,
+  writableSharedCalendars,
 }: CalendarProps) => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation('common');
@@ -707,6 +709,7 @@ export const Calendar = ({
           {editingTask && (
             <TaskInputForm
               initialTask={editingTask}
+              writableSharedCalendars={writableSharedCalendars}
               onSave={(task) => {
                 // update tasks
                 setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)));
@@ -733,6 +736,7 @@ export const Calendar = ({
           {activeDayForInput && !editingTask && (
             <TaskInputForm
               initialDate={activeDayForInput}
+              writableSharedCalendars={writableSharedCalendars}
               onSave={(task) => {
                 setTasks((prev) => [...prev, task]);
                 setActiveDayForInput(null);
