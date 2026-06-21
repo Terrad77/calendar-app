@@ -38,6 +38,21 @@ import { selectHiddenOwners } from '../../../redux/calendarUi/calendarUiSlice';
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
+// Pure week-boundary helpers that don't depend on dayjs's global locale config
+// (mutating it via dayjs.updateLocale only takes effect on next render of
+// components that haven't already memoized a result, which made the
+// previous Monday/Sunday toggle unreliable without a full page reload).
+// weekStart: 0 = Sunday-first, 1 = Monday-first.
+const startOfWeekWith = (date: Dayjs, weekStart: 0 | 1): Dayjs => {
+  const day = date.day(); // 0 (Sun) .. 6 (Sat), locale-independent
+  const diff = (day - weekStart + 7) % 7;
+  return date.subtract(diff, 'day').startOf('day');
+};
+
+const endOfWeekWith = (date: Dayjs, weekStart: 0 | 1): Dayjs => {
+  return startOfWeekWith(date, weekStart).add(6, 'day').endOf('day');
+};
+
 // Tailwind styling moved to JSX
 type CalendarProps = {
   events?: CalendarEvent[];
@@ -84,6 +99,7 @@ export const Calendar = ({
   const dispatch = useAppDispatch();
   const { t } = useTranslation('common');
   const user = useSelector(selectUser);
+  const weekStart: 0 | 1 = user?.startOfWeek === 'Sunday' ? 0 : 1;
   const hiddenOwnersArray = useSelector(selectHiddenOwners);
   const [currentDate, setCurrentDate] = useState<Dayjs>(dayjs());
   const [viewMode, setViewMode] = useState<'month' | 'week'>('month');
@@ -338,11 +354,11 @@ export const Calendar = ({
     if (viewMode === 'month') {
       const firstDayOfMonth = currentDate.startOf('month');
       const lastDayOfMonth = currentDate.endOf('month');
-      startDate = firstDayOfMonth.startOf('week');
-      endDate = lastDayOfMonth.endOf('week');
+      startDate = startOfWeekWith(firstDayOfMonth, weekStart);
+      endDate = endOfWeekWith(lastDayOfMonth, weekStart);
     } else {
-      startDate = currentDate.startOf('week');
-      endDate = currentDate.endOf('week');
+      startDate = startOfWeekWith(currentDate, weekStart);
+      endDate = endOfWeekWith(currentDate, weekStart);
     }
 
     let currentDayInLoop = dayjs(startDate);
@@ -419,7 +435,7 @@ export const Calendar = ({
     });
 
     return result;
-  }, [tasks, visibleHolidays, searchQuery, currentDate, viewMode, hiddenOwnersArray]);
+  }, [tasks, visibleHolidays, searchQuery, currentDate, viewMode, hiddenOwnersArray, weekStart]);
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -547,7 +563,7 @@ export const Calendar = ({
 
     if (viewMode === 'month') {
       // For month view, start from the first day of the week of the first day of the month
-      startVisibleDate = currentDate.startOf('month').startOf('week');
+      startVisibleDate = startOfWeekWith(currentDate.startOf('month'), weekStart);
       // Generate 42 days (6 weeks) to cover the entire month grid
       for (let i = 0; i < 42; i++) {
         allDaysInGrid.push(startVisibleDate.add(i, 'day'));
@@ -555,7 +571,7 @@ export const Calendar = ({
     } else {
       // viewMode === "week"
       //start from the first day of the current week
-      startVisibleDate = currentDate.startOf('week');
+      startVisibleDate = startOfWeekWith(currentDate, weekStart);
       // Generate 7 days for the week
       for (let i = 0; i < 7; i++) {
         allDaysInGrid.push(startVisibleDate.add(i, 'day'));
@@ -575,8 +591,8 @@ export const Calendar = ({
       const isFiller =
         (viewMode === 'month' && !dayInLoop.isSame(currentDate, 'month')) ||
         (viewMode === 'week' &&
-          (!dayInLoop.isSameOrAfter(currentDate.startOf('week'), 'day') ||
-            !dayInLoop.isSameOrBefore(currentDate.endOf('week'), 'day')));
+          (!dayInLoop.isSameOrAfter(startOfWeekWith(currentDate, weekStart), 'day') ||
+            !dayInLoop.isSameOrBefore(endOfWeekWith(currentDate, weekStart), 'day')));
 
       return (
         <CalendarDayCell
@@ -612,6 +628,7 @@ export const Calendar = ({
     setActiveDayForInput,
     editingTask,
     setEditingTask,
+    weekStart,
   ]);
 
   const handleCloseDayModal = useCallback(() => {
@@ -659,7 +676,7 @@ export const Calendar = ({
           </div>
         )}
 
-        <CalendarGridHeader />
+        <CalendarGridHeader weekStart={weekStart} />
 
         <div className="grid grid-cols-7 gap-px bg-neutral-200 dark:bg-neutral-800 rounded-lg overflow-hidden">
           {renderedDays}

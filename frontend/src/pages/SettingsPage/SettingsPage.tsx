@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
 import { NavigationPageShell } from '../../components/NavigationPageShell/NavigationPageShell';
-import { saveSettings } from '../../API/apiOperations';
+import { useAppDispatch } from '../../redux/hooks';
+import { updateSettings } from '../../redux/user/operations';
 import toastMaker from '../../utils/toastMaker/toastMaker';
 import { selectUser } from '../../redux/user/selectors';
 import styles from './SettingsPage.module.css';
@@ -12,6 +13,7 @@ const timeZones = ['Europe/Kyiv', 'Europe/London', 'America/New_York', 'Asia/Tok
 export default function SettingsPage() {
   const { t } = useTranslation('navigation');
   const user = useSelector(selectUser);
+  const dispatch = useAppDispatch();
 
   const [startOfWeek, setStartOfWeek] = useState('Monday');
   const [timeZone, setTimeZone] = useState('Europe/Kyiv');
@@ -20,12 +22,21 @@ export default function SettingsPage() {
   const [emailDigest, setEmailDigest] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const startDays = [t('monday'), t('sunday')];
+  // Canonical values stored on the backend; labels are translated for display only.
+  const startDayOptions: { value: 'Monday' | 'Sunday'; label: string }[] = [
+    { value: 'Monday', label: t('monday') },
+    { value: 'Sunday', label: t('sunday') },
+  ];
 
   // Initialise from persisted user data when it loads
   useEffect(() => {
     if (!user) return;
-    if (user.startOfWeek) setStartOfWeek(user.startOfWeek);
+    // Defend against legacy/corrupted values (e.g. previously-saved localized
+    // text instead of the canonical "Monday"/"Sunday") by falling back to the
+    // default rather than passing an unmatched value into the select.
+    if (user.startOfWeek === 'Monday' || user.startOfWeek === 'Sunday') {
+      setStartOfWeek(user.startOfWeek);
+    }
     if (user.timeZone) setTimeZone(user.timeZone);
     if (user.workingHours) setWorkingHours(user.workingHours);
     if (user.compactDensity !== undefined) setCompactDensity(user.compactDensity);
@@ -36,7 +47,9 @@ export default function SettingsPage() {
     event.preventDefault();
     setSaving(true);
     try {
-      await saveSettings({ startOfWeek, timeZone, workingHours, compactDensity, emailDigest });
+      await dispatch(
+        updateSettings({ startOfWeek, timeZone, workingHours, compactDensity, emailDigest })
+      ).unwrap();
       toastMaker('Settings saved');
     } catch (err) {
       toastMaker(err instanceof Error ? err.message : 'Failed to save settings', 'error');
@@ -81,9 +94,9 @@ export default function SettingsPage() {
           <label className={styles.field}>
             <span>{t('start_of_week')}</span>
             <select value={startOfWeek} onChange={(e) => setStartOfWeek(e.target.value)}>
-              {startDays.map((day) => (
-                <option key={day} value={day}>
-                  {day}
+              {startDayOptions.map((day) => (
+                <option key={day.value} value={day.value}>
+                  {day.label}
                 </option>
               ))}
             </select>

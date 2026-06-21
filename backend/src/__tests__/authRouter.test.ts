@@ -222,10 +222,26 @@ describe('Auth router (mocked service)', () => {
     });
 
     it('saves the settings and returns 200', async () => {
-      mocks.updateSettings.mockResolvedValue({ id: 'test-user', startOfWeek: 1 });
-      const res = await request(app).put('/api/auth/settings').set(auth).send({ startOfWeek: 1 });
+      mocks.updateSettings.mockResolvedValue({ id: 'test-user', startOfWeek: 'Monday' });
+      const res = await request(app)
+        .put('/api/auth/settings')
+        .set(auth)
+        .send({ startOfWeek: 'Monday' });
       expect(res.status).toBe(200);
-      expect(res.body.user).toMatchObject({ startOfWeek: 1 });
+      expect(res.body.user).toMatchObject({ startOfWeek: 'Monday' });
+    });
+
+    it('rejects a numeric startOfWeek', async () => {
+      const res = await request(app).put('/api/auth/settings').set(auth).send({ startOfWeek: 1 });
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a localized startOfWeek value', async () => {
+      const res = await request(app)
+        .put('/api/auth/settings')
+        .set(auth)
+        .send({ startOfWeek: 'Неділя' });
+      expect(res.status).toBe(400);
     });
 
     it('returns 400 when the service throws', async () => {

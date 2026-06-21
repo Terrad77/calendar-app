@@ -262,18 +262,6 @@ export const deleteNotification = async (id: string): Promise<void> => {
   await instance.delete(`/api/notifications/${id}`);
 };
 
-// --- Settings ---
-
-export const saveSettings = async (settings: {
-  startOfWeek?: string;
-  timeZone?: string;
-  workingHours?: string;
-  compactDensity?: boolean;
-  emailDigest?: boolean;
-}): Promise<void> => {
-  await instance.put('/api/auth/settings', settings);
-};
-
 // --- Calendar Sharing ---
 
 export interface CalendarShareItem {

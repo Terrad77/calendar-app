@@ -228,6 +228,31 @@ export const updateUser = createAsyncThunk<
 });
 
 // ---------------------------
+// Update workspace settings (startOfWeek, timeZone, workingHours, etc.)
+// ---------------------------
+export interface SettingsData {
+  startOfWeek?: string;
+  timeZone?: string;
+  workingHours?: string;
+  compactDensity?: boolean;
+  emailDigest?: boolean;
+}
+
+export const updateSettings = createAsyncThunk<
+  User,
+  SettingsData,
+  { state: RootState; dispatch: AppDispatch; rejectValue: string }
+>('user/updateSettings', async (settingsData, thunkAPI) => {
+  try {
+    const { data } = await instance.put('/api/auth/settings', settingsData);
+    return data.user;
+  } catch (error: unknown) {
+    const msg = (error as AxiosError).response?.data?.message || 'Failed to save settings';
+    return thunkAPI.rejectWithValue(msg);
+  }
+});
+
+// ---------------------------
 // Update avatar
 // ---------------------------
 export const updateAvatar = createAsyncThunk<

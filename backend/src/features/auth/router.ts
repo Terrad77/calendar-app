@@ -291,6 +291,14 @@ router.put('/settings', authenticateToken, async (req: Request, res: Response): 
 
     const { startOfWeek, timeZone, workingHours, compactDensity, emailDigest } = req.body;
 
+    if (startOfWeek !== undefined && startOfWeek !== 'Monday' && startOfWeek !== 'Sunday') {
+      res.status(400).json({
+        error: 'Validation error',
+        message: 'startOfWeek must be "Monday" or "Sunday"',
+      });
+      return;
+    }
+
     if (
       startOfWeek === undefined &&
       timeZone === undefined &&

@@ -30,9 +30,15 @@ const WeekdayHeaderCell = styled('div', {
   boxShadow: '0 1px 4px var(--surface-calendar-cell-shadow)',
 });
 
-export const CalendarGridHeader: React.FC = () => {
+export interface CalendarGridHeaderProps {
+  // 0 = Sunday-first, 1 = Monday-first (matches dayjs weekStart convention)
+  weekStart?: 0 | 1;
+}
+
+export const CalendarGridHeader: React.FC<CalendarGridHeaderProps> = ({ weekStart = 1 }) => {
   const { t } = useTranslation('calendar');
-  const daysOfWeek = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const mondayFirst = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const daysOfWeek = weekStart === 0 ? ['sun', ...mondayFirst.slice(0, 6)] : mondayFirst;
 
   return (
     <WeekdayHeaderContainer>
