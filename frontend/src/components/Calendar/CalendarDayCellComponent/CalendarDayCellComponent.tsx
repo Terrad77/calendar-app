@@ -29,7 +29,7 @@ interface CalendarDayCellProps {
 
 const DayCell = styled('div', {
   minHeight: 'var(--calendar-day-cell-min-height, 100px)',
-  padding: '4px',
+  padding: 'var(--calendar-day-cell-padding, 4px)',
   textAlign: 'left',
   position: 'relative',
   fontSize: '0.88rem',

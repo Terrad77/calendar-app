@@ -45,8 +45,10 @@ const TaskCard = styled('div', {
     whiteSpace: 'nowrap',
   },
   '&[data-compact="true"]': {
-    padding: '3px 6px',
-    marginBottom: '4px',
+    // Grid cards always render compact; density variables (see index.css)
+    // tighten these further on desktop when compactDensity is enabled.
+    padding: 'var(--calendar-card-padding, 3px 6px)',
+    marginBottom: 'var(--calendar-card-gap, 4px)',
     borderRadius: '6px',
     fontSize: '0.64rem',
     lineHeight: '1.1',

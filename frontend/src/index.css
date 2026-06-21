@@ -159,6 +159,27 @@
   --modal-button-border: rgba(60, 48, 36, 0.28);
 }
 
+/* Calendar density (compactDensity user setting).
+   Defaults are the comfortable spacing; useDensity reflects the preference
+   onto <html data-density="compact">, mirroring the data-theme pattern.
+   The compact override is desktop-only (>= lg breakpoint) per the settings
+   copy ("Стискає картки та відступи на desktop"). */
+:root {
+  --calendar-day-cell-min-height: 100px;
+  --calendar-day-cell-padding: 4px;
+  --calendar-card-padding: 3px 6px;
+  --calendar-card-gap: 4px;
+}
+
+@media (min-width: 1024px) {
+  [data-density='compact'] {
+    --calendar-day-cell-min-height: 72px;
+    --calendar-day-cell-padding: 2px;
+    --calendar-card-padding: 2px 5px;
+    --calendar-card-gap: 2px;
+  }
+}
+
 /* Dark theme */
 [data-theme='dark'] {
   /* Pin native controls to the dark scheme to match the Navy theme. */

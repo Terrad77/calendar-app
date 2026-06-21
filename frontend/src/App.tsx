@@ -33,6 +33,7 @@ import {
   selectUser,
 } from './redux/user/selectors';
 import { aiService } from './services/aiService';
+import { useDensity } from './hooks/useDensity';
 import { useDispatch } from 'react-redux';
 import { restoreSession } from './redux/user/operations';
 import { setUserCity } from './redux/user/userSlice';
@@ -67,6 +68,9 @@ function App() {
   const currentUserId = useSelector(selectUserId);
   const user = useSelector(selectUser);
   const isAnalyticsRoute = location.pathname.startsWith('/analytics');
+
+  // Apply the user's compactDensity preference to <html> (see useDensity).
+  useDensity();
 
   // Calendars shared with the current user; the write-permission ones are
   // offered as targets in the event-creation form (see TaskInputForm).
