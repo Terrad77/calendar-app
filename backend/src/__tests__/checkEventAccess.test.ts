@@ -67,7 +67,10 @@ describe('checkEventAccess middleware', () => {
   });
 
   it('returns 400 when no event id is present in params', async () => {
-    const req = makeReq({ params: {}, user: { userId: 'u1' } } as Partial<Request>);
+    const req = makeReq({
+      params: {},
+      user: { userId: 'u1', email: 'test@example.com' },
+    } as Partial<Request>);
     const res = makeRes();
     const next = vi.fn() as unknown as NextFunction;
 
@@ -82,7 +85,7 @@ describe('checkEventAccess middleware', () => {
     dbState.queue = [[]]; // event lookup -> empty
     const req = makeReq({
       params: { eventId: 'missing' },
-      user: { userId: 'u1' },
+      user: { userId: 'u1', email: 'test@example.com' },
     } as Partial<Request>);
     const res = makeRes();
     const next = vi.fn() as unknown as NextFunction;
@@ -99,7 +102,7 @@ describe('checkEventAccess middleware', () => {
     dbState.queue = [[event], []]; // event found, no participant row
     const req = makeReq({
       params: { eventId: 'evt-1' },
-      user: { userId: 'u1' },
+      user: { userId: 'u1', email: 'test@example.com' },
     } as Partial<Request>);
     const res = makeRes();
     const next = vi.fn() as unknown as NextFunction;
@@ -117,7 +120,10 @@ describe('checkEventAccess middleware', () => {
   it('grants a participant access with their status and isOwner false', async () => {
     const event = { id: 'evt-1', userId: 'owner', title: 'Shared' };
     dbState.queue = [[event], [{ status: 'accepted' }]];
-    const req = makeReq({ params: { id: 'evt-1' }, user: { userId: 'u2' } } as Partial<Request>);
+    const req = makeReq({
+      params: { id: 'evt-1' },
+      user: { userId: 'u2', email: 'test@example.com' },
+    } as Partial<Request>);
     const res = makeRes();
     const next = vi.fn() as unknown as NextFunction;
 
@@ -136,7 +142,7 @@ describe('checkEventAccess middleware', () => {
     dbState.queue = [[event], []]; // event found, no participant
     const req = makeReq({
       params: { eventId: 'evt-1' },
-      user: { userId: 'stranger' },
+      user: { userId: 'stranger', email: 'test@example.com' },
     } as Partial<Request>);
     const res = makeRes();
     const next = vi.fn() as unknown as NextFunction;
@@ -152,7 +158,7 @@ describe('checkEventAccess middleware', () => {
     dbState.throwErr = new Error('connection lost');
     const req = makeReq({
       params: { eventId: 'evt-1' },
-      user: { userId: 'u1' },
+      user: { userId: 'u1', email: 'test@example.com' },
     } as Partial<Request>);
     const res = makeRes();
     const next = vi.fn() as unknown as NextFunction;
