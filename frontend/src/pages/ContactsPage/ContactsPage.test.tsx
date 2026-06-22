@@ -13,6 +13,7 @@ vi.mock('../../API/apiOperations', () => ({
   getCalendarShares: vi.fn(),
   inviteUserToEvent: vi.fn(),
   createCalendarShare: vi.fn(),
+  deleteCalendarShare: vi.fn(),
   updateProfile: vi.fn(),
   updateUser: vi.fn(),
 }));
@@ -26,10 +27,9 @@ vi.mock('react-i18next', () => {
   return { useTranslation: () => ({ t, i18n }) };
 });
 
+// authService is token-layer only now; the current user comes from Redux.
 vi.mock('../../services/authService', () => ({
   authenticationService: {
-    getUser: () => ({ id: 'me', role: 'user' }),
-    setUser: vi.fn(),
     getAccessToken: () => 'token',
   },
 }));
@@ -47,6 +47,7 @@ import {
   getMyCalendarEvents,
   getUsers,
   inviteUserToEvent,
+  deleteCalendarShare,
 } from '../../API/apiOperations';
 
 const mockUsers = [
@@ -54,17 +55,23 @@ const mockUsers = [
   { id: 'u2', name: 'Bob', email: 'bob@example.com', jobTitle: 'Designer' },
 ];
 
-// Minimal store so the Modal's selectIsLoading selector resolves.
-const makeStore = () =>
+// Minimal store. selectUserId reads state.user.user?.id (used by ContactsPage
+// for self-exclusion); selectIsLoading reads state.user.isLoading (Modal).
+const makeStore = (currentUserId: string | null = null) =>
   configureStore({
     reducer: {
-      user: (state: { isLoading: boolean } = { isLoading: false }) => state,
+      user: (
+        state: { isLoading: boolean; user: { id: string } | null } = {
+          isLoading: false,
+          user: currentUserId ? { id: currentUserId } : null,
+        }
+      ) => state,
     },
   });
 
-const renderPage = (initialEntry = '/contacts') =>
+const renderPage = (initialEntry = '/contacts', currentUserId: string | null = null) =>
   render(
-    <Provider store={makeStore()}>
+    <Provider store={makeStore(currentUserId)}>
       <QueryClientProvider
         client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
       >
@@ -144,5 +151,172 @@ describe('ContactsPage', () => {
     // Let the request settle; the finally block re-enables the button.
     resolveInvite();
     await waitFor(() => expect(inviteButton().disabled).toBe(false));
+  });
+
+  describe('revoke calendar access', () => {
+    const shareForAlice = {
+      id: 'share-1',
+      permission: 'read' as const,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      sharedWithId: 'u1',
+      sharedWithName: 'Alice',
+    };
+
+    it('does not render the revoke button when no share was granted to the contact', async () => {
+      (getUsers as Mock).mockResolvedValue([mockUsers[0]]);
+      (getCalendarShares as Mock).mockResolvedValue({ sharedWithMe: [], sharedByMe: [] });
+
+      renderPage();
+      await screen.findByText('Alice');
+      expect(screen.queryByText('revokeAccess')).toBeNull();
+    });
+
+    it('renders the revoke button only for contacts the owner shared with', async () => {
+      // Two contacts, but only Alice (u1) has a share granted to her.
+      (getUsers as Mock).mockResolvedValue(mockUsers);
+      (getCalendarShares as Mock).mockResolvedValue({
+        sharedWithMe: [],
+        sharedByMe: [shareForAlice],
+      });
+
+      renderPage();
+      await screen.findByText('Alice');
+      await waitFor(() => expect(screen.getAllByText('revokeAccess')).toHaveLength(1));
+    });
+
+    it('revokes with the correct shareId and removes the button on success', async () => {
+      (getUsers as Mock).mockResolvedValue([mockUsers[0]]);
+      (getCalendarShares as Mock).mockResolvedValue({
+        sharedWithMe: [],
+        sharedByMe: [shareForAlice],
+      });
+      (deleteCalendarShare as Mock).mockResolvedValue(undefined);
+      vi.stubGlobal(
+        'confirm',
+        vi.fn(() => true)
+      );
+
+      renderPage();
+      const revokeButton = await screen.findByText('revokeAccess');
+
+      fireEvent.click(revokeButton);
+
+      await waitFor(() => expect(deleteCalendarShare as Mock).toHaveBeenCalledWith('share-1'));
+      // State drops the record, so the button disappears without a reload.
+      await waitFor(() => expect(screen.queryByText('revokeAccess')).toBeNull());
+    });
+
+    it('does not call the API when the confirmation is dismissed', async () => {
+      (getUsers as Mock).mockResolvedValue([mockUsers[0]]);
+      (getCalendarShares as Mock).mockResolvedValue({
+        sharedWithMe: [],
+        sharedByMe: [shareForAlice],
+      });
+      vi.stubGlobal(
+        'confirm',
+        vi.fn(() => false)
+      );
+
+      renderPage();
+      const revokeButton = await screen.findByText('revokeAccess');
+
+      fireEvent.click(revokeButton);
+
+      expect(deleteCalendarShare as Mock).not.toHaveBeenCalled();
+      // Button stays because nothing was revoked.
+      expect(screen.queryByText('revokeAccess')).not.toBeNull();
+    });
+  });
+
+  describe('pagination', () => {
+    const makeUsers = (n: number) =>
+      Array.from({ length: n }, (_, i) => ({
+        id: `u${i + 1}`,
+        name: `Person ${i + 1}`,
+        email: `p${i + 1}@example.com`,
+        jobTitle: 'Engineer',
+      }));
+
+    const nextButton = () => screen.getByText('pagination_next') as HTMLButtonElement;
+    const prevButton = () => screen.getByText('pagination_previous') as HTMLButtonElement;
+
+    it('does not render pagination controls when the list fits on one page', async () => {
+      // PAGE_SIZE is 6, so exactly 6 contacts fit on a single page.
+      (getUsers as Mock).mockResolvedValue(makeUsers(6));
+
+      renderPage();
+      await screen.findByText('Person 1');
+      expect(screen.queryByText('pagination_next')).toBeNull();
+    });
+
+    it('paginates and navigates between pages with correct disabled states', async () => {
+      // 8 contacts -> 2 pages (6 + 2).
+      (getUsers as Mock).mockResolvedValue(makeUsers(8));
+
+      renderPage();
+      await screen.findByText('Person 1');
+
+      // Page 1: first six visible, seventh not yet; Previous disabled.
+      expect(screen.getByText('Person 6')).toBeTruthy();
+      expect(screen.queryByText('Person 7')).toBeNull();
+      expect(prevButton().disabled).toBe(true);
+      expect(nextButton().disabled).toBe(false);
+
+      fireEvent.click(nextButton());
+
+      // Page 2: the tail two visible, first gone; Next now disabled.
+      await screen.findByText('Person 7');
+      expect(screen.queryByText('Person 1')).toBeNull();
+      expect(nextButton().disabled).toBe(true);
+      expect(prevButton().disabled).toBe(false);
+
+      fireEvent.click(prevButton());
+      await screen.findByText('Person 1');
+    });
+
+    it('resets to the first page when the search query changes', async () => {
+      (getUsers as Mock).mockResolvedValue(makeUsers(8));
+
+      renderPage();
+      await screen.findByText('Person 1');
+
+      fireEvent.click(nextButton());
+      await screen.findByText('Person 7');
+
+      // Changing the query resets to page 1 (still matches all 8 contacts).
+      fireEvent.change(screen.getByPlaceholderText('search_contacts_or_teams'), {
+        target: { value: 'Person' },
+      });
+
+      await screen.findByText('Person 1');
+      expect(screen.queryByText('Person 7')).toBeNull();
+    });
+  });
+
+  describe('self-exclusion', () => {
+    it('excludes the current user sourced from Redux (not authService) on every page', async () => {
+      const users = Array.from({ length: 8 }, (_, i) => ({
+        id: `u${i + 1}`,
+        name: `Person ${i + 1}`,
+        email: `p${i + 1}@example.com`,
+        jobTitle: 'Engineer',
+      }));
+      (getUsers as Mock).mockResolvedValue(users);
+
+      // The current user id ('u3') is provided only via the Redux store, so the
+      // test passes only if ContactsPage reads it from Redux: Person 3 excluded.
+      renderPage('/contacts', 'u3');
+      await screen.findByText('Person 1');
+
+      // Self (Person 3) absent; neighbours present.
+      expect(screen.queryByText('Person 3')).toBeNull();
+      expect(screen.getByText('Person 2')).toBeTruthy();
+      expect(screen.getByText('Person 4')).toBeTruthy();
+
+      // 7 remaining contacts -> page 2 holds the tail; self still absent.
+      fireEvent.click(screen.getByText('pagination_next'));
+      await screen.findByText('Person 8');
+      expect(screen.queryByText('Person 3')).toBeNull();
+    });
   });
 });

@@ -5,6 +5,8 @@ import type { IconProps } from '../../types/calendar.types';
 import {
   ChevronUp,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Search,
   Eye,
   EyeOff,
@@ -24,6 +26,8 @@ import {
 const iconComponents = {
   'chevron-up': ChevronUp,
   'chevron-down': ChevronDown,
+  'chevron-left': ChevronLeft,
+  'chevron-right': ChevronRight,
   calendar: MdCalendarMonth,
   search: Search,
   'question-mark': CircleQuestionMark, // icon for fallback

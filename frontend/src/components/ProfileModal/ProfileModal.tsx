@@ -6,7 +6,6 @@ import Modal from '../Modal/Modal';
 import DeleteAccountModal from '../DeleteAccountModal/DeleteAccountModal';
 import toastMaker from '../../utils/toastMaker/toastMaker';
 import { logOut, updateUser as updateUserOp } from '../../redux/user/operations';
-import { authenticationService } from '../../services/authService';
 import { selectUser } from '../../redux/user/selectors';
 import { useAppDispatch } from '../../redux/hooks';
 import css from './ProfileModal.module.css';
@@ -115,16 +114,9 @@ export const ProfileModal = ({ isOpen, onClose }: ProfileModalProps) => {
                   setSavingProfile(true);
                   setProfileError(null);
                   try {
-                    const result = await dispatch(
-                      updateUserOp({ name: editName, jobTitle })
-                    ).unwrap();
-                    if (result) {
-                      try {
-                        authenticationService.setUser(result);
-                      } catch (_e) {
-                        // setUser is best-effort; ignore if unavailable
-                      }
-                    }
+                    // The thunk updates the Redux store (single source of
+                    // truth) via updateUser.fulfilled; nothing else to persist.
+                    await dispatch(updateUserOp({ name: editName, jobTitle })).unwrap();
                     handleClose();
                     toastMaker(t('profile_saved'));
                   } catch (err: unknown) {

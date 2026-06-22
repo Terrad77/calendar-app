@@ -173,6 +173,50 @@
   color: var(--color-text-primary);
 }
 
+.contactButton:disabled,
+.secondaryButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-top: 1.1rem;
+}
+
+/* Pagination buttons: identical width (min-width in rem, sized for the longer
+   label) with the arrow icon and text centered as a flex row. */
+.paginationButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 8.5rem;
+  border: 1px solid var(--color-border-input);
+  border-radius: 9999px;
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
+  padding: 0.7rem 0.95rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.paginationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.paginationStatus {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
 @media (min-width: 768px) {
   .contactsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

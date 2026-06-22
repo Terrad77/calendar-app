@@ -98,6 +98,8 @@ function startServer() {
   registerProcessHandlers();
 
   server = app.listen(PORT, () => {
+    // Tips in console to Highlight some features that might be easy to overlook in testing,
+    // and to confirm the server is running with the expected configuration. The AI endpoints are especially easy to miss since they're not linked from the frontend UI.
     console.log(`Backend server running on http://localhost:${PORT}`);
     console.log('Authentication enabled');
     console.log('AI Calendar Assistant ready');

@@ -24,9 +24,10 @@ export interface AuthResponse {
 }
 
 class AuthenticationService {
+  // Token layer only. The current user lives in the Redux store (single source
+  // of truth); this service no longer caches user data.
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
-  private user: User | null = null;
 
   constructor() {
     this.loadFromStorage();
@@ -52,7 +53,7 @@ class AuthenticationService {
 
       const result = await response.json();
 
-      this.setAuth(result.user, result.tokens);
+      this.setAuth(result.tokens);
 
       return result;
     } catch (error) {
@@ -81,7 +82,7 @@ class AuthenticationService {
 
       const result = await response.json();
 
-      this.setAuth(result.user, result.tokens);
+      this.setAuth(result.tokens);
 
       return result;
     } catch (error) {
@@ -168,7 +169,6 @@ class AuthenticationService {
       }
 
       const result = await response.json();
-      this.user = result.user;
 
       return result.user;
     } catch (error) {
@@ -255,17 +255,9 @@ class AuthenticationService {
   }
 
   /**
-   * Get current user
-   */
-  getUser(): User | null {
-    return this.user;
-  }
-
-  /**
    * Set authentication data
    */
-  private setAuth(user: User, tokens: AuthTokens): void {
-    this.user = user;
+  private setAuth(tokens: AuthTokens): void {
     this.accessToken = tokens.accessToken;
     this.refreshToken = tokens.refreshToken;
     this.saveToStorage();
@@ -275,7 +267,6 @@ class AuthenticationService {
    * Clear authentication data
    */
   private clearAuth(): void {
-    this.user = null;
     this.accessToken = null;
     this.refreshToken = null;
     this.removeFromStorage();
@@ -289,21 +280,10 @@ class AuthenticationService {
   }
 
   /**
-   * Set user in memory and persist to storage. Useful after profile updates.
-   */
-  setUser(user: User): void {
-    this.user = user;
-    this.saveToStorage();
-  }
-
-  /**
    * Save to localStorage
    */
   private saveToStorage(): void {
     try {
-      if (this.user) {
-        localStorage.setItem('user', JSON.stringify(this.user));
-      }
       if (this.accessToken) {
         localStorage.setItem('accessToken', this.accessToken);
       }
@@ -320,13 +300,9 @@ class AuthenticationService {
    */
   private loadFromStorage(): void {
     try {
-      const userStr = localStorage.getItem('user');
       const accessToken = localStorage.getItem('accessToken');
       const refreshToken = localStorage.getItem('refreshToken');
 
-      if (userStr) {
-        this.user = JSON.parse(userStr);
-      }
       if (accessToken) {
         this.accessToken = accessToken;
       }

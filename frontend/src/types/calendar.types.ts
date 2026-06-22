@@ -106,6 +106,8 @@ export const isReminderEvent = (event: CalendarEvent): event is ReminderEvent =>
 export type IconName =
   | 'chevron-up'
   | 'chevron-down'
+  | 'chevron-left'
+  | 'chevron-right'
   | 'calendar'
   | 'search'
   | 'question-mark'

@@ -7,7 +7,9 @@ import {
   inviteUserToEvent,
   getCalendarShares,
   createCalendarShare,
+  deleteCalendarShare,
   type ShareWithMe,
+  type ShareByMe,
 } from '../../API/apiOperations';
 import { useTranslation } from 'react-i18next';
 import { getInitials } from '../../utils/getInitials';
@@ -35,10 +37,16 @@ const formatEventDate = (isoDate: string): string => {
 import Modal from '../../components/Modal/Modal';
 import DotLoader from '../../components/DotLoader/DotLoader';
 import { updateProfile, updateUser } from '../../API/apiOperations';
-import { authenticationService, User } from '../../services/authService';
+import { useSelector } from 'react-redux';
+import { selectUser, selectUserId } from '../../redux/user/selectors';
 import { NavigationPageShell } from '../../components/NavigationPageShell/NavigationPageShell';
+import Icon from '../../components/Icon';
 import styles from './ContactsPage.module.css';
 import toastMaker from '../../utils/toastMaker/toastMaker';
+
+// Client-side page size for the contacts list. 6 fills the 2-column grid
+// evenly (3 rows x 2 columns) on desktop.
+const PAGE_SIZE = 6;
 
 type ContactItem = {
   id: string;
@@ -70,6 +78,12 @@ export default function ContactsPage() {
   const [selectedEventId, setSelectedEventId] = useState('');
   const [inviteEvents, setInviteEvents] = useState<InviteEventOption[]>([]);
   const [loadingInviteEvents, setLoadingInviteEvents] = useState(false);
+
+  // Single source of truth for the current user — the Redux store. Used for
+  // self-exclusion, the collaborator metric, edit-permission checks and Sentry
+  // scope. Declared up here so the effects below can reference it safely.
+  const currentUser = useSelector(selectUser);
+  const currentUserId = useSelector(selectUserId);
 
   useEffect(() => {
     let mounted = true;
@@ -135,8 +149,7 @@ export default function ContactsPage() {
               withScope?: (cb: (scope: SentryScopeLike) => void) => void;
               captureException?: (e: unknown) => void;
             };
-            const cu =
-              authenticationService.getUser && (authenticationService.getUser() as User | null);
+            const cu = currentUser;
             if (S.withScope) {
               S.withScope((scope) => {
                 if (cu && cu.id && scope.setUser) scope.setUser({ id: cu.id });
@@ -206,9 +219,31 @@ export default function ContactsPage() {
     };
   }, [currentEventId]);
 
-  const filteredContacts = contacts.filter((contact) =>
-    `${contact.name} ${contact.role} ${contact.status}`.toLowerCase().includes(query.toLowerCase())
+  // Order matters: drop the current user first, then apply the search filter,
+  // then paginate — so no derived list ever contains the logged-in user.
+  const filteredContacts = contacts
+    .filter((contact) => contact.id !== currentUserId)
+    .filter((contact) =>
+      `${contact.name} ${contact.role} ${contact.status}`
+        .toLowerCase()
+        .includes(query.toLowerCase())
+    );
+
+  // Client-side pagination over the already-filtered list.
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(filteredContacts.length / PAGE_SIZE));
+  // Clamp the page so a shrinking list (e.g. after filtering) never leaves us
+  // past the last page; the query-reset effect below covers the search case.
+  const safePage = Math.min(currentPage, pageCount);
+  const paginatedContacts = filteredContacts.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
   );
+
+  // Reset to the first page whenever the search query changes.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query]);
 
   const [editingContact, setEditingContact] = useState<ContactItem | null>(null);
   const [editName, setEditName] = useState('');
@@ -219,16 +254,23 @@ export default function ContactsPage() {
 
   // Calendar sharing state
   const [sharesWithMe, setSharesWithMe] = useState<ShareWithMe[]>([]);
+  // Shares the current user (owner) granted to others; used to offer revoke.
+  const [sharesByMe, setSharesByMe] = useState<ShareByMe[]>([]);
   const [shareModalContact, setShareModalContact] = useState<ContactItem | null>(null);
   const [sharePermission, setSharePermission] = useState<'read' | 'write'>('read');
   const [shareSaving, setShareSaving] = useState(false);
 
   // Tracks which contact's invite is in-flight, to disable only that button.
   const [invitingId, setInvitingId] = useState<string | null>(null);
+  // Tracks which contact's revoke is in-flight, to disable only that button.
+  const [revokingId, setRevokingId] = useState<string | null>(null);
 
   useEffect(() => {
     getCalendarShares()
-      .then(({ sharedWithMe }) => setSharesWithMe(sharedWithMe))
+      .then(({ sharedWithMe, sharedByMe }) => {
+        setSharesWithMe(sharedWithMe);
+        setSharesByMe(sharedByMe);
+      })
       .catch(() => {});
   }, []);
 
@@ -260,9 +302,11 @@ export default function ContactsPage() {
       toastMaker(
         `Calendar share request sent to ${shareModalContact.name ?? shareModalContact.id}`
       );
-      // Refresh shares so next click navigates directly
-      const { sharedWithMe } = await getCalendarShares();
+      // Refresh shares so the next click navigates directly and the revoke
+      // button (driven by sharedByMe) shows immediately.
+      const { sharedWithMe, sharedByMe } = await getCalendarShares();
       setSharesWithMe(sharedWithMe);
+      setSharesByMe(sharedByMe);
       setShareModalContact(null);
     } catch (err) {
       toastMaker(err instanceof Error ? err.message : 'Failed to share calendar', 'error');
@@ -271,7 +315,28 @@ export default function ContactsPage() {
     }
   };
 
-  const currentUser = authenticationService.getUser && authenticationService.getUser();
+  // Revoke a share the current user (owner) previously granted to a contact.
+  // Only the owner can revoke; the button is shown only when such a share
+  // exists for this contact (see sharesByMe lookup in the card render).
+  const handleRevokeShare = async (contact: ContactItem) => {
+    const share = sharesByMe.find((s) => s.sharedWithId === contact.id);
+    if (!share) return;
+
+    const username = contact.name ?? contact.id;
+    if (!window.confirm(t('revokeAccessConfirm', { username }))) return;
+
+    setRevokingId(contact.id);
+    try {
+      await deleteCalendarShare(share.id);
+      // Drop the record locally so the button disappears without a reload.
+      setSharesByMe((prev) => prev.filter((s) => s.id !== share.id));
+      toastMaker(t('accessRevoked', { username }));
+    } catch (err) {
+      toastMaker(err instanceof Error ? err.message : t('revokeFailed'), 'error');
+    } finally {
+      setRevokingId(null);
+    }
+  };
 
   const canEdit = (contact: ContactItem) => {
     if (!currentUser) return false;
@@ -296,17 +361,8 @@ export default function ContactsPage() {
     setEditError(null);
     try {
       // If editing own profile, call profile endpoint
-      if ((currentUser as unknown as { id?: string }).id === editingContact.id) {
-        const res = await updateProfile({ name: editName });
-        const updatedUser = res?.user ?? null;
-        if (updatedUser) {
-          // update authService user in memory/storage
-          try {
-            authenticationService.setUser(updatedUser);
-          } catch (_e) {
-            // ignore
-          }
-        }
+      if (currentUserId === editingContact.id) {
+        await updateProfile({ name: editName });
         // update contacts list locally
         setContacts((prev) =>
           prev.map((c) =>
@@ -361,8 +417,7 @@ export default function ContactsPage() {
                 withScope?: (cb: (scope: SentryScopeLike) => void) => void;
                 captureException?: (e: unknown) => void;
               };
-              const cu =
-                authenticationService.getUser && (authenticationService.getUser() as User | null);
+              const cu = currentUser;
               if (S.withScope) {
                 S.withScope((scope) => {
                   if (cu && cu.id && scope.setUser) scope.setUser({ id: cu.id });
@@ -412,8 +467,7 @@ export default function ContactsPage() {
             withScope?: (cb: (scope: SentryScopeLike) => void) => void;
             captureException?: (e: unknown) => void;
           };
-          const cu =
-            authenticationService.getUser && (authenticationService.getUser() as User | null);
+          const cu = currentUser;
           if (S.withScope) {
             S.withScope((scope) => {
               if (cu && cu.id && scope.setUser) scope.setUser({ id: cu.id });
@@ -439,7 +493,6 @@ export default function ContactsPage() {
   const inviteEventId = currentEventId || selectedEventId;
   const selectedInviteEvent = inviteEvents.find((event) => event.id === inviteEventId) ?? null;
 
-  const currentUserId = currentUser ? (currentUser as unknown as { id?: string }).id : null;
   const collaboratorCount = statsData
     ? statsData.users.filter((u) => String(u.id ?? u._id ?? u.userId ?? '') !== currentUserId)
         .length
@@ -529,7 +582,7 @@ export default function ContactsPage() {
         ) : contactsError ? (
           <div className={styles.error}>Помилка: {contactsError}</div>
         ) : (
-          filteredContacts.map((contact) => (
+          paginatedContacts.map((contact) => (
             <article
               key={
                 contact.id ||
@@ -598,12 +651,55 @@ export default function ContactsPage() {
                   >
                     {t('invite')}
                   </button>
+                  {/* Owner-only: revoke a share previously granted to this
+                      contact. Shown only when such a share exists. */}
+                  {sharesByMe.some((s) => s.sharedWithId === contact.id) && (
+                    <button
+                      type="button"
+                      className={styles.secondaryButton}
+                      disabled={revokingId === contact.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        void handleRevokeShare(contact);
+                      }}
+                      aria-label={t('revokeAccess')}
+                    >
+                      {t('revokeAccess')}
+                    </button>
+                  )}
                 </div>
               </div>
             </article>
           ))
         )}
       </div>
+
+      {/* Pagination controls — only when the list spans more than one page. */}
+      {filteredContacts.length > PAGE_SIZE && (
+        <div className={styles.pagination}>
+          <button
+            type="button"
+            className={styles.paginationButton}
+            disabled={safePage <= 1}
+            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+          >
+            <Icon name="chevron-left" />
+            {t('pagination_previous')}
+          </button>
+          <span className={styles.paginationStatus}>
+            {t('pagination_status', { current: safePage, total: pageCount })}
+          </span>
+          <button
+            type="button"
+            className={styles.paginationButton}
+            disabled={safePage >= pageCount}
+            onClick={() => setCurrentPage((p) => Math.min(pageCount, p + 1))}
+          >
+            {t('pagination_next')}
+            <Icon name="chevron-right" />
+          </button>
+        </div>
+      )}
 
       <Modal
         isOpen={!!editingContact}

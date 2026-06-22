@@ -23,7 +23,7 @@ CalendAir is a full-stack web calendar application with AI-powered insights, rea
 
 ## Features
 
-- AI-powered calendar insights (Google Gemini 2.5 Flash)
+- AI-powered calendar insights (Google Gemini 3.1 Flash light)
 - Weather-aware AI chat
 - Real-time notifications
 - Calendar sharing with privacy controls

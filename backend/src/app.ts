@@ -44,10 +44,10 @@ app.use(passport.initialize());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventsRoutes);
-// /api/calendar/shares is mounted before /api/calendar.
-// Currently safe regardless of order: calendarRoutes has no GET /:id
-// or other single-segment catch-all that could match "shares" as a param.
-// If you add such a route to features/calendar/router.ts, re-verify this ordering.
+// Currently safe regardless of order: calendarRoutes has no single-segment
+// param route (any HTTP method, e.g. GET/DELETE /:id) that could match
+// "shares" as a param. If you add one to features/calendar/router.ts,
+// re-verify this ordering.
 app.use('/api/calendar/shares', sharesRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/analytics', analyticsRoutes);
@@ -56,7 +56,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use(configRoutes);
 app.use(systemRoutes);
 
-// Catch-all route for undefined endpoints, returning a 404 Not Found error
+// Catch-all route for undefined endpoints -> returning a 404 Not Found error
 app.use('*', (req, res) => {
   res.status(404).json({
     error: 'NotFoundError',
