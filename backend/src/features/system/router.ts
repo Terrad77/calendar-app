@@ -469,7 +469,7 @@ router.post(
   '/api/ai/find-time',
   authenticateToken,
   asyncHandler(async (req, res) => {
-    const { events, duration, preferences } = req.body;
+    const { events, duration, preferences, language } = req.body;
     const userId = req.user!.userId;
 
     if (!duration || typeof duration !== 'number' || duration <= 0 || duration > 1440) {
@@ -477,7 +477,9 @@ router.post(
       return;
     }
 
-    const prompt = `Find the optimal time for a meeting with duration of ${duration} minutes.\n\nExisting events: ${JSON.stringify(events || [], null, 2)}\nPreferences: ${JSON.stringify(preferences || {}, null, 2)}\n\nSuggest 3-5 best time slots with explanations of why they are suitable.`;
+    const responseLanguage = language === 'uk' ? 'Ukrainian' : 'English';
+
+    const prompt = `Find the optimal time for a meeting with duration of ${duration} minutes.\n\nExisting events: ${JSON.stringify(events || [], null, 2)}\nPreferences: ${JSON.stringify(preferences || {}, null, 2)}\n\nSuggest 3-5 best time slots with explanations of why they are suitable.\n\nRespond in ${responseLanguage}.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;

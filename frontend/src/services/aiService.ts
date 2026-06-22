@@ -229,6 +229,71 @@ class AIService {
     }
   }
 
+  /**
+   * Find optimal free time slots for a meeting of the given duration.
+   * Mirrors analyzeSchedule's retry/503/error handling.
+   */
+  async findOptimalTime(
+    events: CalendarEvent[],
+    duration: number,
+    preferences: Record<string, unknown> = {},
+    language: string = getAppLanguage()
+  ): Promise<string> {
+    // Validate duration client-side to match backend contract (1-1440 minutes)
+    // and avoid a request that would be rejected with 400.
+    if (!Number.isFinite(duration) || duration <= 0 || duration > 1440) {
+      throw new Error('Valid duration in minutes (1-1440) is required');
+    }
+
+    // Skip if service is overloaded
+    if (this.retryAttempts >= this.maxRetries) {
+      throw new Error('AI service is temporarily overloaded. Please try again later.');
+    }
+
+    try {
+      const token = this.getStoredToken();
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await this.fetchWithRetry(`${API_URL}/api/ai/find-time`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          events,
+          duration,
+          preferences,
+          language,
+        }),
+      });
+
+      // Reset retry attempts on successful response
+      this.retryAttempts = 0;
+
+      if (response.status === 503) {
+        this.retryAttempts++;
+        throw new Error('AI service is temporarily overloaded. Please try again later.');
+      }
+
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => '');
+        throw new Error(
+          `AI service error: ${response.status} ${response.statusText}. ${errorText}`
+        );
+      }
+
+      const data = await response.json();
+      return data.suggestions || data.message || '';
+    } catch (error) {
+      console.error('Error finding optimal time:', error);
+      throw error;
+    }
+  }
+
   // Check if AI service is available with caching
   async healthCheck(): Promise<{ status: string; available: boolean; message?: string }> {
     // Don't check if we're already checking

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { BarChart3, CalendarDays, Send, X } from 'lucide-react';
+import { BarChart3, CalendarDays, Clock, Send, X } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
@@ -281,6 +281,47 @@ export const AIAssistantDrawer = ({
     }
   }, [currentEvents, addMessage, t]);
 
+  // Default duration in minutes for a standard meeting; could become a
+  // user-supplied parameter later.
+  const DEFAULT_FIND_TIME_DURATION = 60;
+
+  const handleFindTime = useCallback(async () => {
+    if (currentEvents.length === 0) {
+      addMessage({
+        role: 'assistant' as const,
+        content: t('assistant_no_events_to_analyze'),
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    addMessage({
+      role: 'assistant' as const,
+      content: t('assistant_finding_time'),
+      timestamp: new Date().toISOString(),
+      isLoading: true,
+    });
+
+    try {
+      const suggestions = await aiService.findOptimalTime(
+        currentEvents,
+        DEFAULT_FIND_TIME_DURATION,
+        {}
+      );
+      addMessage({
+        role: 'assistant' as const,
+        content: String(suggestions),
+        timestamp: new Date().toISOString(),
+      });
+    } catch (_e) {
+      addMessage({
+        role: 'assistant' as const,
+        content: t('assistant_find_time_error'),
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }, [currentEvents, addMessage, t]);
+
   const handleAction = useCallback(
     (action: AIAction) => {
       switch (action.type) {
@@ -387,7 +428,10 @@ export const AIAssistantDrawer = ({
   );
 
   const handleQuickAction = useCallback(
-    (action: 'show_events' | 'create_quick_event' | 'analyze_week', label: string) => {
+    (
+      action: 'show_events' | 'create_quick_event' | 'analyze_week' | 'find_time',
+      label: string
+    ) => {
       // Echo the clicked button as a user bubble first (same pattern as
       // handleSendMessage) so the assistant reply has a visible prompt.
       addMessage({
@@ -440,11 +484,14 @@ export const AIAssistantDrawer = ({
         case 'analyze_week':
           void handleAnalyzeSchedule();
           break;
+        case 'find_time':
+          void handleFindTime();
+          break;
         default:
           break;
       }
     },
-    [addMessage, currentEvents, handleAnalyzeSchedule, onEventCreate, t]
+    [addMessage, currentEvents, handleAnalyzeSchedule, handleFindTime, onEventCreate, t]
   );
 
   const handleSendMessage = useCallback(async () => {
@@ -638,6 +685,11 @@ export const AIAssistantDrawer = ({
       label: t('assistant_quick_analyze_week'),
       icon: BarChart3,
       type: 'analyze_week',
+    },
+    {
+      label: t('assistant_quick_find_time'),
+      icon: Clock,
+      type: 'find_time',
     },
   ] as const;
 
