@@ -4,25 +4,6 @@ const API_URL = import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:3
 
 export type { User };
 
-export interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterData extends LoginCredentials {
-  name: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  tokens: AuthTokens;
-}
-
 class AuthenticationService {
   // Token layer only. The current user lives in the Redux store (single source
   // of truth); this service no longer caches user data.
@@ -31,86 +12,6 @@ class AuthenticationService {
 
   constructor() {
     this.loadFromStorage();
-  }
-
-  /**
-   * Register new user
-   */
-  async register(data: RegisterData): Promise<AuthResponse> {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Registration failed');
-      }
-
-      const result = await response.json();
-
-      this.setAuth(result.tokens);
-
-      return result;
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Login user
-   */
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Login failed');
-      }
-
-      const result = await response.json();
-
-      this.setAuth(result.tokens);
-
-      return result;
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Logout user
-   */
-  async logout(): Promise<void> {
-    try {
-      if (this.refreshToken) {
-        await fetch(`${API_URL}/api/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${this.accessToken}`,
-          },
-          body: JSON.stringify({ refreshToken: this.refreshToken }),
-        });
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      this.clearAuth();
-    }
   }
 
   /**
@@ -252,15 +153,6 @@ class AuthenticationService {
    */
   getAccessToken(): string | null {
     return this.accessToken || localStorage.getItem('accessToken');
-  }
-
-  /**
-   * Set authentication data
-   */
-  private setAuth(tokens: AuthTokens): void {
-    this.accessToken = tokens.accessToken;
-    this.refreshToken = tokens.refreshToken;
-    this.saveToStorage();
   }
 
   /**
