@@ -3,6 +3,25 @@ import { styled } from '@stitches/react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { CalendarEvent } from '../../../types/calendar.types';
+import { getInitials } from '../../../utils/getInitials';
+
+// Miniature owner monogram shown on shared event cards (mirrors .contactAvatar
+// styling at a compact size so it fits inside a calendar grid card).
+const OwnerAvatar = styled('span', {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '1rem',
+  height: '1rem',
+  flexShrink: 0,
+  borderRadius: '50%',
+  background: 'linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%)',
+  color: '#ffffff',
+  fontSize: '0.5rem',
+  fontWeight: 700,
+  lineHeight: 1,
+  letterSpacing: '0.02em',
+});
 
 const TaskMarker = styled('span', {
   width: '12px',
@@ -40,6 +59,7 @@ const TaskCard = styled('div', {
 
   '& .task-title': {
     flexGrow: 1,
+    minWidth: 0,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
@@ -210,30 +230,57 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
             </div>
           ) : null}
 
-          <span
-            className="task-title"
-            style={
-              event.isPrivate ? { display: 'flex', alignItems: 'center', gap: '3px' } : undefined
-            }
+          {/* Owner monogram + title share a flex row so the avatar never shrinks
+              and the title ellipsis works on narrow cards (week-view, compact). */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              // The avatar row is taller than a plain title row; nudge it down so
+              // it doesn't crowd the color marker above. Only when an avatar shows.
+              ...((event.accessRole === 'shared' || event.accessRole === 'participant') &&
+              event.ownerInfo?.name
+                ? { marginTop: '2px' }
+                : {}),
+            }}
           >
-            {event.isPrivate && (
-              <svg
-                width="9"
-                height="9"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ flexShrink: 0, opacity: 0.55 }}
-              >
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
-            )}
-            {event.title}
-          </span>
+            {/* Owner monogram for shared/participant events — always visible (incl. compact). */}
+            {(event.accessRole === 'shared' || event.accessRole === 'participant') &&
+              event.ownerInfo?.name && (
+                <OwnerAvatar
+                  title={event.ownerInfo.name}
+                  aria-label={`Shared by ${event.ownerInfo.name}`}
+                >
+                  {getInitials(event.ownerInfo.name)}
+                </OwnerAvatar>
+              )}
+
+            <span
+              className="task-title"
+              style={
+                event.isPrivate ? { display: 'flex', alignItems: 'center', gap: '3px' } : undefined
+              }
+            >
+              {event.isPrivate && (
+                <svg
+                  width="9"
+                  height="9"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ flexShrink: 0, opacity: 0.55 }}
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              )}
+              {event.title}
+            </span>
+          </div>
 
           {/* description preview (single line) only for tasks when not in compact mode */}
           {event.eventType === 'task' && !compact && event.description && (
@@ -265,22 +312,24 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
             </p>
           )}
 
-          {/* owner name for shared non-private events (non-compact only) */}
-          {!compact && event.accessRole === 'shared' && event.ownerInfo?.name && (
-            <p
-              style={{
-                fontSize: '0.6rem',
-                color: 'var(--surface-calendar-muted)',
-                marginTop: '2px',
-                marginBottom: 0,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-              }}
-            >
-              {event.ownerInfo.name}
-            </p>
-          )}
+          {/* owner name for shared/participant non-private events (non-compact only) */}
+          {!compact &&
+            (event.accessRole === 'shared' || event.accessRole === 'participant') &&
+            event.ownerInfo?.name && (
+              <p
+                style={{
+                  fontSize: '0.6rem',
+                  color: 'var(--surface-calendar-muted)',
+                  marginTop: '2px',
+                  marginBottom: 0,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {event.ownerInfo.name}
+              </p>
+            )}
         </>
       )}
     </TaskCard>

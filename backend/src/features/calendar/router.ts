@@ -38,12 +38,14 @@ router.get('/my-events', authenticateToken, async (req: Request, res: Response):
             'accessRole'
           ),
         participantStatus: eventParticipants.status,
+        ownerName: users.name,
       })
       .from(calendarEvents)
       .leftJoin(
         eventParticipants,
         and(eq(eventParticipants.eventId, calendarEvents.id), eq(eventParticipants.userId, userId))
       )
+      .leftJoin(users, eq(users.id, calendarEvents.userId))
       .where(
         or(
           eq(calendarEvents.userId, userId),
@@ -56,6 +58,11 @@ router.get('/my-events', authenticateToken, async (req: Request, res: Response):
       ...toEventResponse(row),
       accessRole: row.accessRole as 'owner' | 'participant',
       participantStatus: row.participantStatus as 'pending' | 'accepted' | 'declined' | null,
+      // Owner identity only for events the user participates in (not own events).
+      ownerInfo:
+        row.accessRole === 'participant'
+          ? { id: row.userId, name: row.ownerName ?? '' }
+          : undefined,
     }));
 
     // Append events from calendars that have been shared with the current user

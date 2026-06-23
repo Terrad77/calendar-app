@@ -4,7 +4,7 @@ import { authenticateToken } from '../../middleware/authMiddleware.js';
 import { checkEventAccess } from '../../middleware/checkEventAccess.js';
 import { resolveCalendarWriteTarget } from '../../services/calendarShareService.js';
 import { getDb } from '../../db.js';
-import { calendarEvents } from '../../schema.js';
+import { calendarEvents, users } from '../../schema.js';
 import {
   EventType,
   EventPayload,
@@ -85,11 +85,26 @@ router.get(
         return;
       }
 
+      // For participants, attach the owner's identity so the UI can show a
+      // monogram. checkEventAccess only carries the event row, so the owner
+      // name needs a separate lookup.
+      let ownerInfo: { id: string; name: string } | undefined;
+      if (!req.eventAccess.isOwner) {
+        const database = getDb();
+        const [owner] = await database
+          .select({ name: users.name })
+          .from(users)
+          .where(eq(users.id, req.eventAccess.event.userId))
+          .limit(1);
+        ownerInfo = { id: req.eventAccess.event.userId, name: owner?.name ?? '' };
+      }
+
       res.json({
         event: {
           ...toEventResponse(req.eventAccess.event),
           accessRole: req.eventAccess.isOwner ? 'owner' : 'participant',
           participantStatus: req.eventAccess.participantStatus,
+          ...(ownerInfo ? { ownerInfo } : {}),
         },
       });
     } catch (error) {
