@@ -5,20 +5,17 @@ const API_URL = import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:3
 export type { User };
 
 class AuthenticationService {
-  // Token layer only. The current user lives in the Redux store (single source
-  // of truth); this service no longer caches user data.
-  private accessToken: string | null = null;
-  private refreshToken: string | null = null;
-
-  constructor() {
-    this.loadFromStorage();
-  }
+  // Token layer only. localStorage is the single source of truth for tokens;
+  // this service is stateless and reads/writes storage directly on every call.
+  // The current user lives in the Redux store.
 
   /**
    * Refresh access token
    */
   async refreshAccessToken(): Promise<boolean> {
-    if (!this.refreshToken) {
+    const refreshToken = localStorage.getItem('refreshToken');
+
+    if (!refreshToken) {
       return false;
     }
 
@@ -28,7 +25,7 @@ class AuthenticationService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ refreshToken: this.refreshToken }),
+        body: JSON.stringify({ refreshToken }),
       });
 
       if (!response.ok) {
@@ -37,9 +34,7 @@ class AuthenticationService {
 
       const result = await response.json();
 
-      this.accessToken = result.tokens.accessToken;
-      this.refreshToken = result.tokens.refreshToken;
-      this.saveToStorage();
+      this.saveToStorage(result.tokens.accessToken, result.tokens.refreshToken);
 
       return true;
     } catch (error) {
@@ -53,7 +48,9 @@ class AuthenticationService {
    * Get current user profile
    */
   async getCurrentUser(): Promise<User | null> {
-    if (!this.accessToken) {
+    const accessToken = this.getAccessToken();
+
+    if (!accessToken) {
       return null;
     }
 
@@ -61,7 +58,7 @@ class AuthenticationService {
       const response = await fetch(`${API_URL}/api/auth/me`, {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${this.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
@@ -82,7 +79,9 @@ class AuthenticationService {
    * Verify if token is valid
    */
   async verifyToken(): Promise<boolean> {
-    if (!this.accessToken) {
+    const accessToken = this.getAccessToken();
+
+    if (!accessToken) {
       return false;
     }
 
@@ -90,7 +89,7 @@ class AuthenticationService {
       const response = await fetch(`${API_URL}/api/auth/verify`, {
         method: 'GET',
         headers: {
-          Authorization: `Bearer ${this.accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
@@ -152,15 +151,13 @@ class AuthenticationService {
    * Get access token
    */
   getAccessToken(): string | null {
-    return this.accessToken || localStorage.getItem('accessToken');
+    return localStorage.getItem('accessToken');
   }
 
   /**
    * Clear authentication data
    */
   private clearAuth(): void {
-    this.accessToken = null;
-    this.refreshToken = null;
     this.removeFromStorage();
   }
 
@@ -172,37 +169,14 @@ class AuthenticationService {
   }
 
   /**
-   * Save to localStorage
+   * Save tokens to localStorage
    */
-  private saveToStorage(): void {
+  private saveToStorage(accessToken: string, refreshToken: string): void {
     try {
-      if (this.accessToken) {
-        localStorage.setItem('accessToken', this.accessToken);
-      }
-      if (this.refreshToken) {
-        localStorage.setItem('refreshToken', this.refreshToken);
-      }
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('refreshToken', refreshToken);
     } catch (error) {
       console.error('Error saving to storage:', error);
-    }
-  }
-
-  /**
-   * Load from localStorage
-   */
-  private loadFromStorage(): void {
-    try {
-      const accessToken = localStorage.getItem('accessToken');
-      const refreshToken = localStorage.getItem('refreshToken');
-
-      if (accessToken) {
-        this.accessToken = accessToken;
-      }
-      if (refreshToken) {
-        this.refreshToken = refreshToken;
-      }
-    } catch (error) {
-      console.error('Error loading from storage:', error);
     }
   }
 
