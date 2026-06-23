@@ -55,6 +55,14 @@ export const checkEventAccess = async (
       .limit(1);
 
     const isOwner = event.userId === userId;
+
+    // A participant who declined the invitation must not retain access. Respond
+    // exactly like a missing event (404) so the event's existence isn't leaked.
+    if (!isOwner && participant?.status === 'declined') {
+      res.status(404).json({ error: 'Not found', message: 'Event not found' });
+      return;
+    }
+
     const hasAccess = isOwner || Boolean(participant);
 
     if (!hasAccess) {

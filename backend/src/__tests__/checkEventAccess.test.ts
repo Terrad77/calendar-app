@@ -137,6 +137,44 @@ describe('checkEventAccess middleware', () => {
     });
   });
 
+  it('returns 404 for a participant who declined the invitation', async () => {
+    const event = { id: 'evt-1', userId: 'owner', title: 'Shared' };
+    dbState.queue = [[event], [{ status: 'declined' }]];
+    const req = makeReq({
+      params: { id: 'evt-1' },
+      user: { userId: 'u2', email: 'test@example.com' },
+    } as Partial<Request>);
+    const res = makeRes();
+    const next = vi.fn() as unknown as NextFunction;
+
+    await checkEventAccess(req, res, next);
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body).toMatchObject({ error: 'Not found', message: 'Event not found' });
+    expect(next).not.toHaveBeenCalled();
+    expect(req.eventAccess).toBeUndefined();
+  });
+
+  it('grants a pending participant access with their status', async () => {
+    const event = { id: 'evt-1', userId: 'owner', title: 'Shared' };
+    dbState.queue = [[event], [{ status: 'pending' }]];
+    const req = makeReq({
+      params: { id: 'evt-1' },
+      user: { userId: 'u2', email: 'test@example.com' },
+    } as Partial<Request>);
+    const res = makeRes();
+    const next = vi.fn() as unknown as NextFunction;
+
+    await checkEventAccess(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(req.eventAccess).toEqual({
+      event,
+      participantStatus: 'pending',
+      isOwner: false,
+    });
+  });
+
   it('returns 403 for a user who is neither owner nor participant', async () => {
     const event = { id: 'evt-1', userId: 'owner', title: 'Private' };
     dbState.queue = [[event], []]; // event found, no participant
