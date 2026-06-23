@@ -31,6 +31,36 @@
   color: var(--color-text-primary);
 }
 
+.toolbarActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.markAllBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  padding: 0.7rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 80%, transparent);
+  background: linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--color-accent) 28%, transparent);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.markAllBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--color-accent) 38%, transparent);
+}
+
 .toggleRow {
   display: inline-flex;
   align-items: center;
@@ -55,6 +85,11 @@
   display: flex;
   gap: 0.9rem;
   padding: 1rem;
+}
+
+/* Unread cards are clickable to mark them read. */
+.notificationCard[data-unread='true'] {
+  cursor: pointer;
 }
 
 .notificationDot {

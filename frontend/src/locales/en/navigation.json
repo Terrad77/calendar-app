@@ -140,6 +140,7 @@
   "notification_deleted": "Notification deleted",
   "failed_to_delete_notification": "Failed to delete notification",
   "priority_inbox": "Priority inbox for calendar changes",
+  "mark_all_read": "Mark all as read",
   "hide_read_items": "Hide read items",
   "settings_title": "Refined controls for the workspace",
   "settings_description": "Shape the calendar, appearance, and notification defaults around the way you actually work.",

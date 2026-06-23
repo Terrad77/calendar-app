@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -23,7 +23,6 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(false);
   const [responding, setResponding] = useState<string | null>(null); // notification id being responded to
   const [deleting, setDeleting] = useState<string | null>(null); // notification id being deleted
-  const hasMarkedRead = useRef(false);
 
   useEffect(() => {
     let mounted = true;
@@ -51,17 +50,22 @@ export default function NotificationsPage() {
     };
   }, []);
 
-  // Mark all unread notifications as read on page open (best-effort, fire-and-forget)
-  useEffect(() => {
-    if (hasMarkedRead.current || notifications.length === 0) return;
-    hasMarkedRead.current = true;
+  // Mark a single notification read on card click (no-op if already read).
+  const handleMarkRead = (notification: NotificationApiItem) => {
+    if (notification.isRead) return;
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n))
+    );
+    markNotificationRead(notification.id).catch(console.error);
+  };
 
+  // Mark every unread notification read at once (toolbar action).
+  const handleMarkAllRead = () => {
     const unread = notifications.filter((n) => !n.isRead);
     if (unread.length === 0) return;
-
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    unread.forEach((n) => markNotificationRead(n.id).catch(console.error));
-  }, [notifications]);
+    void Promise.all(unread.map((n) => markNotificationRead(n.id).catch(console.error)));
+  };
 
   const handleRespond = async (
     notificationId: string,
@@ -71,6 +75,14 @@ export default function NotificationsPage() {
     setResponding(notificationId);
     try {
       await respondToInvitation(invitationId, status);
+      // Remove the backing notification so the invitation never returns on reload.
+      // The invitation is already handled, so a delete failure must not block the
+      // success toast — just log it.
+      try {
+        await deleteNotification(notificationId);
+      } catch (deleteErr) {
+        console.error('Failed to delete notification after responding to invitation', deleteErr);
+      }
       setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
       toastMaker(status === 'accepted' ? t('invitation_accepted') : t('invitation_declined'));
     } catch (err) {
@@ -142,14 +154,22 @@ export default function NotificationsPage() {
           <h2 className={styles.sectionTitle}>{t('priority_inbox')}</h2>
         </div>
 
-        <label className={styles.toggleRow}>
-          <input
-            type="checkbox"
-            checked={hideRead}
-            onChange={(event) => setHideRead(event.target.checked)}
-          />
-          <span>{t('hide_read_items')}</span>
-        </label>
+        <div className={styles.toolbarActions}>
+          {unreadCount > 0 && (
+            <button type="button" className={styles.markAllBtn} onClick={handleMarkAllRead}>
+              {t('mark_all_read')}
+            </button>
+          )}
+
+          <label className={styles.toggleRow}>
+            <input
+              type="checkbox"
+              checked={hideRead}
+              onChange={(event) => setHideRead(event.target.checked)}
+            />
+            <span>{t('hide_read_items')}</span>
+          </label>
+        </div>
       </section>
 
       <div className={styles.notificationList}>
@@ -163,7 +183,12 @@ export default function NotificationsPage() {
           </p>
         ) : (
           visible.map((notification) => (
-            <article key={notification.id} className={styles.notificationCard}>
+            <article
+              key={notification.id}
+              className={styles.notificationCard}
+              data-unread={String(!notification.isRead)}
+              onClick={() => handleMarkRead(notification)}
+            >
               <div className={styles.notificationDot} data-unread={String(!notification.isRead)} />
               <div className={styles.notificationBody}>
                 <div className={styles.notificationHeader}>
@@ -177,7 +202,10 @@ export default function NotificationsPage() {
                       aria-label={t('delete_notification')}
                       title={t('delete_notification')}
                       disabled={deleting === notification.id}
-                      onClick={() => handleDelete(notification.id)}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleDelete(notification.id);
+                      }}
                     >
                       ✕
                     </button>
@@ -192,9 +220,10 @@ export default function NotificationsPage() {
                       type="button"
                       className={styles.acceptBtn}
                       disabled={responding === notification.id}
-                      onClick={() =>
-                        handleRespond(notification.id, notification.referenceId!, 'accepted')
-                      }
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleRespond(notification.id, notification.referenceId!, 'accepted');
+                      }}
                     >
                       {t('accept')}
                     </button>
@@ -202,9 +231,10 @@ export default function NotificationsPage() {
                       type="button"
                       className={styles.declineBtn}
                       disabled={responding === notification.id}
-                      onClick={() =>
-                        handleRespond(notification.id, notification.referenceId!, 'declined')
-                      }
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleRespond(notification.id, notification.referenceId!, 'declined');
+                      }}
                     >
                       {t('decline')}
                     </button>
