@@ -39,63 +39,7 @@ class AuthenticationService {
       return true;
     } catch (error) {
       console.error('Token refresh error:', error);
-      this.clearAuth();
-      return false;
-    }
-  }
-
-  /**
-   * Get current user profile
-   */
-  async getCurrentUser(): Promise<User | null> {
-    const accessToken = this.getAccessToken();
-
-    if (!accessToken) {
-      return null;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/api/auth/me`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to get user profile');
-      }
-
-      const result = await response.json();
-
-      return result.user;
-    } catch (error) {
-      console.error('Get user error:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Verify if token is valid
-   */
-  async verifyToken(): Promise<boolean> {
-    const accessToken = this.getAccessToken();
-
-    if (!accessToken) {
-      return false;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/api/auth/verify`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      return response.ok;
-    } catch (error) {
-      console.error('Token verification error:', error);
+      this.removeFromStorage();
       return false;
     }
   }
@@ -141,13 +85,6 @@ class AuthenticationService {
   }
 
   /**
-   * Check if user is authenticated
-   */
-  isAuthenticated(): boolean {
-    return !!this.getAccessToken();
-  }
-
-  /**
    * Get access token
    */
   getAccessToken(): string | null {
@@ -155,17 +92,10 @@ class AuthenticationService {
   }
 
   /**
-   * Clear authentication data
-   */
-  private clearAuth(): void {
-    this.removeFromStorage();
-  }
-
-  /**
    * Public helper to clear auth state without triggering logout request
    */
   clearAccessToken(): void {
-    this.clearAuth();
+    this.removeFromStorage();
   }
 
   /**
