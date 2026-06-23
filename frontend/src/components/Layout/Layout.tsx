@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import clsx from 'clsx';
 import { Sidebar } from '../Sidebar/Sidebar';
@@ -16,15 +16,22 @@ export const Layout = ({ children, headerVariant }: LayoutProps) => {
   const isAuthenticated = useSelector(selectIsLoggedIn);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  // Toggle button lives in the Header; focus returns here whenever the sidebar
+  // closes so focus never lingers inside the now-hidden (aria-hidden/inert) aside.
+  const toggleButtonRef = useRef<HTMLButtonElement>(null);
+  const focusToggleButton = useCallback(() => toggleButtonRef.current?.focus(), []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && sidebarOpen) setSidebarOpen(false);
+      if (e.key === 'Escape' && sidebarOpen) {
+        setSidebarOpen(false);
+        focusToggleButton();
+      }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [sidebarOpen]);
+  }, [sidebarOpen, focusToggleButton]);
 
   const openProfile = () => setProfileOpen(true);
 
@@ -40,6 +47,7 @@ export const Layout = ({ children, headerVariant }: LayoutProps) => {
           isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           onOpenProfile={openProfile}
+          focusToggleButton={focusToggleButton}
         />
       )}
 
@@ -50,6 +58,7 @@ export const Layout = ({ children, headerVariant }: LayoutProps) => {
           isAuthenticated={isAuthenticated}
           headerVariant={headerVariant}
           onOpenProfile={openProfile}
+          toggleButtonRef={toggleButtonRef}
         />
 
         <main

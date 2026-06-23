@@ -20,6 +20,8 @@ interface HeaderProps {
   isAuthenticated: boolean;
   headerVariant?: 'default' | 'compact' | 'overlay';
   onOpenProfile?: () => void;
+  // Ref to the sidebar toggle so focus can be returned here when the sidebar closes.
+  toggleButtonRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -28,6 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   isAuthenticated,
   headerVariant = 'default',
   onOpenProfile,
+  toggleButtonRef,
 }: HeaderProps) => {
   const { t } = useTranslation('common');
   const navigate = useNavigate();
@@ -79,6 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Burger toggle — 36×36 icon button */}
         {isAuthenticated && (
           <button
+            ref={toggleButtonRef}
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className={`${btnCss.headerControl} ${btnCss.headerIconBtn}`}
             aria-label={sidebarToggleLabel}

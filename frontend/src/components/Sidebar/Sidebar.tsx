@@ -55,9 +55,17 @@ interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
   onOpenProfile?: () => void;
+  // Returns focus to the Header toggle so it never lingers inside the hidden aside.
+  focusToggleButton?: () => void;
 }
 
-export const Sidebar = ({ className, isOpen = true, onClose, onOpenProfile }: SidebarProps) => {
+export const Sidebar = ({
+  className,
+  isOpen = true,
+  onClose,
+  onOpenProfile,
+  focusToggleButton,
+}: SidebarProps) => {
   const user = useSelector(selectUser);
   const hiddenOwners = useSelector(selectHiddenOwners);
   const { t } = useTranslation('navigation');
@@ -74,6 +82,13 @@ export const Sidebar = ({ className, isOpen = true, onClose, onOpenProfile }: Si
     return 'calendar';
   }, [location.pathname]);
 
+  // Close the sidebar and move focus back to the toggle button, so focus is
+  // never retained inside the aside once it becomes hidden from assistive tech.
+  const handleClose = () => {
+    onClose?.();
+    focusToggleButton?.();
+  };
+
   const handleSelect = (key: (typeof navigationItems)[number]['key']) => {
     const routeMap: Record<(typeof navigationItems)[number]['key'], string> = {
       calendar: '/calendar',
@@ -84,7 +99,7 @@ export const Sidebar = ({ className, isOpen = true, onClose, onOpenProfile }: Si
     };
 
     navigate(routeMap[key]);
-    onClose?.();
+    handleClose();
   };
 
   const initials = useMemo(() => getInitials(user?.name, user?.email), [user?.name, user?.email]);
@@ -96,7 +111,7 @@ export const Sidebar = ({ className, isOpen = true, onClose, onOpenProfile }: Si
 
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           className={css.closeButton}
           aria-label="Close sidebar"
         >
@@ -190,7 +205,7 @@ export const Sidebar = ({ className, isOpen = true, onClose, onOpenProfile }: Si
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            onClick={onClose}
+            onClick={handleClose}
           />
         )}
       </AnimatePresence>
@@ -198,6 +213,9 @@ export const Sidebar = ({ className, isOpen = true, onClose, onOpenProfile }: Si
       <motion.aside
         className={clsx(css.sidebar, className)}
         aria-hidden={!isOpen}
+        // inert removes the closed aside from the tab order and the accessibility
+        // tree, so a descendant can never retain focus while aria-hidden is set.
+        inert={!isOpen}
         initial={false}
         animate={{ x: isOpen ? 0 : '-100%' }}
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
