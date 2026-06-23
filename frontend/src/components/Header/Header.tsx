@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Bell, Menu, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -52,17 +52,6 @@ export const Header: React.FC<HeaderProps> = ({
     staleTime: 15_000,
   });
   const unreadCount = unreadNotifs?.length ?? 0;
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && sidebarOpen) setSidebarOpen(false);
-    };
-
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [sidebarOpen, setSidebarOpen]);
 
   return (
     <header
