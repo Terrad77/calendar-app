@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { styled } from '@stitches/react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -123,6 +124,7 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
   isDragging: propIsDragging,
   compact,
 }) => {
+  const { t } = useTranslation('calendar');
   const isBusy = event.isPrivate === true && event.accessRole === 'shared';
   // Any shared-calendar event is read-only for the viewer (no drag/click/edit),
   // whether or not it is private. isBusy stays narrower: it only selects the
@@ -213,7 +215,7 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
-            Busy
+            {t('busy')}
           </span>
         </div>
       ) : (
