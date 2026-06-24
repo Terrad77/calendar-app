@@ -9,6 +9,7 @@ import {
   TaskEvent,
 } from '../../../types/calendar.types';
 import { generateUniqueId } from '../../../utils/idGenerator';
+import OwnerAvatar from '../../OwnerAvatar/OwnerAvatar';
 
 const isPastDate = (date?: string | null) => {
   if (!date) {
@@ -696,6 +697,12 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
   const isEditing = Boolean(initialTask);
   const isCreatingInPast = !isEditing && isPastDate(initialDate);
 
+  // Owner monogram for events the current user does not own (shared / participant).
+  const ownerName =
+    initialTask && initialTask.accessRole !== 'owner' && initialTask.ownerInfo?.name
+      ? initialTask.ownerInfo.name
+      : null;
+
   // --- handler for button "Save" ---
 
   const handleSaveClick = useCallback(() => {
@@ -896,7 +903,10 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     <TaskInputFormWrapper onClick={(e) => e.stopPropagation()}>
       <FormHeader>
         <HeaderMeta>
-          <FormKicker>{isEditing ? t('form_kicker_edit') : t('form_kicker_new')}</FormKicker>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FormKicker>{isEditing ? t('form_kicker_edit') : t('form_kicker_new')}</FormKicker>
+            {ownerName && <OwnerAvatar name={ownerName} size="sm" />}
+          </div>
           <FormTitle>{isEditing ? t('form_title_edit') : t('form_title_create')}</FormTitle>
           <FormDescription>
             {isEditing ? t('form_description_edit') : t('form_description_create')}

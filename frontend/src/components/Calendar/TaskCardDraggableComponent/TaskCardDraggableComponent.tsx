@@ -3,25 +3,7 @@ import { styled } from '@stitches/react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { CalendarEvent } from '../../../types/calendar.types';
-import { getInitials } from '../../../utils/getInitials';
-
-// Miniature owner monogram shown on shared event cards (mirrors .contactAvatar
-// styling at a compact size so it fits inside a calendar grid card).
-const OwnerAvatar = styled('span', {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: '1rem',
-  height: '1rem',
-  flexShrink: 0,
-  borderRadius: '50%',
-  background: 'linear-gradient(180deg, var(--color-accent) 0%, var(--color-accent-hover) 100%)',
-  color: '#ffffff',
-  fontSize: '0.5rem',
-  fontWeight: 700,
-  lineHeight: 1,
-  letterSpacing: '0.02em',
-});
+import OwnerAvatar from '../../OwnerAvatar/OwnerAvatar';
 
 const TaskMarker = styled('span', {
   width: '12px',
@@ -203,23 +185,31 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
       data-compact={compact ? 'true' : 'false'}
     >
       {isBusy ? (
-        <span className="task-title" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-          <svg
-            width="10"
-            height="10"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{ flexShrink: 0 }}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          {/* Owner monogram for shared/participant events — also on the Busy placeholder. */}
+          {(event.accessRole === 'shared' || event.accessRole === 'participant') &&
+            event.ownerInfo?.name && <OwnerAvatar name={event.ownerInfo.name} size="sm" />}
+          <span
+            className="task-title"
+            style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
           >
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-          </svg>
-          Busy
-        </span>
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ flexShrink: 0 }}
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            Busy
+          </span>
+        </div>
       ) : (
         <>
           {event.eventType === 'task' ? (
@@ -247,14 +237,7 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
           >
             {/* Owner monogram for shared/participant events — always visible (incl. compact). */}
             {(event.accessRole === 'shared' || event.accessRole === 'participant') &&
-              event.ownerInfo?.name && (
-                <OwnerAvatar
-                  title={event.ownerInfo.name}
-                  aria-label={`Shared by ${event.ownerInfo.name}`}
-                >
-                  {getInitials(event.ownerInfo.name)}
-                </OwnerAvatar>
-              )}
+              event.ownerInfo?.name && <OwnerAvatar name={event.ownerInfo.name} size="sm" />}
 
             <span
               className="task-title"
