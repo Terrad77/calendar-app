@@ -135,39 +135,47 @@ export const DayEventsModal: React.FC<Props> = ({
                         {t('tasks')}
                       </div>
                       <div className="space-y-2">
-                        {tasks.map((task) => (
-                          <div
-                            key={task.id}
-                            className="flex items-center justify-between p-2 rounded-md bg-white dark:bg-neutral-900 border"
-                            style={{ borderColor: 'var(--surface-panel-inset)' }}
-                          >
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={`w-2.5 h-2 rounded-sm ${getColorClass(task.colors && task.colors[0])}`}
-                              />
-                              <div>
-                                <div className="text-sm font-medium">{task.title}</div>
-                                {task.description && (
-                                  <div
-                                    className="text-xs text-neutral-500 dark:text-neutral-400 truncate"
-                                    style={{ maxWidth: 240 }}
-                                  >
-                                    {String(task.description).split('\n')[0]}
-                                  </div>
-                                )}
+                        {tasks.map((task) => {
+                          // Busy/masked event from a shared calendar: editing is
+                          // owner-scoped (backend 404s), so hide the Edit button
+                          // instead of opening a form on the masked "Busy" title.
+                          const isBusy = task.isPrivate === true && task.accessRole === 'shared';
+                          return (
+                            <div
+                              key={task.id}
+                              className="flex items-center justify-between p-2 rounded-md bg-white dark:bg-neutral-900 border"
+                              style={{ borderColor: 'var(--surface-panel-inset)' }}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className={`w-2.5 h-2 rounded-sm ${getColorClass(task.colors && task.colors[0])}`}
+                                />
+                                <div>
+                                  <div className="text-sm font-medium">{task.title}</div>
+                                  {task.description && (
+                                    <div
+                                      className="text-xs text-neutral-500 dark:text-neutral-400 truncate"
+                                      style={{ maxWidth: 240 }}
+                                    >
+                                      {String(task.description).split('\n')[0]}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
 
-                            <div>
-                              <button
-                                className="modal-button text-sm px-2 py-1"
-                                onClick={() => onEditTask(task)}
-                              >
-                                {t('edit')}
-                              </button>
+                              {!isBusy && (
+                                <div>
+                                  <button
+                                    className="modal-button text-sm px-2 py-1"
+                                    onClick={() => onEditTask(task)}
+                                  >
+                                    {t('edit')}
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}
