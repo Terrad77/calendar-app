@@ -3,15 +3,14 @@ import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { BrowserRouter } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 
 import './index.css';
 import App from './App';
 import { store, persistor } from './redux/store';
+import { queryClient } from './lib/queryClient';
 import { ThemeProvider } from './contexts/ThemeContext';
 import './locales';
-
-const queryClient = new QueryClient();
 
 type SentryModule = {
   init: (options: {

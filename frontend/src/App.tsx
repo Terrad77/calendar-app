@@ -29,6 +29,7 @@ import { useSelector } from 'react-redux';
 import {
   selectIsLoggedIn,
   selectIsRefreshing,
+  selectSessionRestored,
   selectUserId,
   selectUser,
 } from './redux/user/selectors';
@@ -65,6 +66,7 @@ function App() {
   } | null>(null);
 
   const isAuthenticated = useSelector(selectIsLoggedIn);
+  const sessionRestored = useSelector(selectSessionRestored);
   const currentUserId = useSelector(selectUserId);
   const user = useSelector(selectUser);
   const isAnalyticsRoute = location.pathname.startsWith('/analytics');
@@ -77,6 +79,9 @@ function App() {
   const { data: calendarSharesData } = useQuery({
     queryKey: ['calendarShares'],
     queryFn: getCalendarShares,
+    // Only while signed in: a root-level query has no route guard, so without
+    // this it keeps refetching on /signin after logout (see Header pattern).
+    enabled: isAuthenticated && sessionRestored,
   });
 
   const writableSharedCalendars = (calendarSharesData?.sharedWithMe ?? [])

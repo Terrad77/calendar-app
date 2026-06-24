@@ -13,6 +13,7 @@ import storage from 'redux-persist/lib/storage';
 import userReducer from './user/userSlice';
 import taskReducer from './task/taskSlice';
 import calendarUiReducer from './calendarUi/calendarUiSlice';
+import { authCacheListener } from './listeners/authCacheListener';
 // import { TaskState } from './task/types';
 
 const userPersistConfig = {
@@ -34,7 +35,7 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }),
+    }).prepend(authCacheListener.middleware),
 });
 
 export const persistor = persistStore(store);
