@@ -124,6 +124,10 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
   compact,
 }) => {
   const isBusy = event.isPrivate === true && event.accessRole === 'shared';
+  // Any shared-calendar event is read-only for the viewer (no drag/click/edit),
+  // whether or not it is private. isBusy stays narrower: it only selects the
+  // masked "Busy" placeholder render for private shared events.
+  const isReadOnlyShared = event.accessRole === 'shared';
 
   const {
     attributes,
@@ -140,7 +144,7 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
       description: event.description,
       countryCode: event.countryCode,
     },
-    disabled: isBusy || event.eventType === 'holiday',
+    disabled: isReadOnlyShared || event.eventType === 'holiday',
   });
 
   const style = {
@@ -151,14 +155,14 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
   const renderIsDragging = propIsDragging !== undefined ? propIsDragging : dndIsDragging;
 
   const finalCustomCursor = useMemo(() => {
-    if (isBusy || event.eventType === 'holiday') {
+    if (isReadOnlyShared || event.eventType === 'holiday') {
       return 'default';
     }
     if (renderIsDragging) {
       return 'grabbing';
     }
     return propCustomCursor || 'pointer';
-  }, [isBusy, event.eventType, renderIsDragging, propCustomCursor]);
+  }, [isReadOnlyShared, event.eventType, renderIsDragging, propCustomCursor]);
 
   const busyStyle: React.CSSProperties = isBusy
     ? {
@@ -174,14 +178,16 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
     <TaskCard
       ref={setNodeRef}
       style={{ ...style, ...busyStyle }}
-      {...(isBusy ? {} : listeners)}
+      {...(isReadOnlyShared ? {} : listeners)}
       {...attributes}
       eventType={
         event.eventType === 'meeting' || event.eventType === 'reminder' ? 'task' : event.eventType
       }
       isDragging={renderIsDragging}
       customCursor={finalCustomCursor}
-      onClick={!isBusy && onCardClick !== undefined ? (e) => onCardClick(e, event) : undefined}
+      onClick={
+        !isReadOnlyShared && onCardClick !== undefined ? (e) => onCardClick(e, event) : undefined
+      }
       data-compact={compact ? 'true' : 'false'}
     >
       {isBusy ? (

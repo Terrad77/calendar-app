@@ -136,10 +136,10 @@ export const DayEventsModal: React.FC<Props> = ({
                       </div>
                       <div className="space-y-2">
                         {tasks.map((task) => {
-                          // Busy/masked event from a shared calendar: editing is
-                          // owner-scoped (backend 404s), so hide the Edit button
-                          // instead of opening a form on the masked "Busy" title.
-                          const isBusy = task.isPrivate === true && task.accessRole === 'shared';
+                          // Any event from a shared calendar is read-only for the
+                          // viewer: editing is owner-scoped (backend 404s), so hide the
+                          // Edit button regardless of whether the event is private.
+                          const isReadOnlyShared = task.accessRole === 'shared';
                           return (
                             <div
                               key={task.id}
@@ -163,7 +163,7 @@ export const DayEventsModal: React.FC<Props> = ({
                                 </div>
                               </div>
 
-                              {!isBusy && (
+                              {!isReadOnlyShared && (
                                 <div>
                                   <button
                                     className="modal-button text-sm px-2 py-1"
