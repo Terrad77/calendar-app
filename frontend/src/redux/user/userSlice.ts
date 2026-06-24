@@ -5,7 +5,6 @@ import {
   registerUser,
   logIn,
   logOut,
-  refreshUserToken,
   fetchUser,
   restoreSession,
   changePassword,
@@ -92,27 +91,6 @@ const userSlice = createSlice({
       .addCase(logIn.rejected, (state, action: PayloadAction<string | undefined>) => {
         state.isLoading = false;
         state.error = action.payload || 'Login failed';
-      })
-
-      // Refresh Token
-      .addCase(refreshUserToken.pending, (state) => {
-        state.isLoading = true;
-        state.isRefreshing = true;
-        state.error = null;
-      })
-      .addCase(refreshUserToken.fulfilled, (state, action: PayloadAction<AuthPayload>) => {
-        state.isLoading = false;
-        state.isRefreshing = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.refreshToken = action.payload.refreshToken;
-        state.isLoggedIn = true;
-        localStorage.setItem('accessToken', action.payload.token);
-        localStorage.setItem('refreshToken', action.payload.refreshToken);
-      })
-      .addCase(refreshUserToken.rejected, (state, action: PayloadAction<string | undefined>) => {
-        resetAuthState(state);
-        state.error = action.payload as string;
       })
 
       // Logout

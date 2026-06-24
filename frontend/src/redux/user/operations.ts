@@ -101,40 +101,6 @@ export const logOut = createAsyncThunk<
 });
 
 // ---------------------------
-// Refresh user token
-// ---------------------------
-export const refreshUserToken = createAsyncThunk<
-  { user: User; token: string; refreshToken: string },
-  void,
-  { state: RootState; dispatch: AppDispatch; rejectValue: string }
->('user/refreshUserToken', async (_, thunkAPI) => {
-  const state = thunkAPI.getState();
-  const refreshToken = state.user.refreshToken;
-
-  if (!refreshToken) {
-    return thunkAPI.rejectWithValue('No refresh token available');
-  }
-
-  try {
-    const { data } = await instance.post('/api/auth/refresh', { refreshToken });
-    setAuthHeader(data.tokens.accessToken);
-    localStorage.setItem('accessToken', data.tokens.accessToken);
-    localStorage.setItem('refreshToken', data.tokens.refreshToken);
-
-    const userResponse = await instance.get('/api/auth/me');
-    return {
-      user: userResponse.data.user,
-      token: data.tokens.accessToken,
-      refreshToken: data.tokens.refreshToken,
-    };
-  } catch (error: unknown) {
-    clearAuthHeader();
-    const msg = (error as AxiosError).message || 'Failed to refresh token';
-    return thunkAPI.rejectWithValue(msg);
-  }
-});
-
-// ---------------------------
 // Fetch current user
 // ---------------------------
 export const fetchUser = createAsyncThunk<
@@ -186,6 +152,9 @@ export const restoreSession = createAsyncThunk<
 
   if (accessToken) {
     try {
+      // The axios interceptor transparently refreshes an expired access token
+      // during this /me request (the single refresh path), so a success here
+      // means the session is valid.
       await thunkAPI.dispatch(fetchUser()).unwrap();
       return;
     } catch (error) {
@@ -194,14 +163,10 @@ export const restoreSession = createAsyncThunk<
       if (payload?.shouldLogout || (payload?.status && payload.status !== 401)) {
         return;
       }
-    }
-  }
 
-  if (refreshToken) {
-    try {
-      await thunkAPI.dispatch(refreshUserToken()).unwrap();
-      return;
-    } catch {
+      // A 401 means the interceptor's refresh attempt also failed: the persisted
+      // tokens are stale. Clear credentials so the app falls back to the
+      // signed-out state instead of looping on a dead token.
       thunkAPI.dispatch({ type: 'user/clearCredentials' });
       clearAuthHeader();
       authenticationService.clearAccessToken();

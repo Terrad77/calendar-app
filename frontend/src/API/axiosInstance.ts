@@ -12,6 +12,17 @@ const instance = axios.create({
 
 let refreshPromise: Promise<{ accessToken: string; refreshToken: string }> | null = null;
 
+// Keep the Redux auth state in sync after an interceptor-driven refresh. The
+// store is imported lazily to avoid a circular dependency
+// (store -> userSlice -> operations -> axiosInstance). We dispatch the plain
+// 'user/setTokens' action (same shape restoreSession uses) so consumers reading
+// state.refreshToken — notably logOut — never send a stale token.
+const syncTokensToStore = (accessToken: string, refreshToken: string) => {
+  void import('../redux/store').then(({ store }) => {
+    store.dispatch({ type: 'user/setTokens', payload: { accessToken, refreshToken } });
+  });
+};
+
 const refreshAccessToken = async (): Promise<{ accessToken: string; refreshToken: string }> => {
   if (refreshPromise) {
     return refreshPromise;
@@ -32,6 +43,7 @@ const refreshAccessToken = async (): Promise<{ accessToken: string; refreshToken
 
     localStorage.setItem('accessToken', accessToken);
     localStorage.setItem('refreshToken', nextRefreshToken);
+    syncTokensToStore(accessToken, nextRefreshToken);
 
     return { accessToken, refreshToken: nextRefreshToken };
   })().finally(() => {
