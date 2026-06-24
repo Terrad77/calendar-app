@@ -1,4 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import i18n from 'i18next';
 import instance from '../../API/axiosInstance';
 import toastMaker from '../../utils/toastMaker/toastMaker';
 import { authenticationService } from '../../services/authService';
@@ -39,7 +40,9 @@ export const logIn = createAsyncThunk<
   } catch (error: unknown) {
     const axiosError = error as AxiosError;
     const msg =
-      axiosError.response?.data?.message || axiosError.response?.data?.error || 'Login failed';
+      axiosError.response?.data?.message ||
+      axiosError.response?.data?.error ||
+      i18n.t('login_failed', { ns: 'common' });
     toastMaker(msg, 'error');
     return thunkAPI.rejectWithValue(msg);
   }

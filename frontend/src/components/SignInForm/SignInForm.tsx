@@ -9,7 +9,6 @@ import DotLoader from '../DotLoader/DotLoader';
 import { signInSchema } from '../../schemas/validationSchemas';
 import type { SignInFormData } from '../../types/auth.types';
 import { useTranslation } from 'react-i18next';
-import toast from 'react-hot-toast';
 import toastMaker from '../../utils/toastMaker/toastMaker';
 import { AppDispatch } from '../../redux/types';
 import { useTogglePassword } from '../../hooks/useTogglePassword';
@@ -42,21 +41,9 @@ export default function SignInForm() {
 
       toastMaker(t('login_successful', { ns: 'common' }), 'success');
       navigate('/');
-    } catch (error: unknown) {
-      if (typeof error === 'object' && error !== null) {
-        if ('message' in error) {
-          const loginError = error as { message: string };
-          console.error('Login failed with message:', loginError.message);
-          toast.error(loginError.message);
-        } else if ('payload' in error) {
-          const thunkError = error as { payload: string };
-          console.error('Login failed with payload:', thunkError.payload);
-          toast.error(thunkError.payload);
-        }
-      } else {
-        console.error('Unexpected error type:', error);
-        toast.error(t('login_failed', { ns: 'common' }));
-      }
+    } catch {
+      // The error toast is shown by the logIn thunk; on failure we only need
+      // to skip the success toast and navigation.
     }
   };
 
