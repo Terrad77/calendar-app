@@ -180,7 +180,7 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
 
   const busyStyle: React.CSSProperties = isBusy
     ? {
-        backgroundColor: 'var(--surface-calendar-outside-bg)',
+        backgroundColor: 'var(--surface-calendar-busy-bg)',
         borderColor: '#9ca3af',
         color: 'var(--surface-calendar-muted)',
         fontStyle: 'italic',

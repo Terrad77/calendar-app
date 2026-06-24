@@ -83,7 +83,7 @@ const DayCell = styled('div', {
   variants: {
     isOutsideMonth: {
       true: {
-        backgroundColor: 'var(--surface-calendar-outside-bg)',
+        backgroundColor: 'var(--surface-calendar-cell-outside)',
         color: 'var(--surface-calendar-muted)',
         '& .day-number': {
           color: 'var(--surface-calendar-muted)',

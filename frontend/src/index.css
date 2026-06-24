@@ -90,6 +90,7 @@
   --surface-calendar-grid: #e4ddd2;
   --surface-calendar-cell: rgba(255, 255, 255, 0.9);
   --surface-calendar-cell-outside: rgba(250, 246, 239, 0.96);
+  --surface-calendar-busy-bg: rgba(140, 126, 106, 0.18);
   --surface-calendar-cell-filler: rgba(250, 246, 239, 0.92);
   --surface-calendar-cell-hover: rgba(255, 255, 255, 0.98);
   --surface-calendar-cell-border: rgba(60, 48, 36, 0.32);
@@ -257,6 +258,7 @@
   --surface-calendar-grid: rgba(138, 155, 181, 0.14);
   --surface-calendar-cell: rgba(30, 45, 70, 0.68);
   --surface-calendar-cell-outside: rgba(22, 32, 51, 0.48);
+  --surface-calendar-busy-bg: rgba(138, 155, 181, 0.16);
   --surface-calendar-cell-filler: rgba(22, 32, 51, 0.38);
   --surface-calendar-cell-hover: rgba(44, 63, 92, 0.9);
   --surface-calendar-cell-border: rgba(138, 155, 181, 0.18);
