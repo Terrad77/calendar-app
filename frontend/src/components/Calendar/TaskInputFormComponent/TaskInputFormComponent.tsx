@@ -787,6 +787,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
   }, [
     title,
     description,
+    isPrivate,
     selectedColors,
     startDate,
     endDate,
@@ -852,6 +853,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
     onDuplicate,
     title,
     description,
+    isPrivate,
     selectedColors,
     startTime,
     endTime,

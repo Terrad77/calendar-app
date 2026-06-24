@@ -178,6 +178,7 @@ function App() {
       JSON.stringify(leftParticipants || []) === JSON.stringify(rightParticipants || []) &&
       JSON.stringify(leftReminderTime) === JSON.stringify(rightReminderTime) &&
       JSON.stringify(leftIsRecurring) === JSON.stringify(rightIsRecurring) &&
+      (left.isPrivate ?? false) === (right.isPrivate ?? false) &&
       JSON.stringify(leftCompleted) === JSON.stringify(rightCompleted) &&
       JSON.stringify(leftPriority) === JSON.stringify(rightPriority)
     );
