@@ -136,10 +136,11 @@ export const DayEventsModal: React.FC<Props> = ({
                       </div>
                       <div className="space-y-2">
                         {tasks.map((task) => {
-                          // Any event from a shared calendar is read-only for the
-                          // viewer: editing is owner-scoped (backend 404s), so hide the
-                          // Edit button regardless of whether the event is private.
-                          const isReadOnlyShared = task.accessRole === 'shared';
+                          // A shared-calendar event is read-only for the viewer
+                          // (hide Edit) unless the share grants write permission;
+                          // read-only edits are owner-scoped and the backend 404s.
+                          const isReadOnlyShared =
+                            task.accessRole === 'shared' && task.sharePermission !== 'write';
                           return (
                             <div
                               key={task.id}

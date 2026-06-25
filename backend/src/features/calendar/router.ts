@@ -67,13 +67,17 @@ router.get('/my-events', authenticateToken, async (req: Request, res: Response):
 
     // Append events from calendars that have been shared with the current user
     const shares = await database
-      .select({ ownerId: calendarShares.ownerId, ownerName: users.name })
+      .select({
+        ownerId: calendarShares.ownerId,
+        ownerName: users.name,
+        permission: calendarShares.permission,
+      })
       .from(calendarShares)
       .leftJoin(users, eq(users.id, calendarShares.ownerId))
       .where(eq(calendarShares.sharedWithId, userId));
 
     const sharedEventArrays = await Promise.all(
-      shares.map(async ({ ownerId, ownerName }) => {
+      shares.map(async ({ ownerId, ownerName, permission }) => {
         const ownerEvents = await database
           .select()
           .from(calendarEvents)
@@ -91,12 +95,14 @@ router.get('/my-events', authenticateToken, async (req: Request, res: Response):
               participants: [],
               metadata: {},
               accessRole: 'shared' as const,
+              sharePermission: permission,
               ownerInfo: { id: ownerId, name: ownerName ?? '' },
             };
           }
           return {
             ...base,
             accessRole: 'shared' as const,
+            sharePermission: permission,
             ownerInfo: { id: ownerId, name: ownerName ?? '' },
           };
         });

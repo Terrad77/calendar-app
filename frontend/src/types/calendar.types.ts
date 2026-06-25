@@ -41,6 +41,8 @@ export interface BaseCalendarEvent {
   // Ignored on existing/persisted events.
   targetCalendarOwnerId?: string;
   accessRole?: 'owner' | 'participant' | 'shared';
+  // Per-event permission from calendar_shares; only present when accessRole === 'shared'.
+  sharePermission?: 'read' | 'write';
   participantStatus?: 'pending' | 'accepted' | 'declined' | null;
   ownerInfo?: { id: string; name: string } | null;
   eventType: EventType;

@@ -126,10 +126,10 @@ export const TaskCardDraggable: React.FC<TaskCardDraggableProps> = ({
 }) => {
   const { t } = useTranslation('calendar');
   const isBusy = event.isPrivate === true && event.accessRole === 'shared';
-  // Any shared-calendar event is read-only for the viewer (no drag/click/edit),
-  // whether or not it is private. isBusy stays narrower: it only selects the
-  // masked "Busy" placeholder render for private shared events.
-  const isReadOnlyShared = event.accessRole === 'shared';
+  // A shared-calendar event is read-only for the viewer (no drag/click/edit)
+  // unless the share grants write permission. isBusy stays narrower: it only
+  // selects the masked "Busy" placeholder render for private shared events.
+  const isReadOnlyShared = event.accessRole === 'shared' && event.sharePermission !== 'write';
 
   const {
     attributes,
