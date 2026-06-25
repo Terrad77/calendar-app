@@ -192,7 +192,7 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response): Promi
     const existingRows = await database
       .select()
       .from(calendarEvents)
-      .where(and(eq(calendarEvents.id, req.params.id), eq(calendarEvents.userId, req.user.userId)))
+      .where(eq(calendarEvents.id, req.params.id))
       .limit(1);
 
     if (existingRows.length === 0) {
@@ -201,6 +201,21 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response): Promi
     }
 
     const existing = existingRows[0];
+
+    // Owner edits freely; a non-owner needs a 'write' share on the event owner's
+    // calendar (same check the create flow uses). The event exists, so a failed
+    // authorization is 403, not 404.
+    if (existing.userId !== req.user.userId) {
+      const writeTarget = await resolveCalendarWriteTarget(req.user.userId, existing.userId);
+      if ('error' in writeTarget) {
+        res.status(403).json({
+          error: 'Forbidden',
+          message: 'You do not have write access to this event',
+        });
+        return;
+      }
+    }
+
     const payload = req.body as Partial<EventPayload>;
     const [updatedEvent] = await database
       .update(calendarEvents)
@@ -225,7 +240,7 @@ router.put('/:id', authenticateToken, async (req: Request, res: Response): Promi
         metadata: payload.metadata ?? existing.metadata,
         updatedAt: new Date(),
       })
-      .where(and(eq(calendarEvents.id, req.params.id), eq(calendarEvents.userId, req.user.userId)))
+      .where(eq(calendarEvents.id, req.params.id))
       .returning();
 
     if (!updatedEvent) {
@@ -253,9 +268,35 @@ router.delete('/:id', authenticateToken, async (req: Request, res: Response): Pr
     }
 
     const database = getDb();
+    const existingRows = await database
+      .select({ id: calendarEvents.id, userId: calendarEvents.userId })
+      .from(calendarEvents)
+      .where(eq(calendarEvents.id, req.params.id))
+      .limit(1);
+
+    if (existingRows.length === 0) {
+      res.status(404).json({ error: 'Not found', message: 'Event not found' });
+      return;
+    }
+
+    const existing = existingRows[0];
+
+    // Owner deletes freely; a non-owner needs a 'write' share on the event
+    // owner's calendar. The event exists, so a failed authorization is 403.
+    if (existing.userId !== req.user.userId) {
+      const writeTarget = await resolveCalendarWriteTarget(req.user.userId, existing.userId);
+      if ('error' in writeTarget) {
+        res.status(403).json({
+          error: 'Forbidden',
+          message: 'You do not have write access to this event',
+        });
+        return;
+      }
+    }
+
     const deletedRows = await database
       .delete(calendarEvents)
-      .where(and(eq(calendarEvents.id, req.params.id), eq(calendarEvents.userId, req.user.userId)))
+      .where(eq(calendarEvents.id, req.params.id))
       .returning({ id: calendarEvents.id });
 
     if (deletedRows.length === 0) {

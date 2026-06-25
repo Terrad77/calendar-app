@@ -405,6 +405,31 @@ describe('Events router', () => {
       expect(res.status).toBe(500);
       expect(res.body.error).toBe('Failed to update event');
     });
+
+    it('lets a non-owner with a write share update the event', async () => {
+      const existing = makeRow({ userId: 'other-user' });
+      dbState.select = [
+        [existing], // event belongs to someone else
+        [{ permission: 'write' }], // calendar_shares lookup
+      ];
+      dbState.update = [[existing]];
+      const res = await request(app).put(`${EVENTS}/evt-1`).set(auth).send({ title: 'New' });
+      expect(res.status).toBe(200);
+      expect(dbState.updated[0]).toMatchObject({ title: 'New' });
+    });
+
+    it('forbids a non-owner with a read-only share (403)', async () => {
+      dbState.select = [[makeRow({ userId: 'other-user' })], [{ permission: 'read' }]];
+      const res = await request(app).put(`${EVENTS}/evt-1`).set(auth).send({ title: 'New' });
+      expect(res.status).toBe(403);
+      expect(dbState.updateIdx).toBe(0); // never reached the update
+    });
+
+    it('forbids a non-owner with no share (403)', async () => {
+      dbState.select = [[makeRow({ userId: 'other-user' })], []];
+      const res = await request(app).put(`${EVENTS}/evt-1`).set(auth).send({ title: 'New' });
+      expect(res.status).toBe(403);
+    });
   });
 
   describe('DELETE /api/events/:id', () => {
@@ -421,6 +446,7 @@ describe('Events router', () => {
     });
 
     it('deletes the event and returns its id', async () => {
+      dbState.select = [[makeRow()]]; // owner lookup
       dbState.delete = [[{ id: 'evt-1' }]];
       const res = await request(app).delete(`${EVENTS}/evt-1`).set(auth);
       expect(res.status).toBe(200);
@@ -428,10 +454,34 @@ describe('Events router', () => {
     });
 
     it('returns 500 when deletion throws', async () => {
+      dbState.select = [[makeRow()]]; // owner lookup
       dbState.delete = [new Error('delete boom')];
       const res = await request(app).delete(`${EVENTS}/evt-1`).set(auth);
       expect(res.status).toBe(500);
       expect(res.body.error).toBe('Failed to delete event');
+    });
+
+    it('lets a non-owner with a write share delete the event', async () => {
+      dbState.select = [
+        [makeRow({ userId: 'other-user' })], // event belongs to someone else
+        [{ permission: 'write' }], // calendar_shares lookup
+      ];
+      dbState.delete = [[{ id: 'evt-1' }]];
+      const res = await request(app).delete(`${EVENTS}/evt-1`).set(auth);
+      expect(res.status).toBe(200);
+    });
+
+    it('forbids a non-owner with a read-only share (403)', async () => {
+      dbState.select = [[makeRow({ userId: 'other-user' })], [{ permission: 'read' }]];
+      const res = await request(app).delete(`${EVENTS}/evt-1`).set(auth);
+      expect(res.status).toBe(403);
+      expect(dbState.deleteIdx).toBe(0); // never reached the delete
+    });
+
+    it('forbids a non-owner with no share (403)', async () => {
+      dbState.select = [[makeRow({ userId: 'other-user' })], []];
+      const res = await request(app).delete(`${EVENTS}/evt-1`).set(auth);
+      expect(res.status).toBe(403);
     });
   });
 });
