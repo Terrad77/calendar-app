@@ -114,6 +114,7 @@ describe('checkEventAccess middleware', () => {
       event,
       participantStatus: null,
       isOwner: true,
+      accessSource: 'owner',
     });
   });
 
@@ -134,6 +135,7 @@ describe('checkEventAccess middleware', () => {
       event,
       participantStatus: 'accepted',
       isOwner: false,
+      accessSource: 'participant',
     });
   });
 
@@ -172,6 +174,29 @@ describe('checkEventAccess middleware', () => {
       event,
       participantStatus: 'pending',
       isOwner: false,
+      accessSource: 'participant',
+    });
+  });
+
+  it('grants a calendar-share viewer access with accessSource share', async () => {
+    const event = { id: 'evt-1', userId: 'owner', title: 'Shared' };
+    // event found, no participant row, then a calendar_shares grant.
+    dbState.queue = [[event], [], [{ id: 'share-1' }]];
+    const req = makeReq({
+      params: { id: 'evt-1' },
+      user: { userId: 'viewer', email: 'test@example.com' },
+    } as Partial<Request>);
+    const res = makeRes();
+    const next = vi.fn() as unknown as NextFunction;
+
+    await checkEventAccess(req, res, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(req.eventAccess).toEqual({
+      event,
+      participantStatus: null,
+      isOwner: false,
+      accessSource: 'share',
     });
   });
 

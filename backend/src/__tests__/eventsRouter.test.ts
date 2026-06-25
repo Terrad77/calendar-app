@@ -178,6 +178,36 @@ describe('Events router', () => {
         participantStatus: 'accepted',
       });
     });
+
+    it('grants access to a calendar-share viewer (non-owner, non-participant)', async () => {
+      // checkEventAccess: event lookup, empty participant, then calendar_shares
+      // grant; the handler then looks up the owner name for ownerInfo.
+      dbState.select = [
+        [makeRow({ id: 'evt-1', userId: 'owner' })],
+        [], // not a participant
+        [{ id: 'share-1' }], // calendar_shares grant (any permission)
+        [{ name: 'Owner' }], // owner name lookup
+      ];
+      const res = await request(app).get(`${EVENTS}/evt-1`).set(auth);
+
+      expect(res.status).toBe(200);
+      expect(res.body.event).toMatchObject({
+        id: 'evt-1',
+        accessRole: 'shared',
+        ownerInfo: { id: 'owner', name: 'Owner' },
+      });
+    });
+
+    it('returns 403 for a non-owner without participation or a share', async () => {
+      dbState.select = [
+        [makeRow({ id: 'evt-1', userId: 'owner' })],
+        [], // not a participant
+        [], // no calendar_shares grant
+      ];
+      const res = await request(app).get(`${EVENTS}/evt-1`).set(auth);
+
+      expect(res.status).toBe(403);
+    });
   });
 
   describe('POST /api/events', () => {

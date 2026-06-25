@@ -99,10 +99,17 @@ router.get(
         ownerInfo = { id: req.eventAccess.event.userId, name: owner?.name ?? '' };
       }
 
+      const accessRole =
+        req.eventAccess.accessSource === 'owner'
+          ? 'owner'
+          : req.eventAccess.accessSource === 'share'
+            ? 'shared'
+            : 'participant';
+
       res.json({
         event: {
           ...toEventResponse(req.eventAccess.event),
-          accessRole: req.eventAccess.isOwner ? 'owner' : 'participant',
+          accessRole,
           participantStatus: req.eventAccess.participantStatus,
           ...(ownerInfo ? { ownerInfo } : {}),
         },

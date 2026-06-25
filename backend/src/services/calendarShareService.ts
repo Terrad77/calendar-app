@@ -38,3 +38,18 @@ export async function resolveCalendarWriteTarget(
 
   return { ownerId: targetOwnerId };
 }
+
+// Returns true if `viewerId` holds any calendar share (read or write) on
+// `ownerId`'s calendar. Read access to a shared event is granted by either
+// permission level — write is a superset of read — so this check, unlike
+// resolveCalendarWriteTarget, does not filter on the permission column.
+export async function hasCalendarShare(ownerId: string, viewerId: string): Promise<boolean> {
+  const db = getDb();
+  const [share] = await db
+    .select({ id: calendarShares.id })
+    .from(calendarShares)
+    .where(and(eq(calendarShares.ownerId, ownerId), eq(calendarShares.sharedWithId, viewerId)))
+    .limit(1);
+
+  return Boolean(share);
+}
