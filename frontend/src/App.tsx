@@ -189,23 +189,31 @@ function App() {
     );
   };
 
-  // A locally-created event has no ownerId yet; treat it as owned by the current
-  // user so it gets persisted. Events loaded from the backend always carry an
-  // ownerId, so shared events (owned by others) are still excluded.
-  const isOwnedByCurrentUser = (event: CalendarEvent) =>
-    !event.ownerId || event.ownerId === currentUserId;
+  // Eligibility to persist from the client: events the user owns, not-yet-saved
+  // local events (no ownerId), and events on a calendar shared with write
+  // permission. Read-only shares and holidays are never written back. This gate
+  // is intentionally separate from the new-vs-existing decision below.
+  const canPersistEvent = (event: CalendarEvent) =>
+    !event.ownerId ||
+    event.ownerId === currentUserId ||
+    (event.accessRole === 'shared' && event.sharePermission === 'write');
 
   const syncEventChanges = async (previousEvents: CalendarEvent[], nextEvents: CalendarEvent[]) => {
-    const ownedPreviousEvents = previousEvents.filter(isOwnedByCurrentUser);
-    const ownedNextEvents = nextEvents.filter(isOwnedByCurrentUser);
+    // Identity (existing vs new) is decided purely by id across the full
+    // snapshots, never by ownership: an id present before is an existing event
+    // (PUT), a brand-new id is a creation (POST). This keeps an edited
+    // write-shared event — whose ownerId belongs to its owner, not the current
+    // user — correctly routed to update instead of misclassified as a creation.
+    const previousById = new Map(previousEvents.map((event) => [event.id, event]));
+    const nextById = new Map(nextEvents.map((event) => [event.id, event]));
 
-    const ownedPreviousById = new Map(ownedPreviousEvents.map((event) => [event.id, event]));
-    const ownedNextById = new Map(ownedNextEvents.map((event) => [event.id, event]));
+    const persistablePrevious = previousEvents.filter(canPersistEvent);
+    const persistableNext = nextEvents.filter(canPersistEvent);
 
-    const createdEvents = ownedNextEvents.filter((event) => !ownedPreviousById.has(event.id));
-    const deletedEvents = ownedPreviousEvents.filter((event) => !ownedNextById.has(event.id));
-    const updatedEvents = ownedNextEvents.filter((event) => {
-      const previousEvent = ownedPreviousById.get(event.id);
+    const createdEvents = persistableNext.filter((event) => !previousById.has(event.id));
+    const deletedEvents = persistablePrevious.filter((event) => !nextById.has(event.id));
+    const updatedEvents = persistableNext.filter((event) => {
+      const previousEvent = previousById.get(event.id);
       return previousEvent ? !eventsEqual(previousEvent, event) : false;
     });
 

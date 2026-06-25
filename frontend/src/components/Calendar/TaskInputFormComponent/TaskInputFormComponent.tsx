@@ -767,6 +767,14 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       endDate?: string;
     } = {
       id: taskId,
+      // Preserve the shared-calendar context of the edited event: ownerId so the
+      // sync diff routes it to PUT (not POST), accessRole/sharePermission so the
+      // card stays editable after save, ownerInfo for the owner monogram. All
+      // undefined for newly created events, leaving the create flow unchanged.
+      ownerId: initialTask?.ownerId,
+      accessRole: initialTask?.accessRole,
+      sharePermission: initialTask?.sharePermission,
+      ownerInfo: initialTask?.ownerInfo,
       targetCalendarOwnerId: targetCalendarOwnerId || undefined,
       title: title.trim(),
       description: description.trim(),
