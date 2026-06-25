@@ -38,6 +38,9 @@ router.get('/my-events', authenticateToken, async (req: Request, res: Response):
             'accessRole'
           ),
         participantStatus: eventParticipants.status,
+        // Invitation (event_participants) row id — used by the client to
+        // decline/leave a participant event via the invitation endpoint.
+        participationId: eventParticipants.id,
         ownerName: users.name,
       })
       .from(calendarEvents)
@@ -58,6 +61,9 @@ router.get('/my-events', authenticateToken, async (req: Request, res: Response):
       ...toEventResponse(row),
       accessRole: row.accessRole as 'owner' | 'participant',
       participantStatus: row.participantStatus as 'pending' | 'accepted' | 'declined' | null,
+      // Invitation row id, only for participant events (lets the client decline/leave).
+      participationId:
+        row.accessRole === 'participant' ? (row.participationId ?? undefined) : undefined,
       // Owner identity only for events the user participates in (not own events).
       ownerInfo:
         row.accessRole === 'participant'

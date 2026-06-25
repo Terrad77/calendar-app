@@ -58,6 +58,7 @@ type CalendarProps = {
   events?: CalendarEvent[];
   setEvents?: React.Dispatch<React.SetStateAction<CalendarEvent[]>>;
   writableSharedCalendars?: { ownerId: string; ownerName: string }[];
+  onLeaveInvitation?: (participationId: string) => Promise<void>;
 };
 
 // Tailwind styling moved to JSX
@@ -95,6 +96,7 @@ export const Calendar = ({
   events: externalEvents,
   setEvents: externalSetEvents,
   writableSharedCalendars,
+  onLeaveInvitation,
 }: CalendarProps) => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation('common');
@@ -741,6 +743,16 @@ export const Calendar = ({
                 setTasks((prev) => prev.filter((t) => t.id !== taskId));
                 setEditingTask(null);
               }}
+              onLeaveInvitation={
+                onLeaveInvitation
+                  ? async (participationId) => {
+                      // App removes the card from state on API success (outside the
+                      // events sync diff); here we just close the editor.
+                      await onLeaveInvitation(participationId);
+                      setEditingTask(null);
+                    }
+                  : undefined
+              }
             />
           )}
         </Modal>

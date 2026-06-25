@@ -48,6 +48,8 @@ export interface EventResponse extends Omit<EventPayload, 'color'> {
   accessRole?: 'owner' | 'participant' | 'shared';
   // Per-event permission from calendar_shares; only set when accessRole === 'shared'.
   sharePermission?: 'read' | 'write';
+  // Invitation (event_participants) row id; only set when accessRole === 'participant'.
+  participationId?: string;
   participantStatus?: 'pending' | 'accepted' | 'declined' | null;
   ownerInfo?: { id: string; name: string } | null;
 }

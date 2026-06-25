@@ -43,6 +43,10 @@ export interface BaseCalendarEvent {
   accessRole?: 'owner' | 'participant' | 'shared';
   // Per-event permission from calendar_shares; only present when accessRole === 'shared'.
   sharePermission?: 'read' | 'write';
+  // Invitation row id from event_participants, only present when
+  // accessRole === 'participant'. Used to decline/leave the invitation
+  // (distinct from event.id, which is the underlying shared event).
+  participationId?: string;
   participantStatus?: 'pending' | 'accepted' | 'declined' | null;
   ownerInfo?: { id: string; name: string } | null;
   eventType: EventType;
@@ -178,6 +182,8 @@ export interface HomePageProps {
   // Write-permission shared calendars, forwarded to the calendar's event form
   // so the user can create events in someone else's calendar.
   writableSharedCalendars?: { ownerId: string; ownerName: string }[];
+  // Decline/leave a participant invitation by its event_participants row id.
+  onLeaveInvitation?: (participationId: string) => Promise<void>;
 }
 
 export interface Holiday {

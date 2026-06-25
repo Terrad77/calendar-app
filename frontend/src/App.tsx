@@ -44,6 +44,7 @@ import {
   deleteCalendarEvent,
   getCalendarShares,
   getMyCalendarEvents,
+  respondToInvitation,
   updateCalendarEvent,
 } from './API/apiOperations';
 import instance from './API/axiosInstance';
@@ -270,6 +271,21 @@ function App() {
       }
     } catch (error) {
       console.error('Failed to sync calendar events with backend:', error);
+    }
+  };
+
+  // Decline/leave a participant invitation. This is a direct call to the
+  // invitation endpoint — deliberately NOT routed through syncEventChanges,
+  // since participant events are (correctly) excluded from the events diff.
+  // On success we drop the card from local state via the raw setter, bypassing
+  // the diff entirely.
+  const handleLeaveInvitation = async (participationId: string) => {
+    try {
+      await respondToInvitation(participationId, 'declined');
+      setEvents((prev) => prev.filter((event) => event.participationId !== participationId));
+    } catch (error) {
+      console.error('Failed to decline invitation:', error);
+      toast.error(t('failed_to_respond', { ns: 'navigation' }));
     }
   };
 
@@ -518,6 +534,7 @@ function App() {
                   events={events}
                   setEvents={applyEventsUpdate}
                   writableSharedCalendars={writableSharedCalendars}
+                  onLeaveInvitation={handleLeaveInvitation}
                 />
               </Layout>
             </ProtectedRoute>

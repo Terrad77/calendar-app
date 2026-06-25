@@ -584,6 +584,9 @@ interface TaskInputFormProps {
   onDuplicate?: (task: CalendarEvent) => void; // callback for copying an existing task
   onCancel: () => void; // callback for canceling
   onDelete?: (taskId: string) => void; // callback for delete
+  // Decline/leave a participant invitation (accessRole === 'participant').
+  // Routed straight to the invitation endpoint, not through the events sync diff.
+  onLeaveInvitation?: (participationId: string) => void;
   initialDate?: string; // date for new task, if no exist initialTask
   isSubmitting?: boolean;
   // Calendars shared with the current user with write permission. When
@@ -599,6 +602,7 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
   onDuplicate,
   onCancel,
   onDelete,
+  onLeaveInvitation,
   initialDate,
   isSubmitting,
   writableSharedCalendars,
@@ -825,6 +829,15 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
       onDelete(initialTask.id);
     }
   }, [initialTask, onDelete]);
+
+  // --- logic for btn "Leave" (decline a participant invitation) ---
+  const handleLeaveClick = useCallback(() => {
+    if (initialTask?.participationId && onLeaveInvitation) {
+      onLeaveInvitation(initialTask.participationId);
+    }
+  }, [initialTask, onLeaveInvitation]);
+
+  const isParticipant = initialTask?.accessRole === 'participant';
 
   const handleDuplicateClick = useCallback(() => {
     if (!initialTask || !onDuplicate) {
@@ -1167,11 +1180,20 @@ export const TaskInputForm: React.FC<TaskInputFormProps> = ({
               {t('copy')}
             </TaskInputButton>
           )}
-          {initialTask && onDelete && (
-            <TaskInputButton type="button" onClick={handleDeleteClick} danger>
-              {t('delete')}
-            </TaskInputButton>
-          )}
+          {initialTask &&
+            (isParticipant
+              ? onLeaveInvitation && (
+                  // Participant on someone else's event: decline the invitation
+                  // instead of deleting the event (which the user doesn't own).
+                  <TaskInputButton type="button" onClick={handleLeaveClick} danger>
+                    {t('leave')}
+                  </TaskInputButton>
+                )
+              : onDelete && (
+                  <TaskInputButton type="button" onClick={handleDeleteClick} danger>
+                    {t('delete')}
+                  </TaskInputButton>
+                ))}
         </ActionGroup>
       </FooterNote>
 

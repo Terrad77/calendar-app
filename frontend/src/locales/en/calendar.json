@@ -113,6 +113,7 @@
   "recurring_end_date": "End date",
   "copy": "Copy",
   "delete": "Delete",
+  "leave": "Leave",
   "save_changes": "Save changes",
   "cannot_add_here": "Cannot add here",
   "add_event_button": "Add event",

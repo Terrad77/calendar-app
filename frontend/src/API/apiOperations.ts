@@ -31,6 +31,7 @@ interface BackendCalendarEvent {
   updatedAt: string;
   accessRole?: 'owner' | 'participant' | 'shared';
   sharePermission?: 'read' | 'write';
+  participationId?: string;
   participantStatus?: 'pending' | 'accepted' | 'declined' | null;
   ownerInfo?: { id: string; name: string } | null;
 }
@@ -56,6 +57,7 @@ const mapBackendEventToCalendarEvent = (event: BackendCalendarEvent): CalendarEv
     isPrivate: event.isPrivate ?? false,
     accessRole: event.accessRole,
     sharePermission: event.sharePermission,
+    participationId: event.participationId,
     participantStatus: event.participantStatus ?? null,
     ownerInfo: event.ownerInfo ?? null,
   };
